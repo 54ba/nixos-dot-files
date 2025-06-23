@@ -24,19 +24,17 @@ with pkgs; [
   
   # Podcast players
   gpodder
-  vocal
+  gnome-podcasts  # Replaces archived 'vocal' package
   
   # E-book readers
   calibre
   foliate
   
   # Comic book readers
-  comix
-  mcomix3
+  mcomix3  # comix is no longer available
   
   # Radio and audio streaming
-  radio-tray
-  shortwave
+  shortwave  # radio-tray is no longer available
   
   # Media servers
   plex
@@ -53,7 +51,7 @@ with pkgs; [
   gnome-weather
   
   # Games (casual)
-  solitaire
-  gnome-games
+  # gnome-games and solitaire are no longer available
+  # Consider installing games individually if needed
 ]
 

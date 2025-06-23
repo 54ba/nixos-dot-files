@@ -1,12 +1,12 @@
 { pkgs }:
 
-# Collection of popular and widely-used packages across different categories
-# Key applications: vscode, firefox, discord, git, docker, steam, vlc, spotify
 with pkgs; [
-  # Text editors and IDEs (most popular: vscode, vim, neovim)
-  vscode
+  # Essential CLI tools that everyone needs
+  
+  # Text editors (popular: vim, neovim, nano)
   vim
   neovim
+  nano
   
   # Terminal emulators (popular: alacritty, kitty)
   alacritty
@@ -106,6 +106,7 @@ with pkgs; [
   podman
   
   # Package managers for other ecosystems
+  # Use consistent Python 3.11 to avoid version conflicts
   python311Packages.pip
   cargo
   

@@ -68,7 +68,6 @@ let
     pydantic
     
     # Documentation
-    sphinx
     mkdocs
     mkdocs-material
   ]);

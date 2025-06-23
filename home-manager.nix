@@ -79,9 +79,9 @@
   #     useNixVim = true;
   #     autoStartMcp = true;
   #     keybindings = {
-  #       askNixai = "<leader>na";
-  #       askNixaiVisual = "<leader>na";
-  #       startMcpServer = "<leader>ns";
+  #       askNixai = "\u003cleader\u003ena";
+  #       askNixaiVisual = "\u003cleader\u003ena";
+  #       startMcpServer = "\u003cleader\u003ens";
   #     };
   #   };
   # };
@@ -89,9 +89,9 @@
   # Development packages
   home.packages = with pkgs; [
     # AI/ML Development
-    python3
-    python3Packages.pip
-    python3Packages.virtualenv
+    python311  # Use consistent Python 3.11 instead of python3
+    python311Packages.pip
+    python311Packages.virtualenv
     nodejs
     nodePackages.npm
     nodePackages.yarn
@@ -198,192 +198,211 @@
       nrs = "sudo nixos-rebuild switch";
       nrt = "sudo nixos-rebuild test";
       nrb = "sudo nixos-rebuild boot";
-      hms = "home-manager switch";
+      nrc = "sudo nixos-rebuild switch --flake .";
+      nrct = "sudo nixos-rebuild test --flake .";
+      nrg = "sudo nix-collect-garbage -d";
+      
+      # Package management
+      nps = "nix search nixpkgs";
+      npi = "nix profile install";
+      npr = "nix profile remove";
+      npl = "nix profile list";
       
       # Development shortcuts
-      dev = "nix develop";
-      run = "nix run";
-      shell = "nix-shell";
+      ns = "nix-shell";
+      nsp = "nix-shell -p";
+      
+      # Directory shortcuts
+      cd-nix = "cd /etc/nixos";
+      cd-home = "cd ~/.config/home-manager";
     };
-    initContent = lib.mkOrder 550 ''
-      # Initialize starship prompt
+    
+    initExtra = ''
+      # Enable starship prompt
       eval "$(starship init zsh)"
       
-      # Initialize zoxide
+      # Enable zoxide
       eval "$(zoxide init zsh)"
       
-      # Initialize direnv
+      # Enable direnv
       eval "$(direnv hook zsh)"
       
-      # nixai completion
-      if command -v nixai > /dev/null 2>&1; then
-        eval "$(nixai completion zsh)"
-      fi
-      
       # Custom functions
-      nixai-context() {
-        echo "🤖 Getting NixOS context for AI assistance..."
-        nixai context detect --cache
+      nixai-help() {
+        echo "NixAI Commands:"
+        echo "  nai [question]      - Ask nixai a question"
+        echo "  nix-help [topic]    - Get help on Nix topics"
+        echo "  nix-debug          - Diagnose system issues"
+        echo "  rebuild-flake      - Rebuild system with flake"
+        echo "  test-flake         - Test system build with flake"
       }
       
-      nixai-optimize() {
-        echo "⚡ Running AI-powered NixOS optimization..."
-        nixai ask "Analyze my current NixOS configuration and suggest optimizations"
+      # Function to easily edit NixOS config
+      edit-nix() {
+        sudo $EDITOR /etc/nixos/configuration.nix
       }
       
-      nixai-troubleshoot() {
-        echo "🔧 Running AI-powered troubleshooting..."
-        nixai diagnose --type system
+      # Function to edit home-manager config
+      edit-home() {
+        $EDITOR ~/.config/home-manager/home.nix
+      }
+      
+      # Function to search and install packages
+      nix-install() {
+        if [ -z "$1" ]; then
+          echo "Usage: nix-install <package-name>"
+          return 1
+        fi
+        nix search nixpkgs $1
+        read "?Install $1? (y/N): " confirm
+        if [[ $confirm == [yY] ]]; then
+          nix profile install nixpkgs#$1
+        fi
       }
     '';
   };
 
-  # Starship configuration
+  # Starship prompt configuration
   programs.starship = {
     enable = true;
     settings = {
-      add_newline = false;
+      add_newline = true;
       
       character = {
         success_symbol = "[➜](bold green)";
-        error_symbol = "[➜](bold red)";
-      };
-      
-      directory = {
-        style = "blue";
-        truncation_length = 4;
-        truncation_symbol = "…/";
+        error_symbol = "[✗](bold red)";
       };
       
       git_branch = {
-        style = "bright-green";
+        format = "[$symbol$branch]($style) ";
       };
       
       nix_shell = {
-        symbol = "❄️ ";
-        style = "bright-blue";
+        format = "[⎈ $state( \\($name\\))]($style) ";
+        heuristic = true;
       };
       
-      # Custom nixai indicator
-      custom.nixai = {
-        command = "echo 🤖";
-        when = "test -S ~/.local/share/nixai/mcp.sock";
-        description = "nixai MCP server is running";
+      directory = {
+        truncation_length = 3;
+        truncate_to_repo = true;
+      };
+      
+      cmd_duration = {
+        min_time = 500;
+        format = "⏱️  [$duration]($style) ";
       };
     };
   };
 
-  # VS Code configuration with AI integration (temporarily disabled)
-  # programs.vscode = {
-  #   enable = true;
-  #   
-  #   extensions = with pkgs.vscode-extensions; [
-  #     # Nix support
-  #     bbenoist.nix
-  #     
-  #     # General development
-  #     ms-python.python
-  #     
-  #     # Productivity
-  #     vscodevim.vim
-  #     
-  #     # Git
-  #     eamodio.gitlens
-  #   ];
-  #   
-  #   userSettings = {
-  #     "editor.fontSize" = 14;
-  #     "editor.fontFamily" = "'JetBrains Mono', 'Fira Code', monospace";
-  #     "editor.fontLigatures" = true;
-  #     "editor.minimap.enabled" = false;
-  #     "editor.rulers" = [ 80 120 ];
-  #     
-  #     # AI settings
-  #     "github.copilot.enable" = {
-  #       "*" = true;
-  #       "nix" = true;
-  #     };
-  #     
-  #     # Nix settings
-  #     "nix.enableLanguageServer" = true;
-  #     "nix.serverPath" = "nil";
-  #     
-  #     # Terminal
-  #     "terminal.integrated.shell.linux" = "${pkgs.zsh}/bin/zsh";
-  #     "terminal.integrated.fontSize" = 14;
-  #     
-  #     # Theme
-  #     "workbench.colorTheme" = "Tomorrow Night Blue";
-  #     "workbench.iconTheme" = "material-icon-theme";
-  #   };
-  # };
-
-  # Neovim configuration (basic)
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
-    
-    extraConfig = ''
-      " Basic configuration
-      set number relativenumber
-      set expandtab tabstop=2 shiftwidth=2
-      set hidden
-      set ignorecase smartcase
-      set termguicolors
-      
-      " Leader key
-      let mapleader = " "
-    '';
-  };
-
-  # Direnv for automatic development environments
+  # Direnv configuration for automatic shell environments
   programs.direnv = {
     enable = true;
+    enableZshIntegration = true;
     nix-direnv.enable = true;
   };
 
-  # File manager configuration
-  xdg.mimeApps = {
+  # Bat (better cat) configuration
+  programs.bat = {
     enable = true;
-    defaultApplications = {
-      "text/plain" = "nvim.desktop";
-      "application/pdf" = "firefox.desktop";
+    config = {
+      theme = "TwoDark";
+      pager = "less -FR";
     };
   };
 
-  # XDG directories
-  xdg.userDirs = {
+  # FZF configuration
+  programs.fzf = {
     enable = true;
-    createDirectories = true;
-    desktop = "$HOME/Desktop";
-    documents = "$HOME/Documents";
-    download = "$HOME/Downloads";
-    music = "$HOME/Music";
-    pictures = "$HOME/Pictures";
-    videos = "$HOME/Videos";
-    templates = "$HOME/Templates";
-    publicShare = "$HOME/Public";
+    enableZshIntegration = true;
+    defaultCommand = "fd --type f";
+    defaultOptions = [ "--height 40%" "--border" ];
   };
 
-  # System services
-  systemd.user.startServices = "sd-switch";
-  
-  # Create nixai config directory
-  xdg.configFile."nixai/.keep".text = "";
-  
-  # Development environment templates
-  home.file.".local/share/nixai/templates/python.envrc".text = ''
-    use flake github:the-nix-way/dev-templates#python
-  '';
-  
-  home.file.".local/share/nixai/templates/rust.envrc".text = ''
-    use flake github:the-nix-way/dev-templates#rust
-  '';
-  
-  home.file.".local/share/nixai/templates/node.envrc".text = ''
-    use flake github:the-nix-way/dev-templates#nodejs
-  '';
+  # Zoxide (better cd) configuration
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
+  # Development environment configuration
+  home.sessionVariables = {
+    EDITOR = "nvim";
+    BROWSER = "firefox";
+    TERMINAL = "gnome-terminal";
+    
+    # Development environment variables
+    NIXPKGS_ALLOW_UNFREE = "1";
+    
+    # Python environment
+    PYTHONPATH = "$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH";
+  };
+
+  # XDG configuration
+  xdg = {
+    enable = true;
+    
+    userDirs = {
+      enable = true;
+      createDirectories = true;
+      desktop = "$HOME/Desktop";
+      documents = "$HOME/Documents";
+      download = "$HOME/Downloads";
+      music = "$HOME/Music";
+      pictures = "$HOME/Pictures";
+      videos = "$HOME/Videos";
+      templates = "$HOME/Templates";
+      publicShare = "$HOME/Public";
+    };
+    
+    mimeApps = {
+      enable = true;
+      defaultApplications = {
+        "text/html" = "firefox.desktop";
+        "x-scheme-handler/http" = "firefox.desktop";
+        "x-scheme-handler/https" = "firefox.desktop";
+        "x-scheme-handler/about" = "firefox.desktop";
+        "x-scheme-handler/unknown" = "firefox.desktop";
+        "application/pdf" = "evince.desktop";
+        "image/jpeg" = "eog.desktop";
+        "image/png" = "eog.desktop";
+        "text/plain" = "nvim.desktop";
+        "inode/directory" = "nautilus.desktop";
+      };
+    };
+  };
+
+  # Fonts configuration
+  fonts.fontconfig.enable = true;
+
+  # Services
+  services = {
+    # Enable GPG agent
+    gpg-agent = {
+      enable = true;
+      defaultCacheTtl = 1800;
+      enableSshSupport = true;
+    };
+  };
+
+  # GTK theme configuration
+  gtk = {
+    enable = true;
+    theme = {
+      name = "Adwaita-dark";
+      package = pkgs.gnome-themes-extra;
+    };
+    iconTheme = {
+      name = "Papirus-Dark";
+      package = pkgs.papirus-icon-theme;
+    };
+  };
+
+  # Qt theme configuration
+  qt = {
+    enable = true;
+    platformTheme.name = "adwaita";
+    style.name = "adwaita-dark";
+  };
+
 }
 
