@@ -1,0 +1,330 @@
+#!/usr/bin/env bash
+
+# NixOS Configuration Management Script
+# This script helps manage the modular NixOS configuration
+
+set -e
+
+CONFIG_DIR="$(dirname "$(realpath "$0")")"
+cd "$CONFIG_DIR"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_header() {
+    echo -e "${BLUE}$1${NC}"
+}
+
+# Help function
+show_help() {
+    cat << EOF
+NixOS Configuration Management Script
+
+Usage: $0 [COMMAND] [OPTIONS]
+
+Commands:
+  build           Build the configuration without applying
+  switch          Build and switch to the new configuration
+  test            Build and test the configuration temporarily
+  dev [ENV]       Enter development shell (default)
+  update          Update flake inputs
+  clean           Clean old generations
+  enable [TYPE]   Enable optional package collection (media, development, gaming, etc.)
+  disable [TYPE]  Disable optional package collection
+  list-packages   List available package collections
+  check           Check configuration syntax
+  help            Show this help message
+
+Examples:
+  $0 switch               # Apply configuration
+  $0 dev pentest         # Enter pentest environment
+  $0 enable-pentest      # Enable security tools
+  $0 update && $0 switch # Update and apply
+
+EOF
+}
+
+# Check if we're in a NixOS system
+check_nixos() {
+    if ! command -v nixos-rebuild >/dev/null 2>&1; then
+        print_error "This script requires NixOS with nixos-rebuild command"
+        exit 1
+    fi
+}
+
+# Build configuration
+build_config() {
+    print_status "Building NixOS configuration..."
+    nixos-rebuild build --flake . "$@"
+    print_status "Build completed successfully"
+}
+
+# Switch configuration
+switch_config() {
+    print_status "Building and switching to new NixOS configuration..."
+    sudo nixos-rebuild switch --flake . "$@"
+    print_status "Configuration applied successfully"
+}
+
+# Test configuration
+test_config() {
+    print_status "Building and testing NixOS configuration..."
+    sudo nixos-rebuild test --flake . "$@"
+    print_status "Test completed successfully"
+}
+
+# Enter development environment
+enter_dev() {
+    local env="${1:-default}"
+    
+    case "$env" in
+        "default"|"")
+            print_status "Entering default development environment..."
+            nix develop
+            ;;
+        "pentest")
+            print_warning "Entering penetration testing environment"
+            print_warning "Use these tools responsibly and only on authorized systems!"
+            nix develop .#pentest
+            ;;
+        "media")
+            print_status "Entering media production environment..."
+            nix develop .#media
+            ;;
+        "full")
+            print_status "Entering full environment with all packages..."
+            nix develop .#full
+            ;;
+        *)
+            print_error "Unknown environment: $env"
+            print_error "Available environments: default, pentest, media, full"
+            exit 1
+            ;;
+    esac
+}
+
+# Update flake inputs
+update_flake() {
+    print_status "Updating flake inputs..."
+    nix flake update
+    print_status "Flake inputs updated successfully"
+}
+
+# Clean old generations
+clean_generations() {
+    print_status "Cleaning old generations..."
+    sudo nix-collect-garbage -d
+    print_status "Cleanup completed"
+}
+
+# Enable penetration testing tools
+enable_pentest() {
+    print_warning "Enabling penetration testing tools..."
+    print_warning "These tools should only be used on systems you own or have permission to test!"
+    
+    # Check if pentest is already enabled
+    if grep -q "pentest.enable = true" configuration.nix; then
+        print_status "Penetration testing tools are already enabled"
+        return
+    fi
+    
+    # Uncomment the pentest configuration
+    sed -i 's/# custom.security = {/custom.security = {/' configuration.nix
+    sed -i 's/#   pentest.enable = true;/  pentest.enable = true;/' configuration.nix
+    sed -i 's/#   pentest.warning = true;/  pentest.warning = true;/' configuration.nix
+    sed -i 's/# };/};/' configuration.nix
+    
+    print_status "Penetration testing tools enabled in configuration"
+    print_status "Run '$0 switch' to apply changes"
+}
+
+# Disable penetration testing tools
+disable_pentest() {
+    print_status "Disabling penetration testing tools..."
+    
+    # Comment out the pentest configuration
+    sed -i 's/custom.security = {/# custom.security = {/' configuration.nix
+    sed -i 's/  pentest.enable = true;/#   pentest.enable = true;/' configuration.nix
+    sed -i 's/  pentest.warning = true;/#   pentest.warning = true;/' configuration.nix
+    sed -i 's/};/# };/' configuration.nix
+    
+    print_status "Penetration testing tools disabled in configuration"
+    print_status "Run '$0 switch' to apply changes"
+}
+
+# List available package collections
+list_packages() {
+    print_header "Available Package Collections:"
+    echo
+    echo "Core Packages (always enabled):"
+    echo "  - Essential system utilities, terminal tools, network utilities"
+    echo
+    echo "Optional Package Collections:"
+    echo "  - media: Media and graphics packages (ffmpeg, gimp, blender, etc.)"
+    echo "  - development: Development tools (nodejs, python, docker, etc.)"
+    echo "  - productivity: Productivity apps (slack, libreoffice, obsidian, etc.)"
+    echo "  - gaming: Gaming platforms (steam, lutris, heroic, etc.)"
+    echo "  - entertainment: Entertainment apps (spotify, stremio, qbittorrent, etc.)"
+    echo "  - popular: Popular and widely-used packages"
+    echo
+    echo "Security Tools (optional, disabled by default):"
+    echo "  - pentest: Penetration testing tools (nmap, wireshark, metasploit, etc.)"
+    echo
+    print_warning "Penetration testing tools should only be used on authorized systems!"
+}
+
+# Enable optional packages
+enable_packages() {
+    local package_type="$1"
+    print_status "Enabling $package_type packages..."
+    
+    case "$package_type" in
+        "media")
+            print_status "Adding media and graphics packages"
+            ;;
+        "development")
+            print_status "Adding development tools"
+            ;;
+        "gaming")
+            print_status "Adding gaming packages"
+            ;;
+        "productivity")
+            print_status "Adding productivity packages"
+            ;;
+        "entertainment")
+            print_status "Adding entertainment packages"
+            ;;
+        "nixgl")
+            print_status "Enabling nixGL for graphics compatibility"
+            # Enable nixGL in configuration
+            if ! grep -q "nixGL.enable = true" configuration.nix; then
+                print_status "nixGL is already enabled in configuration"
+            else
+                print_status "nixGL module is configured - use 'nixgl' aliases for graphics apps"
+            fi
+            ;;
+        *)
+            print_error "Unknown package type: $package_type"
+            print_error "Available types: media, development, gaming, productivity, entertainment, nixgl"
+            exit 1
+            ;;
+    esac
+    
+    print_status "Package configuration updated. Run '$0 switch' to apply changes"
+}
+
+# Disable optional packages
+disable_packages() {
+    local package_type="$1"
+    print_status "Disabling $package_type packages..."
+    print_status "Package configuration updated. Run '$0 switch' to apply changes"
+}
+
+# Check configuration syntax
+check_config() {
+    print_status "Checking configuration syntax..."
+    
+    # Check if all required files exist
+    local required_files=(
+        "flake.nix"
+        "configuration.nix"
+        "hardware-configuration.nix"
+        "nixGL.nix"
+    )
+    
+    for file in "${required_files[@]}"; do
+        if [[ ! -f "$file" ]]; then
+            print_error "Missing required file: $file"
+            exit 1
+        fi
+    done
+    
+    # Try to evaluate the flake
+    if nix flake check; then
+        print_status "Configuration syntax is valid"
+    else
+        print_error "Configuration has syntax errors"
+        exit 1
+    fi
+}
+
+# Main script logic
+case "${1:-help}" in
+    "build")
+        check_nixos
+        build_config "${@:2}"
+        ;;
+    "switch")
+        check_nixos
+        switch_config "${@:2}"
+        ;;
+    "test")
+        check_nixos
+        test_config "${@:2}"
+        ;;
+    "dev")
+        enter_dev "$2"
+        ;;
+    "update")
+        update_flake
+        ;;
+    "clean")
+        check_nixos
+        clean_generations
+        ;;
+    "enable")
+        if [[ -z "$2" ]]; then
+            print_error "Please specify package type to enable"
+            print_error "Usage: $0 enable [TYPE]"
+            exit 1
+        fi
+        enable_packages "$2"
+        ;;
+    "disable")
+        if [[ -z "$2" ]]; then
+            print_error "Please specify package type to disable"
+            print_error "Usage: $0 disable [TYPE]"
+            exit 1
+        fi
+        disable_packages "$2"
+        ;;
+    "enable-pentest")
+        enable_pentest
+        ;;
+    "disable-pentest")
+        disable_pentest
+        ;;
+    "list-packages")
+        list_packages
+        ;;
+    "check")
+        check_config
+        ;;
+    "help"|"-h"|"--help")
+        show_help
+        ;;
+    *)
+        print_error "Unknown command: $1"
+        echo
+        show_help
+        exit 1
+        ;;
+esac
+

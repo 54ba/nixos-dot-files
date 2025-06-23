@@ -1,0 +1,1292 @@
+# Enhanced NixOS Configuration with nixai Integration
+# Merged configuration combining original comprehensive setup with AI-powered assistance
+# This configuration includes AI-powered NixOS assistance and optimization
+
+{ config, pkgs, lib, inputs ? {}, ... }:
+
+let
+  
+  # Custom shell aliases and functions
+  myAliases = {
+    ll = "eza -la --git --group-directories-first";
+    la = "eza -la --git --group-directories-first";
+    ls = "eza --git --group-directories-first";
+    lt = "eza --tree --git";
+    cat = "bat";
+    grep = "rg";
+    find = "fd";
+    ps = "procs";
+    top = "btm";
+    du = "dust";
+    df = "duf";
+    ping = "gping";
+    dig = "dog";
+    http = "xh";
+    
+    # Git aliases
+    gs = "git status";
+    ga = "git add";
+    gc = "git commit";
+    gp = "git push";
+    gl = "git pull";
+    gd = "git diff";
+    gb = "git branch";
+    gco = "git checkout";
+    glog = "git log --oneline --graph --decorate --all";
+    
+    # System aliases
+    rebuild = "sudo nixos-rebuild switch";
+    rebuild-test = "sudo nixos-rebuild test";
+    rebuild-boot = "sudo nixos-rebuild boot";
+    nix-search = "nix search nixpkgs";
+    nix-shell-p = "nix-shell -p";
+    cleanup = "sudo nix-collect-garbage -d && sudo nix-store --optimise";
+    
+    # Docker/Podman aliases
+    dc = "docker-compose";
+    dcu = "docker-compose up -d";
+    dcd = "docker-compose down";
+    dcl = "docker-compose logs -f";
+    
+    # Kubernetes aliases
+    k = "kubectl";
+    kns = "kubectl config set-context --current --namespace";
+    kctx = "kubectl config use-context";
+    
+    # Development aliases
+    dev = "nix develop";
+    run = "nix run";
+    flake-init = "nix flake init";
+    flake-update = "nix flake update";
+  };
+in
+{
+  imports = [
+    ./ai-services.nix
+    ./hardware-configuration.nix
+    ./nixGL.nix
+    ./modules/core-packages.nix
+    ./modules/optional-packages.nix
+    ./modules/pentest-packages.nix
+  ];
+
+  # Enable nixGL for graphics compatibility (temporarily disabled)
+  nixGL = {
+    enable = true;
+    defaultWrapper = "intel";
+    enableVulkan = true;
+  };
+
+  # Enable optional package collections
+  custom.packages = {
+    media.enable = false;
+    development.enable = false;
+    productivity.enable = false;
+    gaming.enable = false;
+    entertainment.enable = false;
+    popular.enable = true;
+  };
+
+  # Enable penetration testing tools (use responsibly!)
+  custom.security = {
+    pentest.enable = true;
+    pentest.warning = true;
+  };
+
+  # Nix configuration with modern settings
+  nix = {
+    # Fix the NIX_PATH warning by removing the non-existent path
+    nixPath = [
+      "nixpkgs=${pkgs.path}"
+    ];
+    
+    settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+      auto-optimise-store = true;
+      builders-use-substitutes = true;
+      warn-dirty = false;
+      max-jobs = "auto";
+      cores = 0;
+      
+      # Trusted users for multi-user builds
+      trusted-users = [ "root" "@wheel" ];
+      
+      # Substituters for faster builds
+      substituters = [
+        "https://cache.nixos.org/"
+        "https://nix-community.cachix.org"
+        "https://cuda-maintainers.cachix.org"
+        "https://devenv.cachix.org"
+      ];
+      trusted-public-keys = [
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "cuda-maintainers.cachix.org-1:0dq3bujKpuEPiCRrjH78fROvYMcMOKUeJHxbaSZD/fM="
+        "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
+      ];
+    };
+    
+    # Garbage collection
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 30d";
+    };
+    
+    # Automatic optimization
+    optimise = {
+      automatic = true;
+      dates = [ "03:45" ];
+    };
+  };
+
+  # Nixpkgs configuration with overlays
+  nixpkgs = {
+    config = {
+      allowUnfree = true;
+      allowUnsupportedSystem = true;
+      permittedInsecurePackages = [
+        "electron-25.9.0"
+        "openssl-1.1.1w"
+      ];
+    };
+    
+    overlays = [
+      # Add modern rust tools overlay with fixed SHA256
+      (import (builtins.fetchTarball {
+        url    = "https://github.com/oxalica/rust-overlay/archive/2ff6d56a67d75559f7b5d9edf9aa1fcf8e15f461.tar.gz";
+        sha256 = "sha256-oWO5KAIjhclLwYJp7kJiNbNqCcZo8ZLuKQEJd9WL6r4=";
+      }))
+      
+      # Additional overlays can be added here
+      
+      # Custom overlay for additional packages
+      (final: prev: {
+          
+        # Custom scripts
+        rebuild-system = prev.writeScriptBin "rebuild-system" ''
+          #!${prev.bash}/bin/bash
+          set -e
+          echo "🔄 Rebuilding NixOS configuration..."
+          sudo nixos-rebuild switch --flake .#$(hostname) "$@"
+          echo "✅ System rebuild complete!"
+        '';
+        
+        update-system = prev.writeScriptBin "update-system" ''
+          #!${prev.bash}/bin/bash
+          set -e
+          echo "🔄 Updating system..."
+          nix flake update
+          sudo nixos-rebuild switch --flake .#$(hostname)
+          echo "✅ System update complete!"
+        '';
+      })
+    ];
+  };
+
+  # Advanced bootloader configuration
+  boot = {
+    supportedFilesystems = [ "ntfs" "btrfs" "zfs" ];
+    kernelParams = [
+      "quiet"
+      "splash"
+      "nvidia-drm.modeset=1"
+      "nvidia-drm.fbdev=1"
+    ];
+    
+    # Enable latest kernel
+    kernelPackages = pkgs.linuxPackages_6_1;
+    
+    # Bootloader with improved configuration
+    loader = {
+      timeout = 3;
+      efi = {
+        canTouchEfiVariables = true;
+        efiSysMountPoint = "/boot";
+      };
+      grub = {
+        enable = true;
+        efiSupport = true;
+        device = "nodev";
+        enableCryptodisk = true;
+        useOSProber = true;
+        theme = pkgs.nixos-grub2-theme;
+        extraConfig = ''
+          set timeout_style=menu
+          set timeout=3
+        '';
+      };
+    };
+    
+    # Kernel modules
+    kernelModules = [ "kvm-intel" "kvm-amd" ];
+    extraModulePackages = with config.boot.kernelPackages; [
+      v4l2loopback
+    ];
+    
+    # Plymouth for boot splash
+    plymouth = {
+      enable = true;
+      theme = "breeze";
+    };
+  };
+
+  # Enhanced networking configuration
+  networking = {
+    hostId = "deadbeef";
+    hostName = "mahmoud-laptop";
+    networkmanager = {
+      enable = true;
+      wifi.powersave = false;
+      dns = "systemd-resolved";
+      connectionConfig = {
+        "connection.mdns" = 2;
+        "connection.llmnr" = 2;
+      };
+    };
+    
+    # Firewall configuration
+    firewall = {
+      enable = true;
+      allowedTCPPorts = [ 22 80 443 8080 3000 5000 8000 ];
+      allowedUDPPorts = [ 53 ];
+      allowPing = true;
+    };
+    
+    # Enable resolved for better DNS
+    nameservers = [ "1.1.1.1" "8.8.8.8" "1.0.0.1" "8.8.4.4" ];
+  };
+
+  # System-wide resolved DNS
+  services.resolved = {
+    enable = true;
+    dnssec = "allow-downgrade";
+    domains = [ "~." ];
+    fallbackDns = [ "1.1.1.1" "8.8.8.8" ];
+  };
+
+  # Time and internationalization
+  time.timeZone = "Africa/Cairo";
+  i18n = {
+    defaultLocale = "en_US.UTF-8";
+    supportedLocales = [ 
+      "en_US.UTF-8/UTF-8" 
+      "ar_EG.UTF-8/UTF-8" 
+      "C.UTF-8/UTF-8"
+    ];
+    extraLocaleSettings = {
+      LC_ALL = "en_US.UTF-8";
+      LC_TIME = "ar_EG.UTF-8";
+      LC_MONETARY = "ar_EG.UTF-8";
+      LC_MEASUREMENT = "ar_EG.UTF-8";
+      LC_PAPER = "ar_EG.UTF-8";
+      LC_ADDRESS = "ar_EG.UTF-8";
+      LC_NAME = "ar_EG.UTF-8";
+      LC_TELEPHONE = "ar_EG.UTF-8";
+      LC_IDENTIFICATION = "ar_EG.UTF-8";
+      LC_NUMERIC = "ar_EG.UTF-8";
+      LANGUAGE = "en_US.UTF-8";
+    };
+  };
+
+  # Enhanced user configuration
+  users = {
+    defaultUserShell = pkgs.zsh;
+    users.mahmoud = {
+      isNormalUser = true;
+      description = "Mahmoud";
+      extraGroups = [ 
+        "wheel" 
+        "networkmanager" 
+        "docker" 
+        "podman"
+        "vboxusers" 
+        "audio" 
+        "video" 
+        "input" 
+        "dialout" 
+        "render" 
+        "flatpak"
+        "libvirtd"
+        "kvm"
+        "adbusers"
+        "wireshark"
+      ];
+      
+      # User-specific packages
+      packages = with pkgs; [
+        # Personal tools
+        firefox-devedition-bin
+        thunderbird
+        vscode
+    # NIXCONFIG: editors packages enabled
+    code-cursor
+    # NIXCONFIG: end editors packages
+        obsidian
+        logseq
+        
+        # Communication
+        slack
+        discord
+        telegram-desktop
+        signal-desktop
+        zoom-us
+        
+        # Development
+        jetbrains.idea-ultimate
+        jetbrains.pycharm-professional
+        jetbrains.webstorm
+        
+        # Entertainment
+        spotify
+        vlc
+    
+    # NIXCONFIG: media packages enabled
+    # Media editing and production
+    gimp
+    inkscape
+    audacity
+    blender
+    # Media players and converters
+    mpv
+    ffmpeg
+    # Image viewers and managers
+    feh
+    imagemagick
+    # NIXCONFIG: end media packages
+    
+        obs-studio
+        
+        # Gaming
+        heroic
+        lutris
+        mangohud
+        gamemode
+      ];
+    };
+  };
+
+  # Security enhancements
+  security = {
+    rtkit.enable = true;
+    polkit.enable = true;
+    
+    # PAM configuration
+    pam = {
+      loginLimits = [
+        { domain = "@users"; type = "soft"; item = "nofile"; value = "65536"; }
+        { domain = "@users"; type = "hard"; item = "nofile"; value = "65536"; }
+        { domain = "@users"; type = "soft"; item = "nproc"; value = "32768"; }
+        { domain = "@users"; type = "hard"; item = "nproc"; value = "32768"; }
+      ];
+      
+      services = {
+        login.enableGnomeKeyring = true;
+        gdm.enableGnomeKeyring = true;
+      };
+    };
+    
+    # Sudo configuration
+    sudo = {
+      enable = true;
+      wheelNeedsPassword = true;
+      extraConfig = ''
+        Defaults timestamp_timeout=30
+        Defaults insults
+      '';
+    };
+  };
+
+  # Enhanced hardware configuration
+  hardware = {
+    
+    # Graphics - Fixed for newer NixOS versions
+    graphics = {
+      enable = true;
+      enable32Bit = true;
+      extraPackages = with pkgs; [
+        intel-media-driver
+        intel-vaapi-driver
+        libvdpau-va-gl
+        intel-compute-runtime
+      ];
+    };
+    
+    # NVIDIA
+    nvidia = {
+      modesetting.enable = true;
+      powerManagement.enable = false;
+      powerManagement.finegrained = false;
+      open = false; # Use proprietary driver for stability
+      nvidiaSettings = true;
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
+      
+      # Prime configuration for laptops
+      prime = {
+        offload = {
+          enable = true;
+          enableOffloadCmd = true;
+        };
+        # Configure your specific GPU bus IDs
+        intelBusId = "PCI:0:2:0";
+        nvidiaBusId = "PCI:1:0:0";
+      };
+    };
+    
+    # Bluetooth
+    bluetooth = {
+      enable = true;
+      powerOnBoot = true;
+      settings = {
+        General = {
+          Enable = "Source,Sink,Media,Socket";
+          Experimental = true;
+        };
+      };
+    };
+    
+    # Enable firmware updates
+    enableRedistributableFirmware = true;
+    enableAllFirmware = true;
+  };
+
+  # Audio configuration
+  services.pulseaudio.enable = false;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    jack.enable = true;
+    
+    # Low latency configuration
+    extraConfig.pipewire."92-low-latency" = {
+      context.properties = {
+        default.clock.rate = 48000;
+        default.clock.quantum = 32;
+        default.clock.min-quantum = 32;
+        default.clock.max-quantum = 32;
+      };
+    };
+  };
+
+  # Comprehensive font configuration
+  fonts = {
+    enableDefaultPackages = true;
+    packages = with pkgs; [
+      # Programming fonts
+      jetbrains-mono
+      fira-code
+      fira-code-symbols
+      cascadia-code
+      victor-mono
+      inconsolata
+      source-code-pro
+      
+      # System fonts
+      noto-fonts
+      noto-fonts-emoji
+      noto-fonts-cjk-sans
+      noto-fonts-extra
+      liberation_ttf
+      dejavu_fonts
+      ubuntu_font_family
+      
+      # Icon fonts
+      font-awesome
+      material-design-icons
+      nerd-fonts.fira-code
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.victor-mono
+      
+      # Arabic fonts
+      amiri
+      scheherazade-new
+    ];
+    
+    fontconfig = {
+      enable = true;
+      defaultFonts = {
+        serif = [ "Noto Serif" "Amiri" ];
+        sansSerif = [ "Noto Sans" "Ubuntu" ];
+        monospace = [ "JetBrains Mono" "Fira Code" ];
+        emoji = [ "Noto Color Emoji" ];
+      };
+    };
+  };
+
+  # Advanced display and desktop configuration
+  services.xserver = {
+    enable = true;
+    videoDrivers = [ "nvidia" ];
+    
+    # Keyboard configuration
+    xkb = {
+      layout = "us,ara";
+      variant = ",qwerty";
+      options = "grp:alt_shift_toggle,caps:escape";
+    };
+    
+
+  };
+
+  # Desktop environment
+  services.desktopManager.gnome.enable = true;
+
+  # Display manager
+  services.displayManager = {
+    gdm = {
+      enable = true;
+      wayland = true;
+      autoSuspend = false;
+    };
+  };
+
+  # Input configuration
+  services.libinput = {
+    enable = true;
+    touchpad = {
+      tapping = true;
+      naturalScrolling = true;
+      disableWhileTyping = true;
+      clickMethod = "clickfinger";
+    };
+  };
+
+  # GNOME configuration
+  services.gnome = {
+    gnome-keyring.enable = true;
+    at-spi2-core.enable = true;
+    localsearch.enable = false;
+    tinysparql.enable = false;
+    gnome-initial-setup.enable = false;
+    
+    # Core services
+    core-apps.enable = true;
+  };
+  
+  # GNOME Extensions
+  environment.gnome.excludePackages = (with pkgs; [
+    # Modify here if needed
+  ]);
+  
+
+  # Environment and shell configuration
+  environment = {
+    # System-wide shell aliases
+    shellAliases = myAliases;
+    
+    # Environment variables
+    variables = {
+      EDITOR = "nvim";
+      BROWSER = "firefox";
+      TERMINAL = "kitty";
+      NIXOS_OZONE_WL = "1"; # Enable Wayland for Electron apps
+      MOZ_ENABLE_WAYLAND = "1"; # Enable Wayland for Firefox
+      
+      # Fix Nix search path warning
+      NIX_PATH = "nixpkgs=${pkgs.path}";
+      
+      # Fix XDG directories
+      XDG_DATA_HOME = "$HOME/.local/share";
+      XDG_CONFIG_HOME = "$HOME/.config";
+      XDG_STATE_HOME = "$HOME/.local/state";
+      XDG_CACHE_HOME = "$HOME/.cache";
+    };
+    
+    # Session variables
+    sessionVariables = {
+      # Wayland
+      GDK_BACKEND = "wayland,x11";
+      QT_QPA_PLATFORM = "wayland;xcb";
+      SDL_VIDEODRIVER = "wayland";
+      CLUTTER_BACKEND = "wayland";
+      
+      # XDG Base Directories
+      XDG_DATA_HOME = "$HOME/.local/share";
+      XDG_CONFIG_HOME = "$HOME/.config";
+      XDG_STATE_HOME = "$HOME/.local/state";
+      XDG_CACHE_HOME = "$HOME/.cache";
+      
+      # Development
+      CARGO_HOME = "$HOME/.cargo";
+      RUSTUP_HOME = "$HOME/.rustup";
+      GOPATH = "$HOME/go";
+      GOBIN = "$HOME/go/bin";
+      
+      # Path additions
+      PATH = [
+        "$HOME/.local/bin"
+        "$HOME/.cargo/bin"
+        "$HOME/go/bin"
+        "$HOME/.npm-global/bin"
+      ];
+    };
+  };
+
+  # Comprehensive system packages
+environment.systemPackages = with pkgs; [
+
+    # GNOME Shell extensions
+    gnomeExtensions.dash-to-dock
+    gnomeExtensions.clipboard-indicator
+    gnomeExtensions.appindicator
+    gnomeExtensions.user-themes
+    gnomeExtensions.vitals
+    gnomeExtensions.gsconnect
+    gnomeExtensions.blur-my-shell
+    gnomeExtensions.just-perfection
+    gnomeExtensions.caffeine
+    gnomeExtensions.removable-drive-menu
+    gnomeExtensions.system-monitor
+
+    # VPN and Proxy tools
+    riseup-vpn
+    shadowsocks-rust
+    openvpn
+    wireguard-tools
+    # === SYSTEM UTILITIES ===
+    # Core utilities
+    coreutils-full
+    util-linux
+    procps
+    psmisc
+    which
+    file
+    lsof
+    pciutils
+    usbutils
+    dmidecode
+    
+    # Modern CLI replacements
+    eza          # ls replacement
+    bat          # cat replacement
+    ripgrep      # grep replacement
+    fd           # find replacement
+    procs        # ps replacement
+    bottom       # top replacement
+    dust         # du replacement
+    duf          # df replacement
+    sd           # sed replacement
+    tokei        # code statistics
+    hyperfine    # benchmarking
+    gping        # ping with graph
+    dog          # dig replacement
+    
+    # Font and graphics libraries - Enhanced for Warp terminal support
+    fontconfig
+    freetype
+    cairo
+    pango
+    harfbuzz
+    xorg.libX11
+    xorg.libXcursor
+    xorg.libXrandr
+    xorg.libXi
+    xorg.libXext
+    xorg.libXfixes
+    xorg.libXrender
+    xorg.libXcomposite
+    xorg.libXdamage
+    libxkbcommon
+    wayland
+    wayland-protocols
+    glib
+    gtk3
+    gdk-pixbuf
+    atk
+    at-spi2-atk
+    at-spi2-core
+    
+    # Archive and compression
+    unzip zip p7zip unrar gnutar gzip xz zstd
+    
+    # Network tools
+    wget curl aria2 rsync rclone
+    httpie xh
+    nmap wireshark
+    speedtest-cli
+    
+    # VPN and Proxy tools
+    riseup-vpn
+    shadowsocks-rust
+    openvpn
+    wireguard-tools
+    
+    # System monitoring
+    htop btop gtop
+    iotop nethogs
+    lm_sensors
+    smartmontools
+    stress stress-ng
+    
+    # === SHELLS AND TERMINALS ===
+    zsh fish starship
+    kitty alacritty wezterm 
+    warp-terminal
+    tmux zellij
+    # NIXCONFIG: terminals packages enabled
+    rio
+    # NIXCONFIG: end terminals packages
+    
+    # === DEVELOPMENT TOOLS ===
+    # Version control
+    git git-lfs gh lazygit gitui delta tig
+    
+    # Editors
+    neovim helix micro
+    vscode
+    code-cursor
+    
+    # Programming languages and tools
+    # Rust - Using regular rust package instead of overlay for now
+    rustc cargo
+    
+    # Python
+    python311
+    python311Packages.pip
+    python311Packages.pipx
+    python311Packages.virtualenv
+    poetry
+    uv # Fast Python package installer
+    
+    # Node.js
+    nodejs_20 yarn pnpm
+    
+    # Go
+    go gopls
+    
+    # Other languages
+    zig lua luajit
+    php php.packages.composer
+    ruby
+    
+    # Databases
+    postgresql sqlite redis
+    mongodb-compass
+    
+    # Cloud tools
+    awscli2 azure-cli google-cloud-sdk terraform ansible
+    
+    # Container tools
+    docker docker-compose
+    podman podman-compose
+    kubectl kubernetes-helm
+    minikube k9s stern
+    lazydocker
+    
+    # === DESKTOP APPLICATIONS ===
+    # Browsers
+    firefox firefox-devedition-bin
+    chromium google-chrome
+    
+    # Communication
+    thunderbird
+    
+    # Media
+    vlc mpv
+    ffmpeg imagemagick
+    obs-studio
+    stremio # Streaming media center
+    
+    # Development tools
+    git # Version control (also available in programs.git)
+    github-desktop # GitHub desktop client
+    
+    # Graphics
+    gimp inkscape krita blender
+    
+    # Office
+    libreoffice-fresh
+    
+    # Development IDEs
+    jetbrains.idea-ultimate
+    
+    # === GAMING ===
+    steam steam-run
+    lutris heroic
+    gamemode mangohud
+    
+    # === UTILITIES ===
+    # File managers
+    ranger nnn broot lf
+    
+    # Search and navigation
+    fzf skim zoxide mcfly
+    
+    # JSON/YAML/TOML tools
+    jq yq-go dasel
+    
+    # Password managers
+    bitwarden keepassxc
+    
+  # System tools
+    flatpak appimage-run
+    wine winetricks
+    
+    # FHS environment for running non-NixOS binaries
+    steam-run
+    
+    # XDG utilities
+    xdg-utils
+    xdg-user-dirs
+    
+    # Documentation
+    man-pages tldr cheat
+    
+    # Nix tools
+    nix-index nix-tree nix-du nixpkgs-review
+    alejandra statix deadnix
+    nix-output-monitor
+  home-manager.users.mahmoud = import ./home-manager/home.nix;
+    
+    # Custom scripts
+    rebuild-system
+    update-system
+    
+    # Hardware optimization and AI assistance
+    # TODO: Fix nixai package build - temporarily disabled
+    # (pkgs.callPackage ./nixai-package.nix {})
+    
+    # Hardware-specific packages based on detection
+    # Audio support for Intel Cannon Point-LP
+    alsa-firmware
+    sof-firmware
+    
+    # Graphics drivers and support
+    mesa
+    vulkan-tools
+    vulkan-loader
+    intel-media-driver
+    intel-vaapi-driver
+    
+    # Network hardware support
+    wirelesstools
+    iw
+    
+    # Power management for laptop
+    powertop
+    tlp
+    
+    # Additional system libraries for compatibility
+    libGL
+    libGLU
+    dbus
+    systemd
+    udev
+    
+    # Libraries needed for Warp terminal and other apps
+    expat
+    zlib
+    openssl
+    curl
+    nss
+    nspr
+    libnotify
+    libpulseaudio
+    cups
+    
+    # NIXCONFIG: productivity packages enabled
+    # Office suites
+    libreoffice
+    # Note-taking and knowledge management
+    obsidian
+    notion-app-enhanced
+    # Communication
+    slack
+    zoom-us
+    thunderbird
+    # Productivity tools
+    todoist-electron
+    # NIXCONFIG: end productivity packages
+    
+    # NIXCONFIG: gaming packages enabled
+    # Gaming platforms
+    steam
+    lutris
+    heroic
+    # Game development
+    godot
+    # Gaming utilities
+    gamemode
+    mangohud
+    # NIXCONFIG: end gaming packages
+    
+    # NIXCONFIG: popular packages enabled
+    # Editors and IDEs (most popular)
+    code-cursor
+    firefox
+    # Communication and social
+    discord
+    # Productivity and note-taking
+    obsidian
+    # Media and entertainment
+    spotify
+    vlc
+    # Development tools
+    git
+    
+    # NIXCONFIG: development packages enabled
+    # Programming languages and runtimes
+    nodejs
+    python3
+    rustc
+    cargo
+    go
+    # Development tools
+    docker
+    docker-compose
+    kubectl
+    terraform
+    # Databases
+    postgresql
+    sqlite
+    # NIXCONFIG: end development packages
+    docker
+    # Terminal improvements
+    warp-terminal
+    # NIXCONFIG: end popular packages
+    
+    # NIXCONFIG: entertainment packages enabled
+    # Music and media streaming
+    spotify
+    # Video streaming and downloading
+    stremio
+    yt-dlp
+    # Torrent clients
+    qbittorrent
+    transmission-gtk
+    # Social media
+    whatsapp-for-linux
+    # NIXCONFIG: end entertainment packages
+    
+    
+    
+    
+  ];
+
+  # Program configurations
+  programs = {
+    # Enable FHS environment for running non-NixOS binaries
+    nix-ld = {
+      enable = true;
+      libraries = with pkgs; [
+        stdenv.cc.cc
+        zlib
+        fuse3
+        icu
+        nss
+        openssl
+        curl
+        expat
+        # Add common libraries that dynamically linked apps need
+        glib
+        gtk3
+        cairo
+        pango
+        harfbuzz
+        gdk-pixbuf
+        atk
+        at-spi2-atk
+        dbus
+        cups
+    
+        libdrm
+        mesa
+        vulkan-loader
+        xorg.libX11
+        xorg.libXcursor
+        xorg.libXrandr
+        xorg.libXi
+        xorg.libXext
+        xorg.libXfixes
+        libGL
+        alsa-lib
+        pulseaudio
+        xkeyboard_config
+        libxkbcommon
+        # Font libraries
+        fontconfig
+        freetype
+      ];
+    };
+    # Shell programs
+    zsh = {
+      enable = true;
+      enableCompletion = true;
+      autosuggestions.enable = true;
+      syntaxHighlighting.enable = true;
+      
+      shellAliases = myAliases;
+      
+      ohMyZsh = {
+        enable = true;
+        plugins = [ 
+          "git" "docker" "kubectl" "rust" "python" "node" 
+          "systemd" "ssh-agent" "gpg-agent" "direnv"
+        ];
+        theme = "robbyrussell";
+      };
+      
+      interactiveShellInit = ''
+        # Initialize tools
+        eval "$(starship init zsh)"
+        eval "$(zoxide init zsh)"
+        eval "$(direnv hook zsh)"
+        
+        # Custom functions
+        mkcd() { mkdir -p "$1" && cd "$1"; }
+        
+        # FZF configuration
+        export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+        export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+      '';
+    };
+    
+    # Git configuration
+    git = {
+      enable = true;
+      config = {
+        init.defaultBranch = "main";
+        pull.rebase = true;
+        push.autoSetupRemote = true;
+        core.editor = "nvim";
+        merge.tool = "nvim";
+        diff.tool = "nvim";
+      };
+    };
+    
+    # Neovim
+    neovim = {
+      enable = true;
+      defaultEditor = true;
+      viAlias = true;
+      vimAlias = true;
+    };
+    
+    # Direnv for automatic environment loading
+    direnv = {
+      enable = true;
+      nix-direnv.enable = true;
+    };
+    
+    # Steam
+    steam = {
+      enable = true;
+      remotePlay.openFirewall = true;
+      dedicatedServer.openFirewall = true;
+      gamescopeSession.enable = true;
+    };
+    
+    # Wireshark
+    wireshark = {
+      enable = true;
+      package = pkgs.wireshark;
+    };
+    
+    # Android development
+    adb.enable = true;
+    
+    # Thunar file manager
+    thunar = {
+      enable = true;
+      plugins = with pkgs.xfce; [
+        thunar-archive-plugin
+        thunar-volman
+      ];
+    };
+  };
+
+  # Advanced virtualization
+  virtualisation = {
+    # Docker
+    docker = {
+      enable = false;
+      enableOnBoot = true;
+      autoPrune = {
+        enable = true;
+        dates = "weekly";
+      };
+    };
+    
+    # Podman
+    podman = {
+      enable = true;
+      dockerCompat = true;
+      defaultNetwork.settings.dns_enabled = true;
+    };
+    
+    # VirtualBox
+    virtualbox.host = {
+      enable = false;
+      enableExtensionPack = false;
+    };
+    
+    # Libvirt/KVM
+    libvirtd = {
+      enable = true;
+      qemu = {
+        package = pkgs.qemu_kvm;
+        ovmf.enable = true;
+        ovmf.packages = [ pkgs.OVMFFull.fd ];
+      };
+    };
+  };
+
+  # Enhanced XDG and Flatpak configuration
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gtk
+      xdg-desktop-portal-gnome
+      xdg-desktop-portal-wlr
+    ];
+    config = {
+      common = {
+        default = [ "gnome" "gtk" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+        "org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
+      };
+    };
+  };
+
+  services.flatpak.enable = true;
+
+  # Essential services
+  services = {
+    # Ensure XDG user directories are properly set up
+    dbus = {
+      enable = true;
+      packages = [ pkgs.gcr ];
+    };
+    
+    # User runtime directory
+    logind = {
+      extraConfig = ''
+        RuntimeDirectorySize=50%
+        RuntimeDirectoryInodesMax=400000
+      '';
+    };
+    # Power management
+    power-profiles-daemon.enable = false;
+    thermald.enable = true;
+    auto-cpufreq.enable = true;
+    
+    # Printing
+    printing = {
+      enable = true;
+      drivers = [ pkgs.hplip ];
+    };
+    
+    # Bluetooth
+    blueman.enable = true;
+    
+    # Location services
+    geoclue2.enable = true;
+    
+    # SSH
+    openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication = false;
+        KbdInteractiveAuthentication = false;
+        PermitRootLogin = "no";
+      };
+    };
+    
+    # Avahi for network discovery
+    avahi = {
+      enable = true;
+      nssmdns4 = true;
+      publish = {
+        enable = true;
+        addresses = true;
+        domain = true;
+        hinfo = true;
+        userServices = true;
+        workstation = true;
+      };
+    };
+    
+    # Syncthing
+    syncthing = {
+      enable = true;
+      user = "mahmoud";
+      dataDir = "/home/mahmoud/.syncthing";
+      configDir = "/home/mahmoud/.config/syncthing";
+    };
+    
+    # Ollama for local AI
+    ollama = {
+      enable = true;
+      acceleration = false;
+    };
+    
+    # nixai service (temporarily disabled due to binary compatibility issues)
+    # The current nixai binary doesn't support the --socket-path flag expected by the module
+    # nixai = {
+    #   enable = true;
+    #   mcp = {
+    #     enable = true;
+    #     aiProvider = "claude";
+    #     aiModel = "claude-3-5-sonnet-20241022";
+    #     port = 8080;
+    #     socketPath = "/run/nixai/mcp.sock";
+    #     documentationSources = [
+    #       "https://wiki.nixos.org/wiki/NixOS_Wiki"
+    #       "https://nix.dev/manual/nix"
+    #       "https://nixos.org/manual/nixpkgs/stable/"
+    #       "https://nix.dev/manual/nix/2.28/language/"
+  home-manager.users.mahmoud = import ./home-manager/home.nix;
+    #       "https://github.com/NixOS/nixpkgs/tree/master/doc"
+    #       "https://nixos.org/manual/nix/stable/"
+    #     ];
+    #     extraFlags = [ "--log-level=info" "--enable-debug" ];
+    #     environment = {
+    #       NIXAI_LOG_LEVEL = "info";
+    #       NIXAI_DEBUG = "true";
+    #     };
+    #   };
+    # };
+  };
+
+  # System tweaks and optimizations
+  systemd = {
+    # Disable systemd-oomd for gaming
+    oomd.enable = false;
+    
+    # User service tweaks
+    user.services.pipewire.wantedBy = [ "default.target" ];
+    
+    # Temporary files cleanup
+    tmpfiles.rules = [
+      "d /tmp 1777 root root 10d"
+      "d /var/tmp 1777 root root 30d"
+    ];
+  };
+
+  # Zram configuration
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 50;
+  };
+
+  # AppArmor security
+  security.apparmor = {
+    enable = true;
+    killUnconfinedConfinables = true;
+  };
+
+  # System state version
+  system.stateVersion = "25.05";
+}
+  # Home Manager Configuration
+  # Home Manager Configuration
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    users.mahmoud = import ./home-manager/home.nix;
+  };
