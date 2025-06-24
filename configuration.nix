@@ -47,18 +47,18 @@
     enable = true;
     device = "nodev";
     efiSupport = true;
-    devices = [ "nodev" ];
     useOSProber = true;  # Detect other operating systems
     configurationLimit = 10;  # Keep last 10 generations
+    default = "saved";  # Remember last choice
     
-    # Custom GRUB configuration for better appearance
+    # Custom GRUB configuration for better appearance and functionality
     extraConfig = ''
       # Set custom colors for menu - beautiful dark theme
       set color_normal=light-cyan/black
       set color_highlight=white/blue
       
-      # Set timeout with countdown
-      set timeout_style=countdown
+      # Set timeout with menu visible
+      set timeout_style=menu
       
       # Better font rendering
       set gfxmode=auto
@@ -67,20 +67,28 @@
       # Enable graphics terminal
       terminal_output gfxterm
       
+      # Show menu entries clearly
+      set menu_color_normal=light-cyan/black
+      set menu_color_highlight=white/blue
+      
       # Custom boot message
       echo "Loading NixOS - Mahmoud's Laptop..."
+      echo "Use arrow keys to select boot option"
     '';
     
     # Set resolution for better display
     gfxmodeEfi = "1920x1080,1366x768,1024x768,auto";
     gfxmodeBios = "1920x1080,1366x768,1024x768,auto";
     
-    # Use existing background image
+    # Use original splash image for now
     splashImage = ./backgrounds/bg.jpg;
     
     # Font configuration for better text rendering
     font = "${pkgs.grub2}/share/grub/unicode.pf2";
   };
+  
+  # Set timeout separately as recommended
+  boot.loader.timeout = 10;
   
   boot.loader.efi.canTouchEfiVariables = true;
   
@@ -91,6 +99,28 @@
     theme = "breeze";  # Beautiful boot splash
   };
   
+  # Fix systemd services and virtual sessions
+  systemd.services."getty@tty1".enable = true;
+  systemd.services."autovt@tty1".enable = true;
+  
+  # Disable getty@tty7 since GDM display manager conflicts with it
+  # GDM is using tty2, so tty7 getty is not needed
+  systemd.services."getty@tty7".enable = false;
+  
+  # Enable proper session management
+  services.logind.lidSwitch = "suspend";
+  services.logind.extraConfig = ''
+    HandlePowerKey=poweroff
+    HandleSuspendKey=suspend
+    HandleHibernateKey=hibernate
+    HandleLidSwitch=suspend
+    IdleAction=ignore
+    KillUserProcesses=no
+    KillOnlyUsers=
+    KillExcludeUsers=root
+    InhibitDelayMaxSec=5
+  '';
+  
   # Kernel parameters for better boot experience
   boot.kernelParams = [
     "quiet"          # Less verbose boot
@@ -99,10 +129,17 @@
     "vt.global_cursor_default=0"  # Hide cursor during boot
   ];
   
-  # Console settings
+  # Console settings - fix console setup issues
   boot.consoleLogLevel = 0;
   boot.kernelPackages = pkgs.linuxPackages;  # Use stable kernel for better compatibility
-
+  
+  # Fix console font issues - use properly configured console font
+  console = {
+    font = "${pkgs.terminus_font}/share/consolefonts/ter-v16n.psf.gz";
+    keyMap = "us";
+    useXkbConfig = false;  # Use console keyMap
+  };
+  
   # Enable ZSH
   programs.zsh.enable = true;
 
@@ -142,7 +179,7 @@
     shell = pkgs.zsh;
   };
   
-  # Additional groups for system functionality
+  # Additional groups for system functionality - ensure storage group exists
   users.groups = {
     vboxusers = {};
     wireshark = {};
@@ -151,6 +188,7 @@
     adbusers = {};   # Android debugging
     plugdev = {};    # USB device access
     netdev = {};     # Network device management
+    storage = {};    # Storage device access group
   };
   
   # Enhanced systemd user services
@@ -174,6 +212,10 @@
 
   # Desktop environment packages
   environment.systemPackages = with pkgs; [
+    # Console font packages - fix virtual console setup
+    terminus_font
+    kbd
+    
     # GUI essentials
     firefox
     nautilus
@@ -434,7 +476,7 @@
     };
   };
   
-  # Enhanced file system and device permissions
+  # Enhanced file system and device permissions - fixed udev rules
   services.udev.extraRules = ''
     # Allow users in audio group to access audio devices
     SUBSYSTEM=="sound", GROUP="audio", MODE="0664"
@@ -449,14 +491,6 @@
     
     # Allow users in storage group to access removable storage
     SUBSYSTEM=="block", ATTRS{removable}=="1", GROUP="storage", MODE="0664"
-    
-    # VirtualBox USB access
-    SUBSYSTEM=="usb_device", ACTION=="add", RUN+="${pkgs.coreutils}/bin/chmod 0664 %c"
-    SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", GROUP="vboxusers", MODE="0664"
-    
-    # Android Debug Bridge (ADB) permissions
-    SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="adbusers"
-    SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="adbusers"
     
     # GPU access permissions for render group
     SUBSYSTEM=="drm", GROUP="render", MODE="0664"
@@ -481,7 +515,7 @@
     };
   };
   
-  # Additional system-wide file and directory permissions
+  # Additional system-wide file and directory permissions - fixed tmpfiles syntax
   systemd.tmpfiles.rules = [
     # Ensure proper permissions for common directories
     "d /home/mahmoud 0755 mahmoud users -"
@@ -503,11 +537,15 @@
     "d /home/mahmoud/.local/share/flatpak 0755 mahmoud users -"
     
     # VirtualBox directories
-    "d /home/mahmoud/VirtualBox\ VMs 0755 mahmoud users -"
+    "d /home/mahmoud/VirtualBox\\ VMs 0755 mahmoud users -"
     
     # Development directories with proper permissions
     "d /home/mahmoud/Development 0755 mahmoud users -"
     "d /home/mahmoud/Projects 0755 mahmoud users -"
+    
+    # Fix systemd-tmpfiles permissions issues
+    "d /run/user 0755 root root -"
+    "d /var/lib/systemd 0755 root root -"
   ];
   
   # Install custom desktop entries (commented out temporarily)
@@ -614,11 +652,6 @@
   time.timeZone = "Africa/Cairo";
   i18n.defaultLocale = "en_US.UTF-8";
   
-  # Console configuration
-  console = {
-    font = "Lat2-Terminus16";
-    keyMap = "us";
-  };
   
   # Allow unfree packages and specific insecure packages
   nixpkgs.config.allowUnfree = true;
@@ -843,4 +876,38 @@
     docker = "podman";
     docker-compose = "podman-compose";
   };
+  
+  # Fix the UserTasksMax deprecation issue by configuring systemd slices
+  systemd.slices."user-.slice" = {
+    sliceConfig = {
+      TasksMax = "infinity";
+    };
+  };
+  
+  # Fix shutdown and reboot issues with /nix/store
+  systemd.services.nix-store-umount-fix = {
+    description = "Fix /nix/store umount on shutdown";
+    wantedBy = [ "shutdown.target" ];
+    before = [ "shutdown.target" "reboot.target" "halt.target" ];
+    conflicts = [ "shutdown.target" "reboot.target" "halt.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "/bin/true";
+      ExecStop = ''
+        ${pkgs.util-linux}/bin/umount -l /nix/store || true
+        ${pkgs.coreutils}/bin/sync
+      '';
+      TimeoutStopSec = "30s";
+      KillMode = "none";
+    };
+  };
+  
+  # Additional systemd settings to prevent /nix/store umount issues
+  systemd.extraConfig = ''
+    DefaultTimeoutStopSec=30s
+    DefaultTimeoutStartSec=30s
+  '';
+  
+  # D-Bus is already enabled above
 }

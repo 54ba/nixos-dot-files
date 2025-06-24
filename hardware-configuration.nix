@@ -27,7 +27,7 @@
  fileSystems."/nix/store" =
    { device = "/dev/disk/by-uuid/789c1629-9b1c-4554-b169-1c8f73ae0f01";
      fsType = "ext4";
-     options = [ "defaults" "noatime" ];
+     options = [ "defaults" "noatime" "rw" "user_xattr" "acl" ];
      neededForBoot = true;
      depends = [ "/" ];
    };
