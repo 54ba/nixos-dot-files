@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=WezTerm
+Comment=A GPU-accelerated cross-platform terminal emulator
+Exec=wezterm
+Icon=terminal
+Terminal=false
+Type=Application
+Categories=System;TerminalEmulator;
+StartupNotify=true
+

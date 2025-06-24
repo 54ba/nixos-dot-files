@@ -10,6 +10,7 @@ with pkgs; [
   neovim
   firefox
   chromium
+  google-chrome  # System-wide Chrome
   tree
   htop
   btop
@@ -29,6 +30,34 @@ with pkgs; [
   bat
   eza  # Renamed from exa
   zoxide
+  wezterm  # Wez terminal
+  
+  # Development tools
+  github-desktop
+  code-cursor  # Code-cursor editor
+  
+  # Design and media tools
+  figma-linux
+  ffmpeg  # FFmpeg for media processing
+  
+  # System utilities
+  gparted  # Partition editor
+  
+  # Database and analytics
+  neo4j
+  
+  # VPN and networking tools
+  riseup-vpn
+  shadowsocks-rust  # Shadowsocks client (rust implementation)
+
+  # Package managers and development tools
+  flatpak
+  poetry  # Python dependency management
+  pipx    # Install Python applications in isolated environments
+  yarn    # JavaScript package manager
+
+  # Virtualization
+  virtualbox
   
   # Network utilities
   nmap
@@ -58,4 +87,3 @@ with pkgs; [
   lz4
   zstd
 ]
-
