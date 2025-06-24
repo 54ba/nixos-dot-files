@@ -59,7 +59,7 @@
                 autocd = true;
                 dotDir = ".config/zsh";
                 
-                initContent = ''
+                initExtra = ''
                   # Source Oh My Zsh if it exists
                   export ZSH="${pkgs.oh-my-zsh}/share/oh-my-zsh"
                   if [ -f $ZSH/oh-my-zsh.sh ]; then

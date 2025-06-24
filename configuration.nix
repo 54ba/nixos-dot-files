@@ -9,11 +9,11 @@
     ./ai-services.nix
   ];
   
-  # Force all Python packages to use Python 3.11 to avoid version conflicts
-  nixpkgs.config.packageOverrides = pkgs: {
-    python3 = pkgs.python311;
-    python3Packages = pkgs.python311Packages;
-  };
+  # Use default Python 3.12 for better binary cache compatibility
+  # nixpkgs.config.packageOverrides = pkgs: {
+  #   python3 = pkgs.python311;
+  #   python3Packages = pkgs.python311Packages;
+  # };
   
   custom.packages.development.enable = true;
   custom.packages.media.enable = true;
@@ -59,7 +59,7 @@
     isNormalUser = true;
     home = "/home/mahmoud";
     description = "mahmoud";
-    extraGroups = [ "wheel" "networkmanager" "docker" "audio" "video" "input" ];
+    extraGroups = [ "wheel" "networkmanager" "podman" "audio" "video" "input" ];
     group = "users";
     shell = pkgs.zsh;
   };
@@ -73,7 +73,7 @@
     flameshot
     pavucontrol
     networkmanagerapplet
-    python311  # Use consistent Python 3.11 instead of python3
+    python3  # Use default Python 3.12 for better binary compatibility
     
     # Git and credentials
     git
@@ -115,6 +115,10 @@
     libsecret  # For storing credentials
     starship   # Prompt (system-wide installation)
     home-manager  # For managing user configuration
+    
+    # Container tools for Podman
+    podman-compose  # Docker-compose equivalent for Podman
+    podman-tui     # Terminal UI for Podman
   ];
 
   # Enable sound with pipewire
@@ -218,8 +222,11 @@
     keyMap = "us";
   };
   
-  # Allow unfree packages
+  # Allow unfree packages and specific insecure packages
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.permittedInsecurePackages = [
+    "electron-27.3.11"  # Required for some applications
+  ];
 
   # Binary cache and build optimization settings
   nix.settings = {
@@ -229,42 +236,58 @@
       "https://nix-community.cachix.org/"
       "https://devenv.cachix.org/"
       "https://nixpkgs-unfree.cachix.org/"
+      "https://cuda-maintainers.cachix.org/"  # For gaming/NVIDIA packages
+      "https://hyprland.cachix.org/"          # For modern desktop packages
     ];
     trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
       "nixpkgs-unfree.cachix.org-1:hqvoInulhbV4nJ9yJOEr+4wxhDV4xq2d1DK7S6Nj6rs="
+      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPiCgBV8vQQGjqozR5lnLBcBJKqKzR6bE="
+      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3rkCI6Vd0HQRSIo3VbK+LSnRVQCQ="
     ];
-    # Prefer binary substitutes over building
+    # Prefer binary substitutes over building - aggressive settings
     builders-use-substitutes = true;
     # Always try substituters first
     substitute = true;
+    # Require signatures for better security
+    require-sigs = true;
     # Fallback to building only if no substitute is available
     fallback = true;
-    # Keep trying substituters for a while
-    connect-timeout = 10;
-    # Maximum number of parallel downloads
-    max-jobs = "auto";
-    # Enable parallel building when needed
-    cores = 0;
+    # Extended timeout for downloads
+    connect-timeout = 30;
+    stalled-download-timeout = 300;
+    # Limit parallel jobs to reduce memory pressure
+    max-jobs = 4;  # Reduced from "auto" to prevent overwhelming system
+    # Limit cores per build job
+    cores = 2;     # Reduced from 0 (unlimited) to prevent memory issues
     # Keep build logs only for failed builds
     keep-outputs = false;
     keep-derivations = false;
-    # Optimize store
+    # Optimize store and use hard links to save space
     auto-optimise-store = true;
+    # Trust binary caches more aggressively
+    trusted-users = [ "root" "@wheel" ];
+    # Allow import-from-derivation for better compatibility
+    allow-import-from-derivation = true;
   };
 
-  # Enable flakes and new nix command
+  # Enable flakes and new nix command with aggressive binary cache preferences
   nix.extraOptions = ''
     experimental-features = nix-command flakes
     keep-outputs = false
     keep-derivations = false
-    # Prefer substitutes over building
+    # Prefer substitutes over building aggressively
     builders-use-substitutes = true
     substitute = true
-    # Timeout for substitute attempts
+    # Extended timeouts for binary cache
     stalled-download-timeout = 300
+    connect-timeout = 30
+    # Try harder to avoid building
+    max-substitution-jobs = 16
+    # Warn instead of failing on missing substitutes
+    warn-dirty = false
   '';
 
   # Garbage collection to keep system clean
@@ -294,8 +317,26 @@
   networking.hostName = "mahmoud-laptop";
   networking.firewall.enable = false;  # Disabled for development
   
-  # Enable container support
-  virtualisation.docker.enable = true;
-  virtualisation.podman.enable = true;
+  # Enable container support - prefer Podman over Docker for better binary cache usage
+  virtualisation.docker.enable = false;  # Disabled to avoid compilation
+  virtualisation.podman = {
+    enable = true;
+    # Docker compatibility layer
+    dockerCompat = true;
+    dockerSocket.enable = true;
+    # Required for containers under podman
+    defaultNetwork.settings.dns_enabled = true;
+    # Auto-update containers
+    autoPrune = {
+      enable = true;
+      dates = "weekly";
+    };
+  };
+  
+  # Add alias for docker -> podman compatibility
+  environment.shellAliases = {
+    docker = "podman";
+    docker-compose = "podman-compose";
+  };
 }
 
