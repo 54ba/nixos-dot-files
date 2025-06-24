@@ -33,6 +33,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
             home-manager.users.mahmoud = { pkgs, ... }: {
               home.stateVersion = "25.05";
               programs.home-manager.enable = true;
@@ -93,15 +94,62 @@
                 };
               };
               
-              # Configure Git for the user
+              # Configure Git for the user with enhanced credentials management
               programs.git = {
                 enable = true;
                 userName = "mahmoud";
-                userEmail = "mahmoud@example.com"; # Replace with your actual email
+                userEmail = "mahmoud@localhost.local"; # Replace with your actual email
                 extraConfig = {
-                  credential.helper = "libsecret";
-                  pull.rebase = false;
+                  # Enhanced credentials management
+                  credential = {
+                    helper = "libsecret";
+                    credentialStore = "secretservice";
+                  };
+                  # Better pull behavior
+                  pull = {
+                    rebase = false;
+                    ff = "only";
+                  };
+                  # Enhanced push behavior
+                  push = {
+                    default = "simple";
+                    autoSetupRemote = true;
+                  };
+                  # Better merge behavior
+                  merge = {
+                    tool = "vimdiff";
+                    conflictStyle = "diff3";
+                  };
+                  # Enhanced diff and status
+                  diff = {
+                    algorithm = "patience";
+                    colorMoved = "default";
+                  };
+                  status = {
+                    showUntrackedFiles = "all";
+                  };
+                  # Default branch
                   init.defaultBranch = "main";
+                  # Better log formatting
+                  log = {
+                    date = "relative";
+                  };
+                  # Enhanced security
+                  transfer.fsckObjects = true;
+                  fetch.fsckObjects = true;
+                  receive.fsckObjects = true;
+                };
+                # Git aliases for better productivity
+                aliases = {
+                  st = "status";
+                  co = "checkout";
+                  br = "branch";
+                  ci = "commit";
+                  unstage = "reset HEAD --";
+                  last = "log -1 HEAD";
+                  visual = "!gitk";
+                  lg = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit";
+                  hist = "log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short";
                 };
               };
               

@@ -42,14 +42,66 @@
     touchpad.naturalScrolling = true;
   };
 
-  # Boot loader configuration
+  # Boot loader configuration with beautiful theme
   boot.loader.grub = {
     enable = true;
     device = "nodev";
     efiSupport = true;
     devices = [ "nodev" ];
+    useOSProber = true;  # Detect other operating systems
+    configurationLimit = 10;  # Keep last 10 generations
+    
+    # Custom GRUB configuration for better appearance
+    extraConfig = ''
+      # Set custom colors for menu - beautiful dark theme
+      set color_normal=light-cyan/black
+      set color_highlight=white/blue
+      
+      # Set timeout with countdown
+      set timeout_style=countdown
+      
+      # Better font rendering
+      set gfxmode=auto
+      set gfxpayload=keep
+      
+      # Enable graphics terminal
+      terminal_output gfxterm
+      
+      # Custom boot message
+      echo "Loading NixOS - Mahmoud's Laptop..."
+    '';
+    
+    # Set resolution for better display
+    gfxmodeEfi = "1920x1080,1366x768,1024x768,auto";
+    gfxmodeBios = "1920x1080,1366x768,1024x768,auto";
+    
+    # Use existing background image
+    splashImage = ./backgrounds/bg.jpg;
+    
+    # Font configuration for better text rendering
+    font = "${pkgs.grub2}/share/grub/unicode.pf2";
   };
+  
   boot.loader.efi.canTouchEfiVariables = true;
+  
+  # Boot splash and kernel parameters for eye candy
+  boot.initrd.systemd.enable = true;
+  boot.plymouth = {
+    enable = true;
+    theme = "breeze";  # Beautiful boot splash
+  };
+  
+  # Kernel parameters for better boot experience
+  boot.kernelParams = [
+    "quiet"          # Less verbose boot
+    "splash"         # Show splash screen
+    "rd.udev.log_level=3"  # Reduce udev log noise
+    "vt.global_cursor_default=0"  # Hide cursor during boot
+  ];
+  
+  # Console settings
+  boot.consoleLogLevel = 0;
+  boot.kernelPackages = pkgs.linuxPackages;  # Use stable kernel for better compatibility
 
   # Enable ZSH
   programs.zsh.enable = true;
@@ -135,7 +187,10 @@
     git
     git-lfs
     gitAndTools.gitFull
+    git-credential-manager  # Modern git credentials manager
     seahorse  # GUI for managing credentials
+    libsecret  # For storing credentials securely
+    gnome-keyring  # GNOME keyring for credential storage
     
     # System tray and notifications
     libnotify
@@ -253,7 +308,12 @@
   services.gnome = {
     core-utilities.enable = true;
     gnome-keyring.enable = true;
+    gnome-online-accounts.enable = true;
   };
+  
+  # Configure credential management services
+  services.dbus.enable = true;
+  
   
   # Enable Flatpak
   services.flatpak.enable = true;
@@ -346,12 +406,12 @@
     options = [ "defaults" "noatime" "nodiratime" "nosuid" "nodev" "noexec" "size=2G" ];
   };
   
-  # VirtualBox configuration and permissions
-  virtualisation.virtualbox.host = {
-    enable = true;
-    enableExtensionPack = false;  # Disabled to use binary cache
-    addNetworkInterface = true;
-  };
+  # VirtualBox configuration and permissions (temporarily disabled due to kernel compatibility)
+  # virtualisation.virtualbox.host = {
+  #   enable = true;
+  #   enableExtensionPack = false;  # Disabled to use binary cache
+  #   addNetworkInterface = true;
+  # };
   
   # Wireshark permissions (allows non-root packet capture)
   programs.wireshark = {
@@ -475,7 +535,6 @@
   
   # Enable additional GNOME services for better integration
   services.gnome.evolution-data-server.enable = true;
-  services.gnome.gnome-online-accounts.enable = true;
   
   # GNOME Shell configuration
   services.xserver.desktopManager.gnome = {
@@ -548,7 +607,6 @@
   # Services
   services.openssh.enable = true;
   services.udisks2.enable = true;
-  services.dbus.enable = true;
   services.acpid.enable = true;
   systemd.services.NetworkManager-wait-online.enable = false;
   
