@@ -5,19 +5,19 @@
 
 {
 
-  dconf.settings = {
-    "org/gnome/desktop/background" = {
-      picture-uri = "file://${./bg.jpg}"; # Use ./ if image is relative to your config, or an absolute path
-      # Or, if you want to fetch an image from the internet (e.g., for a "fetchurl" source):
-      # picture-uri = "file://${pkgs.fetchurl {
-      #   url = "https://example.com/your-wallpaper.png";
-      #   sha256 = "your-sha256-hash"; # IMPORTANT: Get this with `nix-prefetch-url URL`
-      # }}/your-wallpaper.png";
-      picture-options = "zoom"; # Options: "none", "wallpaper", "centered", "scaled", "stretched", "zoom"
-      primary-color = "#000000"; # Optional: background color for "none" or other options
-      color-shading-type = "solid"; # Or "vertical", "horizontal"
-    };
-  };
+  # dconf.settings = {
+  #   "org/gnome/desktop/background" = {
+  #     picture-uri = "file://${./bg.jpg}"; # Use ./ if image is relative to your config, or an absolute path
+  #     # Or, if you want to fetch an image from the internet (e.g., for a "fetchurl" source):
+  #     # picture-uri = "file://${pkgs.fetchurl {
+  #     #   url = "https://example.com/your-wallpaper.png";
+  #     #   sha256 = "your-sha256-hash"; # IMPORTANT: Get this with `nix-prefetch-url URL`
+  #     # }}/your-wallpaper.png";
+  #     picture-options = "zoom"; # Options: "none", "wallpaper", "centered", "scaled", "stretched", "zoom"
+  #     primary-color = "#000000"; # Optional: background color for "none" or other options
+  #     color-shading-type = "solid"; # Or "vertical", "horizontal"
+  #   };
+  # };
 
 
 
@@ -29,7 +29,7 @@
   # Basic user information
   home.username = "mahmoud";
   home.homeDirectory = "/home/mahmoud";
-  home.stateVersion = "25.11";
+  home.stateVersion = "25.05";
 
   # Let Home Manager manage itself
   programs.home-manager.enable = true;
@@ -136,18 +136,18 @@
   # Git configuration
   programs.git = {
     enable = true;
-    userName = "54ba";
-    userEmail = "54bao.o@gmail.com"; # Update with your email
+    userName = lib.mkDefault "54ba";
+    userEmail = lib.mkDefault "54bao.o@gmail.com"; # Update with your email
     
     extraConfig = {
-      init.defaultBranch = "main";
-      pull.rebase = true;
-      push.autoSetupRemote = true;
-      core.editor = "nvim";
+      init.defaultBranch = lib.mkDefault "main";
+      pull.rebase = lib.mkDefault true;
+      push.autoSetupRemote = lib.mkDefault true;
+      core.editor = lib.mkDefault "nvim";
       
       # Enhanced diff and merge tools
-      diff.tool = "vimdiff";
-      merge.tool = "vimdiff";
+      diff.tool = lib.mkDefault "vimdiff";
+      merge.tool = lib.mkDefault "vimdiff";
       
       # GPG signing (optional)
       # commit.gpgsign = true;
@@ -159,7 +159,6 @@
       co = "checkout";
       br = "branch";
       ci = "commit";
-      lg = "log --oneline --graph --decorate --all";
       unstage = "reset HEAD --";
       last = "log -1 HEAD";
       

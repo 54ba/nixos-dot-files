@@ -32,15 +32,14 @@
      depends = [ "/" ];
    };
 
-  fileSystems."/mnt/data" =
-    { device = "/dev/disk/by-uuid/561A84401A841F5D";
-      fsType = "ntfs-3g";
-      options = [ "rw" "uid=1000" "gid=100" "dmask=0022" "fmask=0133" ];
-      noCheck = true;
-      neededForBoot = false;
-      depends = [ "/" ];
-    };
-
+fileSystems."/mnt/storage" =
+  { device = "/dev/disk/by-uuid/a1e6dc63-d58c-48d4-a58d-da8e24baf77a";
+    fsType = "ext4";
+    options = [ "defaults" "rw" "user_xattr" "acl" ];
+    noCheck = true;
+    neededForBoot = false;
+    depends = [ "/" ];
+  };
   swapDevices = [ ];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking

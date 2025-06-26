@@ -297,7 +297,6 @@
     gnome-keyring
     libsecret  # For storing credentials
     starship   # Prompt (system-wide installation)
-    home-manager  # For managing user configuration
     
     # Security and firewall tools
     fail2ban     # Intrusion prevention
@@ -910,4 +909,12 @@
   '';
   
   # D-Bus is already enabled above
+  
+  # Home Manager configuration
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    backupFileExtension = "backup";
+    users.mahmoud = import ./home-manager.nix;
+  };
 }
