@@ -441,10 +441,44 @@ This configuration is provided as-is for educational and personal use. Users are
 - **GPU**: NVIDIA RTX series (for optimal AI performance)
 - **Network**: Stable internet for package downloads
 
+## 🔄 System Restoration
+
+### Recent Restoration (2025-07-12)
+The following components have been restored from git history:
+- **README.md**: Complete documentation restored
+- **modules/pentest-packages.nix**: Penetration testing module restored
+- **configuration.nix**: Import for pentest-packages.nix restored
+
+### Restoration Process
+If you need to restore deleted files in the future:
+```bash
+# Check what files were deleted
+git status
+
+# Restore specific files
+git restore README.md
+git restore modules/pentest-packages.nix
+
+# Or restore all deleted files
+git restore .
+
+# Verify the restoration
+git status
+```
+
+### Configuration Updates
+After restoration, the configuration now includes:
+- ✅ Complete pentest-packages.nix module
+- ✅ Proper import in configuration.nix
+- ✅ Security warnings and desktop notifications
+- ✅ Tor service integration
+- ✅ All penetration testing tools available
+
 ---
 
 **Remember**: 
 - Always use security tools responsibly and only on systems you own or have explicit permission to test
 - AI services require substantial system resources - monitor usage appropriately
 - Keep your system updated regularly for security patches
+- Use git restore to recover accidentally deleted files
 

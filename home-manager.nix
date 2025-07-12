@@ -1,90 +1,10 @@
-# Enhanced Home Manager Configuration with nixai Integration
-# This provides user-level AI assistance and development tools
-
 { config, pkgs, inputs, lib, ... }:
-
 {
-
-  # dconf.settings = {
-  #   "org/gnome/desktop/background" = {
-  #     picture-uri = "file://${./bg.jpg}"; # Use ./ if image is relative to your config, or an absolute path
-  #     # Or, if you want to fetch an image from the internet (e.g., for a "fetchurl" source):
-  #     # picture-uri = "file://${pkgs.fetchurl {
-  #     #   url = "https://example.com/your-wallpaper.png";
-  #     #   sha256 = "your-sha256-hash"; # IMPORTANT: Get this with `nix-prefetch-url URL`
-  #     # }}/your-wallpaper.png";
-  #     picture-options = "zoom"; # Options: "none", "wallpaper", "centered", "scaled", "stretched", "zoom"
-  #     primary-color = "#000000"; # Optional: background color for "none" or other options
-  #     color-shading-type = "solid"; # Or "vertical", "horizontal"
-  #   };
-  # };
-
-
-
-
-  # imports = [
-  #   inputs.nixai.homeManagerModules.default
-  # ];
-
-  # Basic user information
   home.username = "mahmoud";
   home.homeDirectory = "/home/mahmoud";
   home.stateVersion = "25.05";
-
-  # Let Home Manager manage itself
   programs.home-manager.enable = true;
 
-  # ===== NIXAI HOME MANAGER INTEGRATION (TEMPORARILY DISABLED) =====
-  # services.nixai = {
-  #   enable = true;
-  #   
-  #   mcp = {
-  #     enable = true;
-  #     aiProvider = "copilot";
-  #     aiModel = "gpt-4";
-  #     port = 8082; # Different port for user service
-  #     socketPath = "$HOME/.local/share/nixai/mcp.sock";
-  #     
-  #     # User-specific documentation sources
-  #     documentationSources = [
-  #       "https://wiki.nixos.org/wiki/NixOS_Wiki"
-  #       "https://nix.dev/"
-  #       "https://nixos.org/manual/nixpkgs/stable/"
-  #       "https://nix-community.github.io/home-manager/"
-  #       "https://search.nixos.org/packages"
-  #       "https://search.nixos.org/options"
-  #       "https://github.com/nix-community/awesome-nix"
-  #     ];
-  #     
-  #     environment = {
-  #       # User environment variables
-  #       HOME = config.home.homeDirectory;
-  #       USER = config.home.username;
-  #     };
-  #     
-  #     extraFlags = [ "--log-level=info" "--user-mode" ];
-  #   };
-  #   
-  #   # Enable VS Code integration
-  #   vscodeIntegration = {
-  #     enable = true;
-  #     contextAware = true;
-  #     autoRefreshContext = true;
-  #     contextTimeout = 5000;
-  #   };
-  #   
-  #   # Enable Neovim integration
-  #   neovimIntegration = {
-  #     enable = true;
-  #     useNixVim = true;
-  #     autoStartMcp = true;
-  #     keybindings = {
-  #       askNixai = "\u003cleader\u003ena";
-  #       askNixaiVisual = "\u003cleader\u003ena";
-  #       startMcpServer = "\u003cleader\u003ens";
-  #     };
-  #   };
-  # };
 
   # Development packages
   home.packages = with pkgs; [
@@ -92,9 +12,27 @@
     python311  # Use consistent Python 3.11 instead of python3
     python311Packages.pip
     python311Packages.virtualenv
-    nodejs
+    poetry
+    python311Packages.setuptools
+    python311Packages.wheel
+    
+    # Node.js/TypeScript Development
+    nodejs  # Default version to avoid conflicts
     nodePackages.npm
     nodePackages.yarn
+    nodePackages.pnpm
+    nodePackages.typescript
+    nodePackages.ts-node
+    nodePackages.eslint
+    nodePackages.prettier
+    
+    # Flutter/Dart Development
+    flutter
+    # dart - included with flutter, removing to avoid collision
+    
+    # PHP Development
+    php82
+    # php82Packages.composer - removed to avoid collision with Flutter
     
     # Development Tools
     jq
@@ -131,6 +69,7 @@
     # Communication
     slack
     zoom-us
+    discord
   ];
 
   # Git configuration
@@ -211,12 +150,19 @@
       ns = "nix-shell";
       nsp = "nix-shell -p";
       
+      # Development environment shortcuts
+      dev-python = "nix-shell /etc/nixos/shells/python-shell.nix";
+      dev-ts = "nix-shell /etc/nixos/shells/typescript-shell.nix";
+      dev-flutter = "nix-shell /etc/nixos/shells/flutter-shell.nix";
+      dev-php = "nix-shell /etc/nixos/shells/php-shell.nix";
+      dev-full = "nix-shell /etc/nixos/shells/full-dev-shell.nix";
+      
       # Directory shortcuts
       cd-nix = "cd /etc/nixos";
       cd-home = "cd ~/.config/home-manager";
     };
     
-    initExtra = ''
+    initContent = ''
       # Enable starship prompt
       eval "$(starship init zsh)"
       
@@ -323,17 +269,37 @@
     enableZshIntegration = true;
   };
 
-  # Development environment configuration
+  # Development environment configuration with Wayland optimizations
   home.sessionVariables = {
     EDITOR = "nvim";
     BROWSER = "firefox";
     TERMINAL = "gnome-terminal";
+    
+    # Wayland environment variables
+    WAYLAND_DISPLAY = "wayland-0";
+    XDG_SESSION_TYPE = "wayland";
+    XDG_RUNTIME_DIR = "/run/user/1000";
+    
+    # Force Wayland for applications
+    NIXOS_OZONE_WL = "1";  # Chromium/Electron apps
+    MOZ_ENABLE_WAYLAND = "1";  # Firefox
+    QT_QPA_PLATFORM = "wayland;xcb";  # Qt applications
+    GDK_BACKEND = "wayland,x11";  # GTK applications
+    SDL_VIDEODRIVER = "wayland,x11";  # SDL applications
+    CLUTTER_BACKEND = "wayland";  # Clutter applications
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+    
+    # Java applications Wayland support
+    _JAVA_AWT_WM_NONREPARENTING = "1";
     
     # Development environment variables
     NIXPKGS_ALLOW_UNFREE = "1";
     
     # Python environment
     PYTHONPATH = "$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH";
+    
+    # Terminal and shell optimizations
+    TERM = "xterm-256color";
   };
 
   # XDG configuration

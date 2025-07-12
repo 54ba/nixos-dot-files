@@ -9,12 +9,6 @@
     ./ai-services.nix
   ];
   
-  # Use default Python 3.12 for better binary cache compatibility
-  # nixpkgs.config.packageOverrides = pkgs: {
-  #   python3 = pkgs.python311;
-  #   python3Packages = pkgs.python311Packages;
-  # };
-  
   custom.packages.development.enable = true;
   custom.packages.media.enable = true;
   custom.packages.productivity.enable = true;
@@ -22,24 +16,43 @@
   custom.packages.entertainment.enable = true;
   custom.packages.popular.enable = true;
 
-  # Enable X11 windowing system
+  # Disable X11 and use Wayland by default
   services.xserver = {
-    enable = true;
+    enable = true;  # Still needed for some compatibility
     xkb = {
       layout = "us";
       variant = "";
     };
   };
     
-  # Configure GDM display manager and GNOME desktop
-  services.xserver.displayManager.gdm.enable = true;
+  # Configure GDM display manager for Wayland
+  services.xserver.displayManager.gdm = {
+    enable = true;
+    wayland = true;  # Force Wayland
+  };
+  
+  # Configure GNOME desktop for Wayland
   services.xserver.desktopManager.gnome.enable = true;
   
-  # Enable touchpad support (for laptops)
+  # Ensure Wayland is the default session
+  services.displayManager.defaultSession = "gnome";
+  
+  # Enable touchpad support (for laptops) with enhanced configuration
   services.libinput = {
     enable = true;
-    touchpad.tapping = true;
-    touchpad.naturalScrolling = true;
+    touchpad = {
+      tapping = true;
+      naturalScrolling = true;
+      scrollMethod = "twofinger";
+      disableWhileTyping = true;
+      clickMethod = "clickfinger";
+      accelProfile = "adaptive";
+      accelSpeed = "0.5";
+    };
+    mouse = {
+      accelProfile = "adaptive";
+      accelSpeed = "0.0";
+    };
   };
 
   # Boot loader configuration with beautiful theme
@@ -80,8 +93,8 @@
     gfxmodeEfi = "1920x1080,1366x768,1024x768,auto";
     gfxmodeBios = "1920x1080,1366x768,1024x768,auto";
     
-    # Use original splash image for now
-    splashImage = ./backgrounds/bg.jpg;
+    # Use default splash image
+    # splashImage = ./backgrounds/bg.jpg;
     
     # Font configuration for better text rendering
     font = "${pkgs.grub2}/share/grub/unicode.pf2";
@@ -174,6 +187,8 @@
       "wireshark"      # network analysis
       "render"         # GPU rendering
       "gamemode"       # gaming performance
+      "adbusers"       # Android debugging bridge
+      "plugdev"        # USB device access for Android
     ];
     group = "users";
     shell = pkgs.zsh;
@@ -207,6 +222,42 @@
         RemainAfterExit = true;
       };
       wantedBy = [ "default.target" ];
+    };
+  };
+
+  # System-wide services for input device management
+  systemd.services = {
+    # Restart input services after wake from sleep
+    restart-input-devices = {
+      description = "Restart input devices after sleep";
+      after = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = pkgs.writeScript "restart-input-devices" ''
+          #!/bin/bash
+          # Wait a moment for devices to settle
+          sleep 2
+          
+          # Restart GNOME settings daemon to reload input settings
+          systemctl --user restart gnome-settings-daemon || true
+          
+          # Reload input device configuration
+          systemctl restart systemd-udevd || true
+          
+          # Trigger udev rules for input devices
+          ${pkgs.systemd}/bin/udevadm trigger --subsystem-match=input || true
+          ${pkgs.systemd}/bin/udevadm settle || true
+          
+          # Reset libinput calibration
+          for device in /dev/input/event*; do
+            if [[ -e "$device" ]]; then
+              ${pkgs.systemd}/bin/udevadm trigger "$device" || true
+            fi
+          done
+        '';
+        RemainAfterExit = false;
+      };
+      wantedBy = [ "post-resume.target" ];
     };
   };
 
@@ -310,6 +361,10 @@
     # Container tools for Podman
     podman-compose  # Docker-compose equivalent for Podman
     podman-tui     # Terminal UI for Podman
+    
+    # Android development tools
+    android-tools   # ADB, fastboot, and other Android utilities
+    android-udev-rules  # Udev rules for Android devices
   ];
 
   # Enable sound with pipewire
@@ -342,12 +397,12 @@
     font-awesome
   ];
 
-  # System state version
+  # System state version - upgraded to 25.05
   system.stateVersion = "25.05";
 
   # Enable GNOME services
   services.gnome = {
-    core-utilities.enable = true;
+    core-apps.enable = true;
     gnome-keyring.enable = true;
     gnome-online-accounts.enable = true;
   };
@@ -368,14 +423,50 @@
     ];
   };
   
-  # Chrome-specific fixes and environment variables
+  # Wayland and application environment variables
   environment.sessionVariables = {
+    # Force Wayland for all applications
+    WAYLAND_DISPLAY = "wayland-0";
+    XDG_SESSION_TYPE = "wayland";
+    
+    # Enable Wayland support for various applications
+    NIXOS_OZONE_WL = "1";  # Chromium/Electron apps
+    MOZ_ENABLE_WAYLAND = "1";  # Firefox
+    QT_QPA_PLATFORM = "wayland;xcb";  # Qt applications
+    GDK_BACKEND = "wayland,x11";  # GTK applications
+    SDL_VIDEODRIVER = "wayland,x11";  # SDL applications
+    CLUTTER_BACKEND = "wayland";  # Clutter applications
+    
+    # XDG runtime directory
+    XDG_RUNTIME_DIR = "/run/user/1000";
+    
+    # Chrome/Chromium optimizations
     CHROME_WRAPPER = "${pkgs.google-chrome}/bin/google-chrome-stable";
     CHROME_DESKTOP = "google-chrome";
-    # Fix Chrome sandbox issues
-    CHROME_FLAGS = "--no-sandbox --disable-gpu-sandbox --disable-software-rasterizer";
-    # Enable hardware acceleration
-    NIXOS_OZONE_WL = "1";
+    CHROME_FLAGS = "--enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+    
+    # Discord optimizations
+    DISCORD_FLAGS = "--enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+    
+    # Electron applications optimizations
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+    ELECTRON_FLAGS = "--enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+    
+    # VS Code optimizations
+    VSCODE_FLAGS = "--enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox";
+    
+    # Memory optimizations for all applications
+    MOZ_DISABLE_RDD_SANDBOX = "1";
+    MOZ_DISABLE_CONTENT_SANDBOX = "1";
+    
+    # Disable hardware acceleration for problematic applications
+    LIBGL_ALWAYS_SOFTWARE = "0";  # Enable hardware acceleration by default
+    
+    # Java applications Wayland support
+    _JAVA_AWT_WM_NONREPARENTING = "1";
+    
+    # Terminal and shell optimizations
+    TERM = "xterm-256color";
   };
   
   # Security and sandbox fixes for Chrome
@@ -497,6 +588,15 @@
     
     # Camera and webcam permissions
     SUBSYSTEM=="video4linux", KERNEL=="video[0-9]*", GROUP="video", MODE="0664"
+    
+    # Android device permissions
+    SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", GROUP="adbusers", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", GROUP="adbusers", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0bb4", GROUP="adbusers", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="22b8", GROUP="adbusers", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="1004", GROUP="adbusers", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="12d1", GROUP="adbusers", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="2717", GROUP="adbusers", MODE="0664"
   '';
   
   # Enhanced PAM configuration for better session management
@@ -547,16 +647,6 @@
     "d /var/lib/systemd 0755 root root -"
   ];
   
-  # Install custom desktop entries (commented out temporarily)
-  # environment.etc = {
-  #   "xdg/applications/riseup-vpn.desktop".source = ./desktop-entries/riseup-vpn.desktop;
-  #   "xdg/applications/github-desktop.desktop".source = ./desktop-entries/github-desktop.desktop;
-  #   "xdg/applications/wezterm.desktop".source = ./desktop-entries/wezterm.desktop;
-  #   "xdg/applications/gparted.desktop".source = ./desktop-entries/gparted.desktop;
-  #   "xdg/applications/cursor.desktop".source = ./desktop-entries/cursor.desktop;
-  #   "xdg/applications/figma-linux.desktop".source = ./desktop-entries/figma-linux.desktop;
-  #   # Background images will be added when bg.jpg is placed in backgrounds folder
-  # };
   
   # Enable GNOME extensions support and additional tweaks
   services.udev.packages = with pkgs; [ gnome-settings-daemon ];
@@ -646,6 +736,9 @@
   services.udisks2.enable = true;
   services.acpid.enable = true;
   systemd.services.NetworkManager-wait-online.enable = false;
+  
+  # Android development services
+  programs.adb.enable = true;
   
   # Localization
   time.timeZone = "Africa/Cairo";
@@ -870,10 +963,22 @@
     };
   };
   
-  # Add alias for docker -> podman compatibility
+  # Add alias for docker -> podman compatibility and Electron apps
   environment.shellAliases = {
     docker = "podman";
     docker-compose = "podman-compose";
+    
+    # Electron applications with Wayland support
+    discord = "discord --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote --single-process --disable-features=VizDisplayCompositor,zygote";
+    code = "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --no-zygote";
+    vscode = "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --no-zygote";
+    slack = "slack --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote";
+    zoom = "zoom --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote";
+    
+    # Chrome/Chromium with Wayland
+    google-chrome = "google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+    chrome = "google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+    chromium = "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
   };
   
   # Fix the UserTasksMax deprecation issue by configuring systemd slices

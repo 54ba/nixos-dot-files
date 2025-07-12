@@ -2,12 +2,12 @@
   description = "NixOS configuration with home-manager";
 
   inputs = {
-    # Use stable channel for better binary cache coverage
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    # Use latest stable channel for better binary cache coverage
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     # Fallback to unstable for packages not in stable
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager = {
-      url = "github:nix-community/home-manager/release-24.11";
+      url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -60,7 +60,7 @@
                 autocd = true;
                 dotDir = ".config/zsh";
                 
-                initExtra = ''
+                initContent = ''
                   # Source Oh My Zsh if it exists
                   export ZSH="${pkgs.oh-my-zsh}/share/oh-my-zsh"
                   if [ -f $ZSH/oh-my-zsh.sh ]; then
