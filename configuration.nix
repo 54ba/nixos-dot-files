@@ -7,6 +7,7 @@
     ./modules/optional-packages.nix
     ./modules/pentest-packages.nix
     ./ai-services.nix
+    ./electron-desktop-portals.nix
   ];
   
   custom.packages.development.enable = true;
@@ -969,7 +970,7 @@
     docker-compose = "podman-compose";
     
     # Electron applications with Wayland support
-    discord = "discord --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote --single-process --disable-features=VizDisplayCompositor,zygote";
+    discord = "discord --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
     code = "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --no-zygote";
     vscode = "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --no-zygote";
     slack = "slack --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote";
