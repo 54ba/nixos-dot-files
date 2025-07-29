@@ -4,32 +4,11 @@
   # Desktop portal configuration for Electron apps on NixOS
   services.dbus.enable = true;
   
-  # XDG Desktop Portal configuration
-  xdg.portal = {
-    enable = true;
-    extraPortals = with pkgs; [
-      xdg-desktop-portal-gtk
-      xdg-desktop-portal-gnome
-    ];
-    config = {
-      common = {
-        default = [ "gtk" ];
-        "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-        "org.freedesktop.impl.portal.AppChooser" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Print" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Notification" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Inhibit" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Access" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Account" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Email" = [ "gtk" ];
-        "org.freedesktop.impl.portal.DynamicLauncher" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Lockdown" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Background" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Screenshot" = [ "gtk" ];
-        "org.freedesktop.impl.portal.Wallpaper" = [ "gtk" ];
-      };
-    };
-  };
+  # Ensure XDG Desktop Portal is enabled with additional portals
+  xdg.portal.extraPortals = with pkgs; [
+    xdg-desktop-portal-gtk
+    xdg-desktop-portal-gnome
+  ];
   
   # System packages needed for desktop portals
   environment.systemPackages = with pkgs; [
