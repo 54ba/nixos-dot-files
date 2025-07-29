@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   # Desktop portal configuration for Electron apps on NixOS
@@ -55,9 +55,6 @@
     
     # GSETTINGS configuration
     GSETTINGS_SCHEMA_DIR = "/run/current-system/sw/share/gsettings-schemas/gsettings-desktop-schemas/glib-2.0/schemas";
-    
-    # XDG data directories
-    XDG_DATA_DIRS = "/run/current-system/sw/share";
   };
   
   # Systemd user services for desktop portals
