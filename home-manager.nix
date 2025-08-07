@@ -8,6 +8,9 @@
 
   # Development packages
   home.packages = with pkgs; [
+    # Home Manager CLI
+    home-manager
+    
     # AI/ML Development
     python311  # Use consistent Python 3.11 instead of python3
     python311Packages.pip
@@ -346,6 +349,33 @@
       enable = true;
       defaultCacheTtl = 1800;
       enableSshSupport = true;
+    };
+  };
+
+  # GNOME dconf settings for session restoration
+  dconf.settings = {
+    "org/gnome/desktop/session" = {
+      idle-delay = 300;  # 5 minutes before idle
+    };
+    
+    # Enable session saving and restoration
+    "org/gnome/SessionManager" = {
+      auto-save-session = true;
+    };
+    
+    # Additional window manager settings for better session handling
+    "org/gnome/desktop/wm/preferences" = {
+      focus-mode = "sloppy";
+      auto-raise = false;
+      raise-on-click = true;
+    };
+    
+    # Mutter settings for window management
+    "org/gnome/mutter" = {
+      attach-modal-dialogs = true;
+      dynamic-workspaces = true;
+      workspaces-only-on-primary = false;
+      focus-change-on-pointer-rest = true;
     };
   };
 

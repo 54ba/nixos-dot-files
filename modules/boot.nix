@@ -86,7 +86,7 @@ with lib;
     
     # Console settings
     boot.consoleLogLevel = 0;
-    boot.kernelPackages = pkgs.linuxPackages_6_6;  # Use LTS kernel to avoid build issues
+    # boot.kernelPackages = pkgs.linuxPackages;  # Use default kernel - commented out to avoid build issues
     
     # Console font configuration
     console = {

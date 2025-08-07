@@ -1,6 +1,6 @@
-# Comprehensive NixOS Configuration with AI Services, nixGL and Optional Penetration Testing Tools
+# Modular NixOS Configuration
 
-This repository contains a modular NixOS configuration with nixGL support for OpenGL applications, AI services (Ollama with CUDA), home-manager integration, and optional penetration testing tools.
+This is a modular NixOS configuration system that allows you to easily enable or disable different sets of packages and services based on your needs. The system is designed to be minimal by default while providing optional components that can be enabled as needed.
 
 ## 📁 Directory Structure
 

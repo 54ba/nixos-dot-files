@@ -17,29 +17,42 @@
     { device = "/dev/disk/by-uuid/0174fc9a-577d-444c-84cb-a4ac6419f478";
       fsType = "ext4";
     };
+
   fileSystems."/boot" =
     { device = "/dev/disk/by-uuid/1BE7-C4B2";
       fsType = "vfat";
       options = [ "fmask=0022" "dmask=0022" ];
     };
 
+  fileSystems."/mnt/ssd2" =
+    { device = "/dev/disk/by-uuid/19324f88-fbf3-41a8-8758-1c35604d7137";
+      fsType = "ext4";
+    };
 
- fileSystems."/nix/store" =
-   { device = "/dev/disk/by-uuid/789c1629-9b1c-4554-b169-1c8f73ae0f01";
-     fsType = "ext4";
-     options = [ "defaults" "noatime" "rw" "user_xattr" "acl" ];
-     neededForBoot = true;
-     depends = [ "/" ];
-   };
+  fileSystems."/nix" =
+    { device = "/mnt/ssd2/nix";
+      fsType = "none";
+      options = [ "bind" ];
+    };
 
-fileSystems."/mnt/storage" =
-  { device = "/dev/disk/by-uuid/a1e6dc63-d58c-48d4-a58d-da8e24baf77a";
-    fsType = "ext4";
-    options = [ "defaults" "rw" "user_xattr" "acl" ];
-    noCheck = true;
-    neededForBoot = false;
-    depends = [ "/" ];
-  };
+  fileSystems."/home" =
+    { device = "/mnt/ssd2/home";
+      fsType = "none";
+      options = [ "bind" ];
+    };
+
+  fileSystems."/tmp" =
+    { device = "/mnt/ssd2/tmp";
+      fsType = "none";
+      options = [ "bind" "noatime" ];
+    };
+
+  fileSystems."/var" =
+    { device = "/mnt/ssd2/var";
+      fsType = "none";
+      options = [ "bind" ];
+    };
+
   swapDevices = [ ];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
