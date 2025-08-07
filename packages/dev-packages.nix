@@ -44,6 +44,7 @@ with pkgs; [
   postgresql
   sqlite
   redis
+  neo4j
   
   # Container and orchestration tools
   docker
