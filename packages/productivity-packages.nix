@@ -16,7 +16,7 @@ with pkgs; [
   
   # Note-taking and knowledge management
   # notion-app-enhanced  # If available
-  obsidian
+  # obsidian  # Removed due to build issues
   logseq
   joplin-desktop
   zettlr
