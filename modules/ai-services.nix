@@ -45,6 +45,19 @@ with lib;
           description = "Install AI development packages";
         };
       };
+      
+      nixai = {
+        enable = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Enable nixai configuration and tools";
+        };
+        configPath = mkOption {
+          type = types.str;
+          default = "/etc/nixai/nixai-config.yaml";
+          description = "Path to nixai configuration file";
+        };
+      };
     };
   };
 
@@ -108,5 +121,32 @@ with lib;
         RemainAfterExit = true;
       };
     };
-  };
+  }
+  
+  # nixai configuration
+  // (mkIf config.custom.ai-services.nixai.enable {
+    # Install nixai packages
+    environment.systemPackages = with pkgs; [
+      # AI and machine learning tools
+      jq
+      yq-go
+      curl
+      wget
+      
+      # Additional AI tools that may be useful with nixai
+      python311Packages.openai
+      python311Packages.requests
+    ];
+    
+    # Create nixai configuration directory and file
+    environment.etc."nixai/nixai-config.yaml" = {
+      source = ../packages/nixai-config.yaml;
+      mode = "0644";
+    };
+    
+    # Create symlink for easier access
+    environment.etc."nixai-config.yaml" = {
+      source = config.custom.ai-services.nixai.configPath;
+    };
+  });
 }

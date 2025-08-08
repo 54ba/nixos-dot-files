@@ -9,49 +9,66 @@ This is a modular NixOS configuration system that allows you to easily enable or
 ├── flake.nix                    # Main flake configuration with home-manager
 ├── configuration.nix             # Main system configuration
 ├── hardware-configuration.nix    # Hardware-specific config (generated)
-├── ai-services.nix              # AI services (Ollama, NVIDIA CUDA setup)
 ├── home-manager.nix             # Home-manager configuration
-├── backgrounds/                 # Boot and desktop background images
-│   ├── bg.jpg                   # Main background image
-│   ├── bg-original.jpg          # Original background backup
-│   ├── custom-splash.png        # Custom splash screen
-│   ├── nix-dark.png            # NixOS dark theme background
-│   └── README.md               # Background setup instructions
-├── qtile/                       # Qtile window manager configuration
-│   ├── config.py               # Main Qtile configuration
-│   ├── autostart.sh            # Autostart applications script
-│   └── test_qtile.sh           # Qtile test script
-├── desktop-entries/             # Custom .desktop files
-│   ├── cursor.desktop
-│   ├── figma-linux.desktop
-│   ├── github-desktop.desktop
-│   ├── gparted.desktop
-│   ├── riseup-vpn.desktop
-│   └── wezterm.desktop
-├── overlays/                    # Nix overlays
-│   ├── nixgl-wrapper.nix        # nixGL wrapper overlay
-│   ├── custom.nix              # Custom package overlays
-│   └── warp.nix                # Warp terminal overlay
-├── modules/
+├── modules/                     # Modular system components
+│   ├── ai-services.nix          # AI services (Ollama, NVIDIA CUDA setup)
+│   ├── boot.nix                 # Boot configuration
+│   ├── boot-enhancements.nix    # Boot enhancements and themes
+│   ├── containers.nix           # Container services (Podman, Docker)
 │   ├── core-packages.nix        # Core system packages and nixGL setup
+│   ├── custom-binding.nix       # Custom SSD2 bind mounts
+│   ├── device-permissions.nix   # Device access permissions
+│   ├── display-manager.nix      # Display manager (GDM) configuration
+│   ├── electron-apps.nix        # Electron apps with Wayland support
+│   ├── flake-config.nix         # Flake configuration management
+│   ├── hardware.nix             # Hardware support (audio, bluetooth, graphics)
+│   ├── home-manager-integration.nix # Home-manager integration
+│   ├── networking.nix           # Network configuration
+│   ├── nixgl.nix               # nixGL graphics compatibility
 │   ├── optional-packages.nix    # Optional package collections
-│   └── pentest-packages.nix     # Penetration testing tools (optional)
-├── packages/
+│   ├── pentest.nix             # Penetration testing configuration
+│   ├── pentest-packages.nix     # Penetration testing tools (optional)
+│   ├── security.nix            # Security configuration
+│   ├── security-services.nix    # Security services
+│   ├── system-base.nix         # Base system configuration
+│   ├── system-optimization.nix  # System performance optimizations
+│   ├── system-services.nix     # System services
+│   ├── user-security.nix       # User security configuration
+│   ├── users.nix               # User account management
+│   ├── virtualization.nix      # Virtualization services
+│   └── wayland.nix             # Wayland environment setup
+├── packages/                    # Package collections
+│   ├── boot-packages.nix        # Boot-related packages
+│   ├── containers-packages.nix  # Container-related packages
 │   ├── core-packages.nix        # Essential system utilities
-│   ├── media-packages.nix       # Media and graphics packages
 │   ├── dev-packages.nix         # Development tools
-│   ├── productivity-packages.nix # Productivity applications
-│   ├── gaming-packages.nix      # Gaming platforms and tools
 │   ├── entertainment-packages.nix# Entertainment applications
+│   ├── essential-packages.nix   # Essential packages
+│   ├── gaming-packages.nix      # Gaming platforms and tools
+│   ├── media-packages.nix       # Media and graphics packages
+│   ├── minimal-packages.nix     # Minimal package set
+│   ├── networking-packages.nix  # Networking tools
+│   ├── nixai-config.yaml        # nixai configuration
 │   ├── pentest-packages.nix     # Penetration testing tools
-│   └── popular-packages.nix     # Popular and widely-used packages
-├── home-manager/                # Home-manager specific configurations
-│   ├── home.nix                # Main home configuration
-│   └── zsh.nix                 # ZSH shell configuration
-└── scripts/                     # Utility scripts
-    ├── deploy-enhanced.sh       # Enhanced deployment script
-    ├── nix-config.sh           # Configuration management script
-    └── ufw-setup.sh            # Firewall setup script
+│   ├── popular-packages.nix     # Popular and widely-used packages
+│   ├── productivity-packages.nix # Productivity applications
+│   ├── system-base-packages.nix # System base packages
+│   └── virtualization-packages.nix # Virtualization packages
+├── shells/                      # Development shell environments
+│   ├── flutter-shell.nix        # Flutter development environment
+│   ├── full-dev-shell.nix       # Full development environment
+│   ├── php-shell.nix            # PHP development environment
+│   ├── python-shell.nix         # Python development environment
+│   └── typescript-shell.nix     # TypeScript development environment
+├── legacy/                      # Legacy and deprecated modules
+│   ├── modules/                 # Moved legacy modules
+│   │   ├── core.nix             # Legacy core module
+│   │   ├── electron-desktop-portals.nix # Legacy electron portals
+│   │   ├── gnome-desktop.nix    # Legacy GNOME configuration
+│   │   └── optional.nix         # Legacy optional module
+│   └── packages/                # Moved legacy packages
+│       └── nixai-packages.nix   # Legacy nixai packages
+└── .gitignore                   # Git ignore rules
 ```
 
 ## 🚀 Quick Start
@@ -149,6 +166,50 @@ This configuration includes full home-manager integration for user-specific conf
 ### Desktop Environments
 - **GNOME**: Primary desktop environment with GDM
 - **Qtile**: Alternative tiling window manager (configured in `qtile/`)
+
+## 🖥️ Electron Apps & Wayland Support
+
+### Electron Apps Module
+The `modules/electron-apps.nix` provides proper Wayland support for Electron-based applications:
+
+```nix
+custom.electron-apps = {
+  discord.enable = true;     # Discord with Wayland support
+  chromium.enable = true;    # Chromium browser with Wayland support
+  vscode.enable = true;      # VS Code with Wayland support
+};
+```
+
+### Features
+- **Wayland Native**: Apps run natively on Wayland with proper flags
+- **Desktop Integration**: Custom desktop files for GUI launchers
+- **Shell aliases**: Terminal aliases with proper flags
+- **Environment Variables**: Proper XDG and Wayland environment setup
+
+### Manual Installation
+If the module doesn't work immediately, you can create manual desktop files:
+```bash
+# Create manual Discord desktop file
+mkdir -p ~/.local/share/applications
+cat > ~/.local/share/applications/discord-wayland.desktop << 'EOF'
+[Desktop Entry]
+Name=Discord (Wayland)
+Exec=discord --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox %U
+Icon=discord
+Type=Application
+Categories=Network;InstantMessaging;
+StartupWMClass=discord
+EOF
+
+# Update desktop database
+update-desktop-database ~/.local/share/applications
+```
+
+### Troubleshooting Electron Apps
+- **GUI Launcher Issues**: Use manual desktop files or system rebuild
+- **Wayland Flags**: Apps include `--enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland`
+- **Sandbox Issues**: Apps include `--no-sandbox --disable-gpu-sandbox` for compatibility
+- **Environment**: Ensure `XDG_SESSION_TYPE=wayland` and `WAYLAND_DISPLAY=wayland-0` are set
 
 ## 🤖 AI Services
 

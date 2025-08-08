@@ -56,19 +56,19 @@ with lib;
       TERM = "xterm-256color";
     };
     
-    # Shell aliases for Wayland applications
+    # Shell aliases for Wayland applications (using mkDefault to allow overrides)
     environment.shellAliases = {
-      # Electron applications with Wayland support
-      discord = "discord --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
-      code = "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --no-zygote";
-      vscode = "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --no-zygote";
-      slack = "slack --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote";
-      zoom = "zoom --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote";
+      # Electron applications with Wayland support (all using mkDefault to avoid conflicts)
+      discord = lib.mkDefault "discord --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+      code = lib.mkDefault "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --no-zygote";
+      vscode = lib.mkDefault "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --no-zygote";
+      slack = lib.mkDefault "slack --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote";
+      zoom = lib.mkDefault "zoom --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage --no-zygote";
       
-      # Chrome/Chromium with Wayland
-      google-chrome = "google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
-      chrome = "google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
-      chromium = "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+      # Chrome/Chromium with Wayland (all using mkDefault to avoid conflicts)
+      google-chrome = lib.mkDefault "google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+      chrome = lib.mkDefault "google-chrome --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
+      chromium = lib.mkDefault "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --disable-gpu-sandbox --disable-dev-shm-usage";
     };
   };
 }

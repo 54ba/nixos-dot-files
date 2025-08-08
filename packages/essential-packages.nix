@@ -3,8 +3,7 @@
 with pkgs; [
   # Web browsers
   firefox
-  chromium
-  google-chrome  # System-wide Chrome
+  chromium  # Better NixOS integration than google-chrome
   
   # GUI essentials from main config
   nautilus

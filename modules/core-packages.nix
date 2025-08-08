@@ -10,20 +10,10 @@ with lib;
         default = true;
         description = "Enable core system packages that should always be available";
       };
-      minimal.enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = "Enable minimal essential packages for basic system function";
-      };
     };
   };
 
   config = mkMerge [
-    # Minimal packages configuration
-    (mkIf config.custom.packages.minimal.enable {
-      environment.systemPackages = import ../packages/minimal-packages.nix { inherit pkgs; };
-    })
-    
     # Core packages configuration
     (mkIf config.custom.packages.core.enable {
       # Allow unfree packages
