@@ -32,8 +32,8 @@ with lib;
       addNetworkInterface = true;
     };
 
-    # KVM/QEMU virtualization
-    virtualisation.libvirtd = mkIf config.custom.virtualization.kvm.enable {
+    # KVM/QEMU virtualization with virtiofsd support
+    virtualisation.libvirtd = mkIf (config.custom.virtualization.kvm.enable || config.custom.virtualization.libvirt.enable) {
       enable = true;
       qemu = {
         package = pkgs.qemu_kvm;
@@ -43,11 +43,13 @@ with lib;
           enable = true;
           packages = [ pkgs.OVMF.fd ];
         };
+        # Enable virtiofsd for efficient file sharing
+        vhostUserPackages = [ pkgs.virtiofsd ];
       };
     };
 
     # Enable libvirt management
-    programs.virt-manager.enable = mkIf config.custom.virtualization.libvirt.enable true;
+    programs.virt-manager.enable = mkIf (config.custom.virtualization.libvirt.enable || config.custom.virtualization.kvm.enable) true;
 
     # Add virtualization packages
     environment.systemPackages = import ../packages/virtualization-packages.nix { inherit pkgs config lib; };
@@ -55,8 +57,8 @@ with lib;
     # Ensure user groups exist and are configured
     users.groups = mkIf config.custom.virtualization.enable {
       vboxusers = mkIf config.custom.virtualization.virtualbox.enable {};
-      libvirtd = mkIf config.custom.virtualization.kvm.enable {};
-      kvm = mkIf config.custom.virtualization.kvm.enable {};
+      libvirtd = mkIf (config.custom.virtualization.kvm.enable || config.custom.virtualization.libvirt.enable) {};
+      kvm = mkIf (config.custom.virtualization.kvm.enable || config.custom.virtualization.libvirt.enable) {};
     };
 
     # Add systemd tmpfiles rules for VirtualBox

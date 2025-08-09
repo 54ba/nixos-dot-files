@@ -57,21 +57,6 @@ with lib;
         description = "System locale";
       };
       
-      # Network interfaces configuration
-      interfaces = mkOption {
-        type = types.attrsOf (types.submodule {
-          options = {
-            macAddress = mkOption {
-              type = types.nullOr types.str;
-              default = null;
-              description = "MAC address for the interface. Use 'random' for randomization";
-            };
-          };
-        });
-        default = {};
-        description = "Network interfaces configuration";
-      };
-      
       # SMB/Samba sharing options
       samba = {
         enable = mkEnableOption "Samba/SMB file sharing";
@@ -93,11 +78,6 @@ with lib;
                 default = true;
                 description = "Whether the share is writeable";
               };
-              readOnly = mkOption {
-                type = types.bool;
-                default = false;
-                description = "Whether the share is read-only";
-              };
               guestOk = mkOption {
                 type = types.bool;
                 default = true;
@@ -112,16 +92,6 @@ with lib;
                 type = types.str;
                 default = "0775";
                 description = "Directory creation mask";
-              };
-              forceUser = mkOption {
-                type = types.nullOr types.str;
-                default = null;
-                description = "Force all file operations as this user";
-              };
-              forceGroup = mkOption {
-                type = types.nullOr types.str;
-                default = null;
-                description = "Force all file operations as this group";
               };
             };
           });
@@ -200,24 +170,15 @@ with lib;
           "printcap name" = "/dev/null";
           "disable spoolss" = "yes";
           "show add printer wizard" = "no";
-          "create mask" = "0666";
-          "directory mask" = "0777";
         };
-      } // (mapAttrs (name: cfg: 
-        {
-          "path" = cfg.path;
-          "browseable" = if cfg.browseable then "yes" else "no";
-          "writable" = if cfg.writeable then "yes" else "no";
-          "read only" = if cfg.readOnly then "yes" else "no";
-          "guest ok" = if cfg.guestOk then "yes" else "no";
-          "create mask" = cfg.createMask;
-          "directory mask" = cfg.directoryMask;
-        } // (optionalAttrs (cfg.forceUser != null) {
-          "force user" = cfg.forceUser;
-        }) // (optionalAttrs (cfg.forceGroup != null) {
-          "force group" = cfg.forceGroup;
-        })
-      ) config.custom.networking.samba.shares);
+      } // (mapAttrs (name: cfg: {
+        "path" = cfg.path;
+        "browseable" = if cfg.browseable then "yes" else "no";
+        "writable" = if cfg.writeable then "yes" else "no";
+        "guest ok" = if cfg.guestOk then "yes" else "no";
+        "create mask" = cfg.createMask;
+        "directory mask" = cfg.directoryMask;
+      }) config.custom.networking.samba.shares);
     };
     
     # Enable NetBIOS name resolution
