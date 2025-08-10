@@ -3,7 +3,7 @@
 with lib;
 
 let
-  void-editor = pkgs.callPackage ../packages/void-editor.nix {};
+  void-editor = pkgs.callPackage ./packages/void-editor.nix {};
 in
 
 {
@@ -23,40 +23,18 @@ in
     # Install void-editor package
     environment.systemPackages = [ void-editor ];
     
-    # Create desktop entry with proper Wayland support
-    environment.etc = mkIf config.custom.void-editor.createDesktopEntry {
-      "applications/void-editor.desktop" = {
-        text = ''
-          [Desktop Entry]
-          Name=Void
-          Comment=Open source Cursor alternative - AI-powered code editor
-          GenericName=Code Editor
-          Exec=${void-editor}/bin/void --ozone-platform-hint=auto --enable-features=UseOzonePlatform,WaylandWindowDecorations %F
-          Icon=void-editor
-          Type=Application
-          Categories=Development;TextEditor;IDE;
-          MimeType=text/plain;text/x-markdown;application/json;text/x-python;text/x-javascript;text/x-typescript;
-          StartupNotify=true
-          StartupWMClass=void
-          Keywords=editor;code;development;programming;
-          Actions=new-window;
-          
-          [Desktop Action new-window]
-          Name=New Window
-          Exec=${void-editor}/bin/void --ozone-platform-hint=auto --enable-features=UseOzonePlatform,WaylandWindowDecorations --new-window
-        '';
-        mode = "0644";
-      };
-    };
+    # The desktop entry is now created by the package itself
+    # with proper working flags, so we don't override it here
     
-    # Shell alias for terminal users
+    # Shell alias for terminal users with working flags
     environment.shellAliases = {
-      void = "${void-editor}/bin/void --ozone-platform-hint=auto --enable-features=UseOzonePlatform,WaylandWindowDecorations";
+      void = "${void-editor}/bin/void";  # Use the wrapper directly
     };
     
     # System-wide environment variables for optimal Wayland support
     environment.sessionVariables = {
-      VOID_OZONE_PLATFORM_HINT = "auto";
+      # Ensure WAYLAND_DISPLAY is set globally for all Wayland apps
+      WAYLAND_DISPLAY = mkDefault "wayland-0";
     };
   };
 }

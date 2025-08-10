@@ -78,6 +78,10 @@ with pkgs; [
   code-server
   
   # Build tools
+  autoPatchelfHook         # Auto patcher for ELF binaries
+  makeWrapper              # Create script wrappers
+  wrapGAppsHook3          # GTK/GNOME app wrapping
+  addDriverRunpath        # Add driver runpath for graphics
   cmake
   ninja
   meson

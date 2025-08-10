@@ -393,11 +393,12 @@ with lib;
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk
       ];
-      config = {
+      /* config = {
         common = {
           default = [ "gtk" ];
         };
       };
+      */
     };
     
     # === SERVICES FOR GTK APPLICATIONS ===

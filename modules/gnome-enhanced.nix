@@ -185,7 +185,6 @@ with lib;
           dynamic-workspaces=true
           workspaces-only-on-primary=false
           center-new-windows=true
-          ${if config.custom.gnome.wayland.variableRefreshRate then "variable-refresh-rate=true" else ""}
           
           # === SHELL CONFIGURATION ===
           [org.gnome.shell]
@@ -261,7 +260,7 @@ with lib;
         '';
       };
     };
-
+    
     # === DEFAULT SESSION ===
     services.displayManager.defaultSession = "gnome";
     
@@ -273,6 +272,7 @@ with lib;
       gnome-online-accounts.enable = true;
       evolution-data-server.enable = true;
       gnome-user-share.enable = true;
+      gnome-browser-connector.enable = true; # Enable browser extension connector
       games.enable = false; # Disable games by default
       tracker.enable = true; # For file indexing
       tracker-miners.enable = true;
@@ -500,7 +500,7 @@ with lib;
     services.blueman.enable = true;
     
     # Sound with PipeWire
-    sound.enable = false;  # Disable ALSA
+    hardware.alsa.enable = false;
     hardware.pulseaudio.enable = false;
     security.rtkit.enable = true;
     services.pipewire = {

@@ -15,9 +15,11 @@ in
   (optionals kvmEnabled [
     qemu_kvm
     OVMF
+    virtiofsd
   ]) ++
   (optionals libvirtEnabled [
     virt-manager
     libvirt
     virt-viewer
+    virtiofsd
   ])

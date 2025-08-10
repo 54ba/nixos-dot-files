@@ -114,7 +114,7 @@ pkgs.mkShell {
     export PATH="$PWD/node_modules/.bin:$PATH"
     export PATH="$PWD/vendor/bin:$PATH"
     export ANDROID_HOME="$HOME/Android/Sdk"
-    export FLUTTER_ROOT="$(dirname $(which flutter) 2>/dev/null || echo '')"
+    export FLUTTER_ROOT="$(dirname $(which flutter) 2>/dev/null || echo "")"
   '';
 }
 

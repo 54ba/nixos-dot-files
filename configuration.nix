@@ -344,4 +344,13 @@
   custom.security = {
     # pentest.enable = false;       # pentest packages - EXCLUDED
   };
+
+
+
+  # Ensure WAYLAND_DISPLAY is set globally for all applications
+  environment.sessionVariables = {
+    WAYLAND_DISPLAY = "wayland-0";
+  };
+
+
 }
