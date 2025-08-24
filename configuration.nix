@@ -4,7 +4,7 @@
   imports = [
     # Hardware and essential configuration
     ./hardware-configuration.nix
-    
+
     # Core system modules (new modular structure)
     ./modules/boot.nix
     ./modules/boot-enhancements.nix
@@ -20,23 +20,26 @@
     ./modules/system-optimization.nix
     ./modules/system-services.nix
     ./modules/networking.nix
-    
+
     # Package modules
     ./modules/core-packages.nix
     ./modules/optional-packages.nix
     ./modules/pentest.nix
-    
+
     # Desktop and application modules
     ./modules/virtualization.nix
     ./modules/containers.nix
-    
+
     # Application and service modules
     ./modules/ai-services.nix
     ./modules/nixgl.nix
     ./modules/electron-apps.nix
-    ./modules/home-manager-integration.nix
     ./modules/flake-config.nix
     ./modules/custom-binding.nix
+
+    # Enhanced modular configuration
+    ./modules/gnome-extensions.nix
+    ./modules/package-recommendations.nix
   ];
 
   # Allow unfree packages and insecure packages
@@ -104,7 +107,7 @@
   };
 
   # ===== MODULAR SYSTEM CONFIGURATION =====
-  
+
   # Core system modules - MINIMAL WITH BASIC GUI
   custom.boot = {
     enable = true;
@@ -121,7 +124,7 @@
     timezone = "Africa/Cairo";
     locale = "en_US.UTF-8";
   };
-  
+
   # Flatpak setting will be controlled by custom.services.system.flatpak.enable
 
   # Basic hardware like live USB - minimal GUI support
@@ -174,18 +177,18 @@
   custom.wayland.enable = true;                     # Enable Wayland optimizations
   custom.device-permissions.enable = true;         # Keep device permissions
   custom.system-optimization.enable = true;        # Enable optimizations
-  
+
   # System services with specific overrides
   custom.services.system = {
     enable = true;                                   # Enable system services
     bluetooth.enable = true;                        # Enable Bluetooth service
     flatpak.enable = true;                          # Enable Flatpak support
   };
-  
+
   custom.services.security.enable = true;          # Enable security services (correct path)
   custom.userSecurity.enable = true;              # Enable user security
   custom.boot.enhancements.enable = true;          # Enable boot enhancements
-  
+
   # ===== CUSTOM SSD2 BIND MOUNTS =====
   custom.binding = {
     enable = false;                                  # Disabled - using hardware-configuration.nix instead
@@ -226,63 +229,63 @@
 
   # These configurations are moved below to avoid duplicates
 
-  # Home Manager Integration
-  custom.home-manager = {
-    enable = true;  # Enable for home-manager integration
-    user = "mahmoud";
-    configPath = "./home-manager.nix";
-    useGlobalPkgs = true;
-    useUserPackages = true;
-    backupFileExtension = "backup";
-    development = {
-      enable = true;
-      languages = [ "python" "nodejs" "dart" "php" ];
-    };
-    shell = {
-      enable = true;
-      defaultShell = "zsh";
-      starship = true;
-      direnv = true;
-    };
-    desktop = {
-      enable = true;
-      theme = "Adwaita-dark";
-      iconTheme = "Papirus-Dark";
-    };
-  };
+  # # Home Manager Integration
+  # custom.home-manager = {
+  #   enable = true;  # Enable for home-manager integration
+  #   user = "mahmoud";
+  #   configPath = "./home-manager.nix";
+  #   useGlobalPkgs = true;
+  #   useUserPackages = true;
+  #   backupFileExtension = "backup";
+  #   development = {
+  #     enable = true;
+  #     languages = [ "python" "nodejs" "dart" "php" ];
+  #   };
+  #   shell = {
+  #     enable = true;
+  #     defaultShell = "zsh";
+  #     starship = true;
+  #     direnv = true;
+  #   };
+  #   desktop = {
+  #     enable = true;
+  #     theme = "Adwaita-dark";
+  #     iconTheme = "Papirus-Dark";
+  #   };
+  # };
 
-  # Flake Configuration
-  custom.flake = {
-    enable = true;  # Enable for flake-based configuration management
-    inputs = {
-      nixpkgs = "github:nixos/nixpkgs/nixos-25.05";
-      nixpkgsUnstable = "github:nixos/nixpkgs/nixos-unstable";
-      homeManager = "github:nix-community/home-manager/release-25.05";
-    };
-    system = "x86_64-linux";
-    hostname = "mahmoud-laptop";
-    homeManager = {
-      enable = true;
-      useGlobalPkgs = true;
-      useUserPackages = true;
-      backupFileExtension = "backup";
-    };
-    overlays = {
-      enable = true;
-      unstable = true;
-    };
-  };
+  # # Flake Configuration
+  # custom.flake = {
+  #   enable = true;  # Enable for flake-based configuration management
+  # #   inputs = {
+  #     nixpkgs = "github:nixos/nixpkgs/nixos-25.05";
+  #     nixpkgsUnstable = "github:nixos/nixpkgs/nixos-unstable";
+  #     homeManager = "github:nix-community/home-manager/release-25.05";
+  #   };
+  #   system = "x86_64-linux";
+  #   hostname = "mahmoud-laptop";
+  #   homeManager = {
+  #     enable = true;
+  #     useGlobalPkgs = true;
+  #     useUserPackages = true;
+  #     backupFileExtension = "backup";
+  #   };
+  #   overlays = {
+  #     enable = true;
+  #     unstable = true;
+  #   };
+  # };
 
-  # ===== DESKTOP AND APPLICATION MODULES =====
-  
-  # GNOME Desktop (enabled for full desktop experience)
-  custom.desktop.gnome = {
-    enable = true;               # Enable GNOME desktop
-    extensions.enable = true;    # Enable GNOME extensions
-    excludeApps.enable = true;   # Exclude unwanted apps
-    theme.enable = true;         # Enable custom theme
-  };
-  
+  # # ===== DESKTOP AND APPLICATION MODULES =====
+
+  # # GNOME Desktop (enabled for full desktop experience)
+  # custom.desktop.gnome = {
+  #   enable = true;               # Enable GNOME desktop
+  #   extensions.enable = true;    # Enable GNOME extensions
+  #   excludeApps.enable = true;   # Exclude unwanted apps
+#     theme.enable = true;         # Enable custom theme
+  # };
+
   # Virtualization services
   custom.virtualization = {
     enable = true;               # Enable virtualization
@@ -290,7 +293,7 @@
     kvm.enable = true;           # Enable KVM virtualization
     libvirt.enable = true;       # Enable libvirt
   };
-  
+
   # Container services
   custom.containers = {
     enable = true;               # Enable containers
@@ -298,7 +301,7 @@
     docker.enable = true;        # Enable Docker support
     dockerCompat = false;        # Disable Docker compatibility (not needed when using Docker directly)
   };
-  
+
   # Electron Apps with proper Wayland support (RECOMMENDED APPROACH)
   custom.electron-apps = {
     enable = true;                # Enable proper electron app integration
@@ -309,7 +312,7 @@
       vscode.enable = true;       # Install VS Code with Wayland support
     };
   };
-  
+
   # nixGL Graphics Compatibility (enable for graphics apps)
   custom.nixgl = {
     enable = true;               # Enable for graphics apps
@@ -323,7 +326,7 @@
   };
 
   # ===== PACKAGE COLLECTIONS =====
-  
+
   # Core package configuration
   custom.packages = {
     # ENABLED PACKAGES:
@@ -334,23 +337,46 @@
     media.enable = true;            # Enable media packages for full desktop
     entertainment.enable = true;    # Enable entertainment packages
     popular.enable = true;          # Enable popular packages
-    
+
     # OPTIONAL PACKAGES:
     gaming.enable = false;          # Gaming packages - can enable if needed
     # nixai.enable = false;         # nixai packages - EXCLUDED (option may not exist)
   };
-  
+
   # Security packages (pentest excluded per user request)
   custom.security = {
     # pentest.enable = false;       # pentest packages - EXCLUDED
   };
 
+  # Enhanced GNOME Extensions Management
+  custom.gnome.extensions = {
+    enable = true;
+    categories = {
+      productivity = true; system = true; windows = true; launchers = true;
+      media = true; utilities = true; development = true; security = true;
+    };
+    migration = { windows = true; macos = true; android = true; };
+    premium = { enable = true; gnomeLook = true; pling = true; };
+    settings.enable = true; performance.enable = true;
+  };
 
+  # Package Recommendations
+  custom.packageRecommendations = {
+    enable = true;
+    categories = {
+      productivity = true; development = true; creative = true; gaming = true;
+      system = true; networking = true; education = true;
+    };
+    hardware = { enable = true; gpu = true; cpu = true; memory = true; storage = true; };
+    usage = { enable = true; developer = true; designer = true; gamer = true; student = true; business = true; };
+    ai = { enable = true; hardwareOptimization = true; performanceTuning = true; };
+  };
 
-  # Ensure WAYLAND_DISPLAY is set globally for all applications
+  # # Ensure WAYLAND_DISPLAY is set globally for all applications
   environment.sessionVariables = {
     WAYLAND_DISPLAY = "wayland-0";
   };
 
 
 }
+
