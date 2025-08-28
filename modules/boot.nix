@@ -34,31 +34,40 @@ with lib;
         efiSupport = true;
         useOSProber = true;
         configurationLimit = config.custom.boot.grub.generations;
+        # Add memtest option to GRUB
+        memtest86.enable = true;
       };
-      # Global timeout setting
-      timeout = 10;
+      timeout = 5;
     };
     
-    # Basic boot configuration  
-    boot.initrd.systemd.enable = true;
+    # Boot configuration
+    boot = {
+      # Enable systemd in initrd
+      initrd.systemd.enable = true;
+      
+      # Console configuration
+      consoleLogLevel = 0;
+      kernelParams = [
+        "quiet"
+        "rd.udev.log_level=3"
+      ];
+    };
     
     # Console settings
-    boot.consoleLogLevel = 0;
-    
-    # Console font configuration
     console = {
       font = "${pkgs.terminus_font}/share/consolefonts/ter-v16n.psf.gz";
       keyMap = "us";
-      useXkbConfig = false;  # Use console keyMap
+      useXkbConfig = false;
     };
-    
-    # System packages needed for boot
-    environment.systemPackages = import ../packages/boot-packages.nix { inherit pkgs; };
 
-    # XDG Portal configuration
-    xdg.portal = {
-      enable = true;
-      config.common.default = "*";
-    };
+    # Early boot messages
+    boot.earlyVconsoleSetup = true;
+
+    # System packages needed for boot
+    environment.systemPackages = with pkgs; [
+      terminus_font
+      efibootmgr
+      os-prober
+    ];
   };
 }

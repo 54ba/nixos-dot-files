@@ -86,6 +86,19 @@ with lib;
       enableBashCompletion = true;
       syntaxHighlighting.enable = true;
       autosuggestions.enable = true;
+      shellInit = ''
+        # Initialize starship prompt if enabled
+        ${if config.custom.shellEnvironment.features.starship then "eval \"$(starship init zsh)\"" else ""}
+
+        # Initialize direnv if enabled
+        ${if config.custom.shellEnvironment.features.direnv then "eval \"$(direnv hook zsh)\"" else ""}
+
+        # FZF configuration if enabled
+        ${if config.custom.shellEnvironment.features.fzf then ''
+          source ${pkgs.fzf}/share/fzf/completion.zsh
+          source ${pkgs.fzf}/share/fzf/key-bindings.zsh
+        '' else ""}
+      '';
     };
   };
 }

@@ -8,76 +8,72 @@
     [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  # Proper module loading order for hardware support
-  boot.initrd.availableKernelModules = [ 
+  # Base kernel modules as detected by nixos-generate-config
+  boot.initrd.availableKernelModules = [
     # Base system modules
-    "xhci_pci" 
-    "ahci" 
-    "nvme" 
-    "usb_storage" 
+    "xhci_pci"
+    "ahci"
+    "nvme"
+    "usb_storage"
     "sd_mod"
     "sdhci_pci"
-    # ThinkPad specific modules
+    # Additional hardware support
     "thinkpad_acpi"
     "coretemp"
-    # NVIDIA modules in correct order
-    "nvidia" 
-    "nvidia_modeset"
-    "nvidia_uvm"
-    "nvidia_drm"
   ];
-  
+
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
+
+  # NVIDIA modules are handled by the nvidia-specific configuration
+  hardware.nvidia = {
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    modesetting.enable = true;
+  };
 
   # Consolidated kernel parameters for hardware support
   boot.kernelParams = [
     # ACPI configuration with USB fixes
     "acpi_osi=Linux"
     "acpi_backlight=vendor"
-    "acpi.debug_layer=0"
-    "acpi.debug_level=0"
-    # USB fixes for AE_ALREADY_EXISTS
     "usbcore.autosuspend=-1"
     "usbcore.use_both_schemes=1"
-    # PCIe and hardware settings
+    # PCIe and power management
     "pcie_aspm=off"
-    "nvidia-drm.modeset=1"
-    # Performance settings
     "intel_pstate=active"
-    "mitigations=off"
   ];
 
-  # Extra module configuration
-  boot.extraModprobeConfig = ''
-    options thinkpad_acpi fan_control=1
-    options nvidia_drm modeset=1
-    options usbcore autosuspend=-1
-  '';
+  # Filesystem configuration
+  fileSystems."/" = {
+    device = "/dev/disk/by-uuid/19324f88-fbf3-41a8-8758-1c35604d7137";
+    fsType = "ext4";
+  };
 
-  fileSystems."/" =
-    { device = "/dev/disk/by-uuid/19324f88-fbf3-41a8-8758-1c35604d7137";
-      fsType = "ext4";
-    };
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-uuid/EF5B-1A82";
+    fsType = "vfat";
+    options = [ "fmask=0022" "dmask=0022" ];
+  };
 
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/EF5B-1A82";
-      fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
-    };
+  fileSystems."/nix" = {
+    device = "/dev/disk/by-uuid/d76ba515-91c4-4316-97ca-749ad2e4e22f";
+    fsType = "ext4";
+  };
 
-  fileSystems."/nix" =
-    { device = "/dev/disk/by-uuid/d76ba515-91c4-4316-97ca-749ad2e4e22f";
-      fsType = "ext4";
-    };
+  # Temporary build directory with more space
+  fileSystems."/tmp/nix-build" = {
+    device = "tmpfs";
+    fsType = "tmpfs";
+    options = [ "size=10G" ];
+  };
 
   swapDevices = [ ];
 
-  # Networking configuration
+  # Network configuration
   networking.useDHCP = lib.mkDefault true;
 
-  # Platform and CPU configuration
+  # Platform configuration
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

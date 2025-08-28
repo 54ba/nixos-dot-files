@@ -2,7 +2,7 @@
 {
   home.username = "mahmoud";
   home.homeDirectory = "/home/mahmoud";
-  home.stateVersion = "25.05";
+  home.stateVersion = "24.11";
   programs.home-manager.enable = true;
 
 
@@ -201,7 +201,7 @@
       cd-home = "cd ~/.config/home-manager";
     };
 
-    initContent = ''
+    initExtra = ''
       # Enable starship prompt
       eval "$(starship init zsh)"
 

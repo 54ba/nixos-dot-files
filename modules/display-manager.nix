@@ -63,44 +63,85 @@ with lib;
         };
 
         # Configure GDM display manager
-        displayManager.gdm = {
-          enable = true;
-          wayland = config.custom.desktop.wayland.enable;
+        displayManager = {
+          gdm = {
+            enable = true;
+            wayland = config.custom.desktop.wayland.enable;
+            debug = true;
+          };
+          # Ensure proper session handling
+          sessionCommands = ''
+            # Fix potential TTY issues
+            ${pkgs.kbd}/bin/setfont ter-v16n
+          '';
         };
-
       };
 
-      # Enable additional GNOME services
-      services.udev.packages = with pkgs; [ gnome-settings-daemon ];
+      # Enable additional GNOME services with fixes
+      services = {
+        udev.packages = with pkgs; [ gnome-settings-daemon ];
+        dbus.packages = [ pkgs.dconf ];
+        gnome = {
+          core-apps.enable = true;
+          core-shell.enable = true;
+          gnome-keyring.enable = true;
+          gnome-online-accounts.enable = true;
+          evolution-data-server.enable = true;
+          glib-networking.enable = true;
+          gnome-settings-daemon.enable = true;
+        };
+      };
 
-      # Enable dconf for GNOME tools
-      programs.dconf.enable = true;
+      # Fix TTY access
+      console = {
+        enable = true;
+        keyMap = "us";
+        font = "${pkgs.terminus_font}/share/consolefonts/ter-v16n.psf.gz";
+      };
 
-      # XDG portals
+      # Enable dconf and required system services
+      programs = {
+        dconf.enable = true;
+        gnome-terminal.enable = true;
+      };
+
+      # XDG portals with proper GNOME integration
       xdg = {
         portal = {
           enable = true;
-          extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
+          extraPortals = [ 
+            pkgs.xdg-desktop-portal-gnome
+            pkgs.xdg-desktop-portal-gtk 
+          ];
           config = {
             common = {
-              default = lib.mkDefault [ "gnome" ];
+              default = [ "gnome" "gtk" ];
             };
           };
         };
-        mime = {
-          enable = true;
-          defaultApplications = {
-            "x-scheme-handler/http" = "firefox.desktop";
-            "x-scheme-handler/https" = "firefox.desktop";
-            "x-scheme-handler/chrome" = "firefox.desktop";
-            "text/html" = "firefox.desktop";
-            "application/x-extension-htm" = "firefox.desktop";
-            "application/x-extension-html" = "firefox.desktop";
-            "application/x-extension-shtml" = "firefox.desktop";
-            "application/xhtml+xml" = "firefox.desktop";
-            "application/x-extension-xhtml" = "firefox.desktop";
-            "application/x-extension-xht" = "firefox.desktop";
-            "inode/directory" = "org.gnome.Nautilus.desktop";
+        mime.enable = true;
+      };
+
+      # Required system packages
+      environment.systemPackages = with pkgs; [
+        gnome-session
+        ibus
+        polkit_gnome
+      ];
+
+      # Ensure polkit authentication agent is running
+      systemd = {
+        user.services.polkit-gnome-authentication-agent-1 = {
+          description = "polkit-gnome-authentication-agent-1";
+          wantedBy = [ "graphical-session.target" ];
+          wants = [ "graphical-session.target" ];
+          after = [ "graphical-session.target" ];
+          serviceConfig = {
+            Type = "simple";
+            ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+            Restart = "on-failure";
+            RestartSec = 1;
+            TimeoutStopSec = 10;
           };
         };
       };
@@ -108,10 +149,8 @@ with lib;
 
     # GNOME desktop environment configuration
     (mkIf config.custom.desktop.gnome.enable {
-      # Enable GNOME desktop environment
       services.xserver.desktopManager.gnome = {
         enable = true;
-        # GNOME Shell configuration with custom theme
         extraGSettingsOverrides = mkIf config.custom.desktop.gnome.theme.enable ''
           [org.gnome.desktop.interface]
           gtk-theme='${config.custom.desktop.gnome.theme.gtkTheme}'
@@ -125,7 +164,7 @@ with lib;
           button-layout='appmenu:minimize,maximize,close'
 
           [org.gnome.shell]
-          enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com', 'blur-my-shell@aunetx', 'caffeine@patapon.info']
+          enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com']
 
           [org.gnome.shell.extensions.dash-to-dock]
           dock-position='BOTTOM'
@@ -134,68 +173,30 @@ with lib;
 
           [org.gnome.mutter]
           experimental-features=['scale-monitor-framebuffer']
-          attach-modal-dialogs=true
-          dynamic-workspaces=true
-          workspaces-only-on-primary=false
 
           [org.gnome.desktop.session]
           idle-delay=300
         '';
       };
 
-      # Ensure Wayland is the default session
-      services.displayManager.defaultSession = "gnome";
-
-      # Enable GNOME services
-      services.gnome = {
-        core-apps.enable = true;
-        gnome-keyring.enable = true;
-        gnome-online-accounts.enable = true;
-        evolution-data-server.enable = true;
-      };
-
-      # GNOME appearance and behavior tweaks
-      environment.gnome.excludePackages = mkIf config.custom.desktop.gnome.excludeApps.enable (with pkgs; [
-        # Remove unwanted GNOME apps to keep system clean
-        gnome-tour
-        epiphany  # GNOME web browser
-        geary     # Email client
-        totem     # Video player (we have better alternatives)
-      ]);
-
-      # GNOME-specific system packages
+      # Essential GNOME packages
       environment.systemPackages = with pkgs; [
-        # GNOME utilities and tools
         gnome-tweaks
         gnome-shell-extensions
         dconf-editor
-
-        # File manager integration
         nautilus
-        file-roller  # Archive manager
-
-        # Additional GNOME applications
-        gnome-calculator
-        gnome-calendar
-        gnome-clocks
-        gnome-weather
-        gnome-maps
-
-        # Theme and appearance
+        gnome-terminal
         papirus-icon-theme
         adwaita-icon-theme
         gnome-themes-extra
-
-        # System integration
-        xdg-utils
-        xdg-user-dirs
-
-
       ];
 
-
-
-
+      # Enable GNOME keyring PAM integration
+      security.pam.services = {
+        gdm.enableGnomeKeyring = true;
+        gdm-password.enableGnomeKeyring = true;
+        login.enableGnomeKeyring = true;
+      };
     })
   ];
 }

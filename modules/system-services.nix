@@ -165,7 +165,7 @@ with lib;
       # Android development packages
       (optionals config.custom.services.system.android.enable [
         android-tools       # ADB, fastboot, etc.
-        android-udev-rules  # Device permissions
+        # android-udev-rules removed due to systemctl path issues
       ]) ++
       
       # FUSE packages
