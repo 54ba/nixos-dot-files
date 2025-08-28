@@ -29,18 +29,28 @@
     in {
       nixosConfigurations.mahmoud-laptop = nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit pkgs; };
         modules = [
           ./configuration.nix
-          # Disable home-manager NixOS module since we're using standalone
-          # home-manager.nixosModules.home-manager
-          # {
-          #   home-manager.useGlobalPkgs = true;
-          #   home-manager.useUserPackages = true;
-          #   home-manager.backupFileExtension = "backup";
-          #   home-manager.users.mahmoud = import ./home-manager.nix;
-          # }
+          {
+            # Configure nixpkgs overlays and config properly
+            nixpkgs.overlays = [ overlay-unstable ];
+            nixpkgs.config = {
+              allowUnfree = true;
+              allowBroken = false;
+              allowUnsupportedSystem = false;
+            };
+          }
         ];
+      };
+
+      # Development shells
+      devShells.${system} = {
+        automation = import ./shells/automation-shell.nix { inherit pkgs; };
+        python = import ./shells/python-shell.nix { inherit pkgs; };
+        typescript = import ./shells/typescript-shell.nix { inherit pkgs; };
+        php = import ./shells/php-shell.nix { inherit pkgs; };
+        flutter = import ./shells/flutter-shell.nix { inherit pkgs; };
+        full-dev = import ./shells/full-dev-shell.nix { inherit pkgs; };
       };
 
       # Standalone home-manager configuration

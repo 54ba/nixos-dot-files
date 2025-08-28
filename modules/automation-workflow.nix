@@ -209,7 +209,7 @@ in
       # Always include essential automation tools
       jq yq curl wget httpie
       git gh glab
-      python3 nodejs npm yarn
+      python3 nodejs nodePackages.npm yarn
       
       # Conditional packages based on configuration
     ] ++ optionals cfg.api.enable [
@@ -237,7 +237,7 @@ in
       python3Packages.pyyaml python3Packages.click
       python3Packages.schedule python3Packages.celery
     ] ++ optionals cfg.scripting.languages.nodejs [
-      nodejs npm yarn nodePackages.pm2
+      nodejs nodePackages.npm yarn nodePackages.pm2
     ] ++ optionals cfg.scripting.languages.powershell [
       powershell
     ] ++ optionals cfg.development.enable [
@@ -424,6 +424,7 @@ EOF
           description = "Kestra workflow user";
         };
       })
+      
     ];
     
     users.groups = mkMerge [
@@ -442,6 +443,11 @@ EOF
       (mkIf cfg.engines.kestra.enable {
         kestra = {};
       })
+      
+      # Create automation group
+      {
+        automation = {};
+      }
     ];
     
     # Firewall configuration for automation services
@@ -505,14 +511,5 @@ EOF
       "d /var/lib/automation/logs 0755 root root -"
       "d /var/lib/automation/temp 0755 root root -"
     ];
-    
-    # Add automation user to required groups
-    users.users.mahmoud.extraGroups = mkIf config.users.users.mahmoud.isNormalUser [
-      "automation"
-    ] ++ optionals cfg.engines.n8n.enable [ "n8n" ]
-      ++ optionals cfg.engines.nodeRed.enable [ "node-red" ];
-    
-    # Create automation group
-    users.groups.automation = {};
   };
 }
