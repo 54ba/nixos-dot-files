@@ -1,15 +1,12 @@
-{ config, pkgs, inputs, lib, ... }:
+{ config, pkgs, lib, ... }:
 {
-  home.username = "mahmoud";
-  home.homeDirectory = "/home/mahmoud";
-  home.stateVersion = "24.11";
-  programs.home-manager.enable = true;
+  # Basic home configuration is handled by flake.nix
+  # This file contains the user-specific package and program configurations
 
 
   # Development packages
   home.packages = with pkgs; [
-    # Home Manager CLI
-    home-manager
+    # Home Manager CLI removed to avoid collision (available system-wide)
 
     # AI/ML Development
     python311  # Use consistent Python 3.11 instead of python3
@@ -201,7 +198,7 @@
       cd-home = "cd ~/.config/home-manager";
     };
 
-    initExtra = ''
+    initContent = ''
       # Enable starship prompt
       eval "$(starship init zsh)"
 

@@ -60,8 +60,8 @@ with lib;
       useXkbConfig = false;
     };
 
-    # Early boot messages (updated deprecated option)
-    console.earlySetup = true;
+    # Early boot messages
+    boot.earlyVconsoleSetup = true;
 
     # System packages needed for boot
     environment.systemPackages = with pkgs; [
