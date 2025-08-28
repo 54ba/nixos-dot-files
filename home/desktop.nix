@@ -1,0 +1,1 @@
+/etc/static/nixos/home/desktop.nix

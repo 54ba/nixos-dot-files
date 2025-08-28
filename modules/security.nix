@@ -39,47 +39,15 @@ with lib;
         ];
       }];
     };
-    
-    # PAM configuration
-    security.pam = mkIf config.custom.security.pam.enable {
-      loginLimits = [
-        {
-          domain = "@users";
-          item = "nofile";
-          type = "soft";
-          value = "65536";
-        }
-        {
-          domain = "@users";
-          item = "nofile";
-          type = "hard";
-          value = "65536";
-        }
-        {
-          domain = "@wheel";
-          item = "nice";
-          type = "soft";
-          value = "-10";
-        }
-      ];
-      services = {
-        login.enableGnomeKeyring = true;
-        gdm.enableGnomeKeyring = true;
-        gdm-password.enableGnomeKeyring = true;
-        common-session = {
-          text = ''
-            session optional pam_umask.so umask=0022
-          '';
-        };
-      };
-    };
-    
+
+    # PAM configuration moved to consolidated module
+
     # AppArmor configuration
     security.apparmor = mkIf config.custom.security.apparmor.enable {
       enable = true;
       killUnconfinedConfinables = true;
     };
-    
+
     # Other security settings
     security.polkit.enable = true;
     security.chromiumSuidSandbox.enable = true;

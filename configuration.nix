@@ -34,12 +34,25 @@
     ./modules/ai-services.nix
     ./modules/nixgl.nix
     ./modules/electron-apps.nix
-    ./modules/flake-config.nix
+    # ./modules/flake-config.nix  # Temporarily disabled to resolve conflicts
     ./modules/custom-binding.nix
+    ./modules/wine-support.nix
 
-    # Enhanced modular configuration
-    ./modules/gnome-extensions.nix
+    # Enhanced modular configuration (consolidated and conflict-free)
     ./modules/package-recommendations.nix
+    ./modules/windows-compatibility.nix
+    ./modules/lenovo-s540-gtx-15iwl.nix
+
+    # Additional modules for comprehensive features
+    ./modules/gnome-extensions.nix
+    ./modules/gtk-enhanced.nix
+    ./modules/home-manager-integration.nix  # Re-enabled with simplified config
+    ./modules/nvidia-performance.nix
+    ./modules/pam-consolidated.nix
+    ./modules/shell-environment.nix
+    ./modules/void-editor.nix
+    ./modules/nixai-integration.nix
+    ./modules/migration-assistant.nix
   ];
 
   # Allow unfree packages and insecure packages
@@ -49,6 +62,18 @@
       "electron-27.3.11"
       "electron-33.4.11"
     ];
+  };
+
+ networking.nameservers = ["8.8.8.8" "8.8.4.4"];
+
+ networking.wireless = {
+  enable = true;
+  networks = {
+    "Yogurt" = {
+       hidden = true;
+       psk = "Kitty1520";
+      };
+    };
   };
 
   # Binary cache and build optimization settings
@@ -81,29 +106,34 @@
     keep-outputs = false;
     keep-derivations = false;
     auto-optimise-store = true;
-    trusted-users = [ "root" "@wheel" ];
     allow-import-from-derivation = true;
     sandbox = false;  # Disable sandboxing for installation - will re-enable after reboot
   };
 
-  # Enable flakes and new nix command
-  nix.extraOptions = ''
-    experimental-features = nix-command flakes
-    keep-outputs = false
-    keep-derivations = false
-    builders-use-substitutes = true
-    substitute = true
-    stalled-download-timeout = 300
-    connect-timeout = 30
-    max-substitution-jobs = 16
-    warn-dirty = false
-  '';
+  # Nix configuration for user access
+  nix = {
+    # Allow users in wheel group to use Nix
+    settings.trusted-users = [ "root" "@wheel" "mahmoud" ];
 
-  # Garbage collection
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 7d";
+    # Enable flakes and new nix command
+    extraOptions = ''
+      experimental-features = nix-command flakes
+      keep-outputs = false
+      keep-derivations = false
+      builders-use-substitutes = true
+      substitute = true
+      stalled-download-timeout = 300
+      connect-timeout = 30
+      max-substitution-jobs = 16
+      warn-dirty = false
+    '';
+
+    # Garbage collection
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 7d";
+    };
   };
 
   # ===== MODULAR SYSTEM CONFIGURATION =====
@@ -136,16 +166,12 @@
     graphics.enable = true;      # Enable graphics for basic GUI
   };
 
-  # ENABLE FULL GNOME DESKTOP ENVIRONMENT
-  custom.desktop = {
-    enable = true;               # Enable full desktop environment
-    wayland.enable = true;       # Enable Wayland support
-  };
+  # Desktop environment configuration moved to gnome-consolidated.nix module
 
   custom.security = {
     enable = true;
     sudo.enable = true;
-    pam.enable = true;
+    pam.enable = true;           # Enable consolidated PAM configuration
     apparmor.enable = true;      # Enable AppArmor security
   };
 
@@ -191,7 +217,7 @@
 
   # ===== CUSTOM SSD2 BIND MOUNTS =====
   custom.binding = {
-    enable = false;                                  # Disabled - using hardware-configuration.nix instead
+    enable = true;                                   # Enable custom binding for SSD2
     ssd2Path = "/mnt/ssd2";                          # Path to SSD2 mount
     tmp = {
       enable = true;                                 # Bind /tmp to SSD2
@@ -207,14 +233,13 @@
   };
 
   # ===== GNOME DESKTOP CONFIGURATION =====
-  # GNOME desktop environment will be configured through the modules
-  # Display manager and desktop environment are handled by the GNOME modules
+  # GNOME configuration consolidated below to avoid conflicts
 
   # ===== APPLICATION MODULES =====
 
   # AI Services (disabled by default)
   custom.ai-services = {
-    enable = false;  # Enable for AI development
+    enable = true;  # Enable for AI development
     ollama = {
       enable = true;
       acceleration = "cuda";
@@ -227,64 +252,106 @@
     packages.enable = true;
   };
 
-  # These configurations are moved below to avoid duplicates
+  # NixAI Integration
+  custom.nixaiIntegration = {
+    enable = true;               # Enable nixai integration
+    features = {
+      cli = true;                # Enable nixai CLI tools
+      gui = true;                # Enable nixai GUI applications
+      development = true;         # Enable nixai development tools
+      ai = true;                 # Enable nixai AI capabilities
+    };
+    packages = {
+      enable = true;             # Enable nixai packages
+      core = true;               # Enable core nixai packages
+      extras = true;             # Enable extra nixai packages
+    };
+  };
 
-  # # Home Manager Integration
-  # custom.home-manager = {
-  #   enable = true;  # Enable for home-manager integration
-  #   user = "mahmoud";
-  #   configPath = "./home-manager.nix";
-  #   useGlobalPkgs = true;
-  #   useUserPackages = true;
-  #   backupFileExtension = "backup";
-  #   development = {
-  #     enable = true;
-  #     languages = [ "python" "nodejs" "dart" "php" ];
-  #   };
-  #   shell = {
-  #     enable = true;
-  #     defaultShell = "zsh";
-  #     starship = true;
-  #     direnv = true;
-  #   };
-  #   desktop = {
-  #     enable = true;
-  #     theme = "Adwaita-dark";
-  #     iconTheme = "Papirus-Dark";
-  #   };
-  # };
+  # Migration Assistant
+  custom.migrationAssistant = {
+    enable = true;               # Enable migration assistant
+    features = {
+      backup = true;             # Enable backup functionality
+      restore = true;            # Enable restore functionality
+      validation = true;         # Enable configuration validation
+      rollback = true;           # Enable rollback functionality
+    };
+    tools = {
+      enable = true;             # Enable migration tools
+      scripts = true;            # Enable migration scripts
+      gui = true;                # Enable migration GUI
+    };
+  };
 
-  # # Flake Configuration
-  # custom.flake = {
-  #   enable = true;  # Enable for flake-based configuration management
-  # #   inputs = {
-  #     nixpkgs = "github:nixos/nixpkgs/nixos-25.05";
-  #     nixpkgsUnstable = "github:nixos/nixpkgs/nixos-unstable";
-  #     homeManager = "github:nix-community/home-manager/release-25.05";
-  #   };
-  #   system = "x86_64-linux";
-  #   hostname = "mahmoud-laptop";
-  #   homeManager = {
-  #     enable = true;
-  #     useGlobalPkgs = true;
-  #     useUserPackages = true;
-  #     backupFileExtension = "backup";
-  #   };
-  #   overlays = {
-  #     enable = true;
-  #     unstable = true;
-  #   };
-  # };
+  # Home Manager Integration - Re-enabled with simplified config
+  custom.home-manager = {
+    enable = true;  # Re-enabled for home-manager integration
+    user = "mahmoud";
+    configPath = "./home-manager.nix";
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    backupFileExtension = "backup";
+    development = {
+      enable = true;
+      languages = [ "python" "nodejs" "dart" "php" ];
+    };
+    shell = {
+      enable = true;
+      defaultShell = "zsh";
+      starship = true;
+      direnv = true;
+    };
+    desktop = {
+      enable = true;
+      theme = "Adwaita-dark";
+      iconTheme = "Papirus-Dark";
+    };
+  };
+
+  # Flake Configuration - Re-enabled with simplified config
+  custom.flake = {
+    enable = true;  # Re-enabled for flake-based configuration management
+    inputs = {
+      nixpkgs = "github:nixos/nixpkgs/nixos-25.05";
+      nixpkgsUnstable = "github:nixos/nixpkgs/nixos-unstable";
+      homeManager = "github:nix-community/home-manager/release-25.05";
+    };
+    system = "x86_64-linux";
+    hostname = "mahmoud-laptop";
+    homeManager = {
+      enable = true;  # Re-enabled with simplified config
+      useGlobalPkgs = true;
+      useUserPackages = true;
+      backupFileExtension = "backup";
+    };
+    overlays = {
+      enable = true;  # Re-enabled for package management
+      unstable = true;  # Re-enabled for latest packages
+    };
+  };
 
   # # ===== DESKTOP AND APPLICATION MODULES =====
 
-  # # GNOME Desktop (enabled for full desktop experience)
-  # custom.desktop.gnome = {
-  #   enable = true;               # Enable GNOME desktop
-  #   extensions.enable = true;    # Enable GNOME extensions
-  #   excludeApps.enable = true;   # Exclude unwanted apps
-#     theme.enable = true;         # Enable custom theme
-  # };
+        # GNOME configuration consolidated below
+
+  # ===== DESKTOP ENVIRONMENT CONFIGURATION =====
+  # Enable desktop environment and GNOME
+  custom.desktop = {
+    enable = true;                    # Enable desktop environment
+    wayland.enable = true;            # Enable Wayland support
+    gnome = {
+      enable = true;                  # Enable GNOME desktop environment
+      extensions.enable = true;       # Enable GNOME extensions
+      excludeApps.enable = true;      # Exclude unwanted apps
+      theme.enable = true;            # Enable custom theming
+    };
+  };
+
+  # PAM configuration handled by existing modules
+
+    # ===== GNOME CONFIGURATION =====
+  # GNOME configuration handled by display-manager.nix module
 
   # Virtualization services
   custom.virtualization = {
@@ -301,6 +368,134 @@
     docker.enable = true;        # Enable Docker support
     dockerCompat = false;        # Disable Docker compatibility (not needed when using Docker directly)
   };
+
+  # Wine and Windows Compatibility Support
+  custom.wine = {
+    enable = true;               # Enable Wine support
+
+    packages = {
+      wine64 = true;             # Install Wine 64-bit
+      wine32 = true;             # Install Wine 32-bit for 32-bit Windows apps
+      winetricks = true;         # Install Winetricks for Wine configuration
+      playonlinux = true;        # Install PlayOnLinux for easy Wine management
+      lutris = true;             # Install Lutris for game management
+      dxvk = true;               # Install DXVK for DirectX 11/10 support
+      vkd3d = true;              # Install VKD3D for DirectX 12 support
+      mono = true;               # Install Wine Mono for .NET applications
+      gecko = true;              # Install Wine Gecko for web browser support
+    };
+
+    performance = {
+      enable = true;             # Enable Wine performance optimizations
+      esync = true;              # Enable Esync for better performance
+      fsync = true;              # Enable Fsync for better performance
+      gamemode = true;           # Enable Feral GameMode for performance
+      mangohud = true;           # Enable MangoHud for performance monitoring
+    };
+
+    compatibility = {
+      enable = true;             # Enable Wine compatibility features
+      virtualDesktop = true;     # Enable virtual desktop mode
+      dpiScaling = true;         # Enable DPI scaling support
+      audio = true;              # Enable enhanced audio support
+      networking = true;         # Enable enhanced networking support
+    };
+  };
+
+  # Windows Application Compatibility Layer
+  custom.windowsCompatibility = {
+    enable = true;               # Enable Windows compatibility layer
+
+    # .NET Framework support
+    dotnet = {
+      enable = true;             # Enable .NET Framework support
+      versions = [ "4.8" "3.5" ]; # Install .NET Framework 4.8 and 3.5
+      mono = true;               # Enable Mono runtime support
+      core = true;               # Enable .NET Core support
+    };
+
+    # Application categories
+    applications = {
+      office = true;             # Office applications (Word, Excel, PowerPoint)
+      development = true;        # Development tools (Visual Studio, etc.)
+      design = true;             # Design applications (Photoshop, Illustrator)
+      gaming = true;             # Gaming applications
+      business = true;           # Business applications (QuickBooks, etc.)
+    };
+
+    # Wine configuration
+    wine = {
+      prefixes = {
+        office = "~/.wine-office";      # Separate prefix for Office apps
+        development = "~/.wine-dev";    # Separate prefix for dev tools
+        gaming = "~/.wine-games";      # Separate prefix for games
+        design = "~/.wine-design";     # Separate prefix for design apps
+        business = "~/.wine-business"; # Separate prefix for business apps
+      };
+      performance = {
+        esync = true;            # Enable esync for better performance
+        fsync = true;            # Enable fsync for better performance
+        gamemode = true;         # Enable gamemode integration
+      };
+    };
+
+    # Alternative applications
+    alternatives = {
+      enable = true;             # Install Linux alternatives to Windows apps
+      office = true;             # Install LibreOffice/OnlyOffice
+      design = true;             # Install GIMP/Inkscape
+      development = true;        # Install VS Code/Rider
+    };
+  };
+
+  # Lenovo S540 GTX 15IWL Hardware Optimizations
+  custom.lenovoS540Gtx15iwl = {
+    enable = true;                # Enable Lenovo S540 GTX 15IWL optimizations
+
+    # Performance optimizations
+    performance = {
+      enable = true;             # Enable performance optimizations
+      cpuGovernor = "performance"; # Maximum performance mode
+      thermalManagement = true;   # Enable thermal management
+      powerManagement = true;     # Enable power management
+    };
+
+    # Graphics optimizations
+    graphics = {
+      enable = true;             # Enable graphics optimizations
+      nvidiaOptimizations = true; # Enable NVIDIA GTX 1650 optimizations
+      intelOptimizations = true; # Enable Intel UHD Graphics optimizations
+    };
+
+    # Storage optimizations
+    storage = {
+      enable = true;             # Enable storage optimizations
+      ssdOptimizations = true;   # Enable SSD optimizations
+      trimSupport = true;        # Enable TRIM support
+    };
+
+    # Memory optimizations
+    memory = {
+      enable = true;             # Enable memory optimizations
+      hugePages = true;          # Enable huge pages
+      swappiness = 10;           # Low swappiness for better performance
+    };
+
+    # Network optimizations
+    network = {
+      enable = true;             # Enable network optimizations
+      wifiOptimizations = true;  # Enable WiFi optimizations
+      bluetoothOptimizations = true; # Enable Bluetooth optimizations
+    };
+
+    # Audio optimizations
+    audio = {
+      enable = true;             # Enable audio optimizations
+      realtekOptimizations = true; # Enable Realtek audio optimizations
+    };
+  };
+
+
 
   # Electron Apps with proper Wayland support (RECOMMENDED APPROACH)
   custom.electron-apps = {
@@ -325,6 +520,60 @@
     help = true;
   };
 
+  # Shell Environment Configuration
+  custom.shellEnvironment = {
+    enable = true;               # Enable enhanced shell environment
+    features = {
+      starship = true;           # Modern shell prompt
+      direnv = true;             # Directory-based environment variables
+      fzf = true;                # Fuzzy finder
+      bat = true;                # Better cat
+      exa = true;                # Better ls
+      fd = true;                 # Better find
+      ripgrep = true;            # Better grep
+      jq = true;                 # JSON processor
+      htop = true;               # Better top
+      tmux = true;               # Terminal multiplexer
+    };
+    aliases = {
+      enable = true;             # Enable useful aliases
+      ls = "exa --icons --group-directories-first";
+      ll = "exa --icons --group-directories-first -la";
+      cat = "bat";
+      grep = "rg";
+      find = "fd";
+    };
+  };
+
+  # GTK and Desktop Enhancements
+  custom.gtk = {
+    enable = true;               # Enable GTK enhancements
+    version = "both";            # Support both GTK3 and GTK4
+    theming = {
+      enable = true;             # Enable custom themes
+      theme = "Adwaita-dark";    # GTK theme
+      iconTheme = "Papirus-Dark"; # Icon theme
+      cursorTheme = "Bibata-Modern-Ice"; # Cursor theme
+      cursorSize = 24;           # Cursor size
+      fontName = "Cantarell 11"; # Default font
+    };
+    wayland = {
+      enable = true;             # Enable Wayland optimizations
+      fractionalScaling = true;  # Enable fractional scaling
+      touchScrolling = true;     # Enable touch scrolling
+    };
+    performance = {
+      enable = true;             # Enable performance optimizations
+      animations = true;         # Enable smooth animations
+      rendering = "auto";        # Auto rendering backend
+    };
+    applications = {
+      fileChooser = {
+        enable = true;           # Enable enhanced file chooser
+      };
+    };
+  };
+
   # ===== PACKAGE COLLECTIONS =====
 
   # Core package configuration
@@ -339,7 +588,7 @@
     popular.enable = true;          # Enable popular packages
 
     # OPTIONAL PACKAGES:
-    gaming.enable = false;          # Gaming packages - can enable if needed
+    gaming.enable = true;          # Gaming packages - can enable if needed
     # nixai.enable = false;         # nixai packages - EXCLUDED (option may not exist)
   };
 
@@ -348,17 +597,7 @@
     # pentest.enable = false;       # pentest packages - EXCLUDED
   };
 
-  # Enhanced GNOME Extensions Management
-  custom.gnome.extensions = {
-    enable = true;
-    categories = {
-      productivity = true; system = true; windows = true; launchers = true;
-      media = true; utilities = true; development = true; security = true;
-    };
-    migration = { windows = true; macos = true; android = true; };
-    premium = { enable = true; gnomeLook = true; pling = true; };
-    settings.enable = true; performance.enable = true;
-  };
+  # GNOME Extensions configuration moved to gnome-consolidated.nix module
 
   # Package Recommendations
   custom.packageRecommendations = {
@@ -372,9 +611,127 @@
     ai = { enable = true; hardwareOptimization = true; performanceTuning = true; };
   };
 
-  # # Ensure WAYLAND_DISPLAY is set globally for all applications
+  # Void Editor Configuration
+  custom.void-editor = {
+    enable = true;               # Enable Void Editor for development
+    createDesktopEntry = true;   # Create desktop entry with Wayland support
+  };
+
+  #   # Ensure WAYLAND_DISPLAY is set globally for all applications
   environment.sessionVariables = {
     WAYLAND_DISPLAY = "wayland-0";
+  };
+
+  # NVIDIA Performance Optimizations
+  custom.nvidiaPerformance = {
+    enable = true;               # Enable NVIDIA performance optimizations
+    gaming = {
+      enable = true;             # Enable gaming optimizations
+      dlss = true;               # Enable DLSS support
+      rayTracing = true;         # Enable ray tracing support
+      performanceMode = "performance"; # Performance mode preference
+    };
+    overclocking = {
+      enable = false;            # Disable overclocking for stability
+      powerLimit = 100;          # Power limit percentage
+      memoryOverclock = 0;       # Memory overclock in MHz
+      coreOverclock = 0;         # Core overclock in MHz
+    };
+    monitoring = {
+      enable = true;             # Enable GPU monitoring tools
+      nvtop = true;              # Enable nvtop for GPU monitoring
+      greenWithEnvy = true;      # Enable GreenWithEnvy for advanced GPU control
+    };
+    optimization = {
+      enable = true;             # Enable performance optimizations
+      powerMizer = "prefer_maximum_performance"; # PowerMizer mode for performance
+      textureQuality = "performance"; # Texture quality preference
+      shaderCache = true;        # Enable shader cache for better performance
+    };
+  };
+
+  # ===== COMPREHENSIVE SYSTEM CONFIGURATION =====
+
+  # System-wide security and permissions
+  security = {
+    # Allow users in wheel group to run sudo without password
+    sudo.wheelNeedsPassword = lib.mkForce false;
+
+    # Enable comprehensive security features
+    apparmor.enable = true;
+    auditd.enable = true;
+    polkit.enable = true;
+
+    # PAM configuration
+    pam.services = {
+      login.enableGnomeKeyring = true;
+      gdm.enableGnomeKeyring = true;
+      gdm-password.enableGnomeKeyring = true;
+      gdm-fingerprint.enableGnomeKeyring = true;
+    };
+  };
+
+  # User management and permissions
+  users.users.mahmoud = {
+    isNormalUser = true;
+    description = "mahmoud";
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" ];
+    shell = lib.mkForce pkgs.zsh;
+    openssh.authorizedKeys.keys = [
+      # Add your SSH public key here if needed
+    ];
+  };
+
+  # System-wide environment variables
+  environment = {
+    systemPackages = with pkgs; [
+      # Essential tools
+      vim
+      wget
+      curl
+      git
+      htop
+      tree
+      ripgrep
+      fd
+      bat
+      eza
+      fzf
+      tmux
+      starship
+      direnv
+
+      # Development tools
+      python3
+      nodejs
+      rustc
+      cargo
+      go
+      gcc
+      cmake
+      ninja
+
+      # System tools
+      pciutils
+      usbutils
+      lshw
+      hwloc
+      iotop
+      smartmontools
+    ];
+
+    # Global environment variables
+    variables = {
+      EDITOR = "vim";
+      VISUAL = "vim";
+      PAGER = "less";
+      LESS = "-R";
+      MANPAGER = "less -R";
+      TERM = "xterm-256color";
+      COLORTERM = "truecolor";
+      LC_ALL = "en_US.UTF-8";
+      LANG = "en_US.UTF-8";
+    };
   };
 
 

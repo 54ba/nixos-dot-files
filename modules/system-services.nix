@@ -48,6 +48,12 @@ with lib;
         default = true;
         description = "Enable Android development tools";
       };
+      
+      fuse.enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable FUSE filesystem support for AppImages";
+      };
     };
   };
 
@@ -108,6 +114,9 @@ with lib;
     # Android development services
     programs.adb.enable = mkIf config.custom.services.system.android.enable true;
     
+    # FUSE filesystem support for AppImages
+    programs.fuse.userAllowOther = mkIf config.custom.services.system.fuse.enable true;
+    
     # Additional system packages for services
     environment.systemPackages = with pkgs; 
       # Basic system utilities
@@ -157,6 +166,12 @@ with lib;
       (optionals config.custom.services.system.android.enable [
         android-tools       # ADB, fastboot, etc.
         android-udev-rules  # Device permissions
+      ]) ++
+      
+      # FUSE packages
+      (optionals config.custom.services.system.fuse.enable [
+        fuse           # FUSE filesystem
+        fuse3          # FUSE3 filesystem
       ]);
     
     # User groups for system services
@@ -165,6 +180,7 @@ with lib;
       adbusers = mkIf config.custom.services.system.android.enable {};
       plugdev = mkIf config.custom.services.system.android.enable {};
       lp = mkIf config.custom.services.system.printing.enable {};
+      fuse = mkIf config.custom.services.system.fuse.enable {};
     };
     
     # Systemd tmpfiles rules for service integration
@@ -196,6 +212,9 @@ with lib;
       # GPU access permissions for render group
       SUBSYSTEM=="drm", GROUP="render", MODE="0664"
       KERNEL=="card[0-9]*", GROUP="render", MODE="0664"
+      
+      # FUSE device permissions
+      KERNEL=="fuse", GROUP="fuse", MODE="0664"
     '';
   };
 }

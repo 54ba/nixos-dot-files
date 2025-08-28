@@ -29,7 +29,7 @@ with lib;
     networking.hostName = config.custom.system-base.hostname;
     time.timeZone = config.custom.system-base.timezone;
     i18n.defaultLocale = config.custom.system-base.locale;
-    
+
     # Basic services
     services = {
       openssh.enable = true;
@@ -38,17 +38,21 @@ with lib;
       dbus.enable = true;
       flatpak.enable = true;
     };
-    
+
+
+
     # Network manager
     networking.networkmanager.enable = true;
     systemd.services.NetworkManager-wait-online.enable = false;
-    
+
     # Android development services
     programs.adb.enable = true;
-    
+
     # Enable nix-ld for compatibility
     programs.nix-ld.enable = true;
-    
+
+
+
     # Font configuration
     fonts.packages = with pkgs; [
       noto-fonts
@@ -59,7 +63,7 @@ with lib;
       jetbrains-mono
       font-awesome
     ];
-    
+
     # Chromium configuration
     programs.chromium = {
       enable = true;
@@ -68,7 +72,7 @@ with lib;
         "hkgfoiooedgoejojocmhlaklaeopbecg" # Picture-in-Picture Extension
       ];
     };
-    
+
     # Git configuration
     programs.git = {
       enable = true;
@@ -78,13 +82,13 @@ with lib;
         credential.helper = "${pkgs.libsecret}/lib/libsecret/git-credential-libsecret";
       };
     };
-    
+
     # Wireshark and GameMode
     programs.wireshark = {
       enable = true;
       package = pkgs.wireshark;
     };
-    
+
     programs.gamemode = {
       enable = true;
       settings = {
@@ -98,16 +102,25 @@ with lib;
         };
       };
     };
-    
+
     # Environment variables
     environment.variables = {
       EDITOR = "vim";
       BROWSER = "firefox";
+
+            # Gaming Performance
+      DXVK_HUD = "1";
+      DXVK_STATE_CACHE = "1";
+      VKD3D_CONFIG = "dxr,dxr11";
     };
-    
+
     # Basic system packages
     environment.systemPackages = import ../packages/system-base-packages.nix { inherit pkgs; };
-    
+
+
+
+
+
     # System state version
     system.stateVersion = "25.05";
   };

@@ -1,0 +1,139 @@
+WINDOWS APPLICATIONS GUIDE FOR NIXOS
+====================================
+
+🎯 WHAT'S INSTALLED AND READY:
+- Wine 64-bit (v10.0) - Windows application compatibility layer
+- Mono Runtime (v6.14.1) - .NET Framework support
+- .NET Core (v8.0.412) - Modern .NET applications
+- DirectX Support (DXVK, VKD3D) - Gaming and graphics
+- Performance Tools (Gamemode, MangoHud) - Gaming optimization
+
+🚀 HOW TO USE WINE:
+
+1. BASIC COMMANDS:
+   wine64 <application>.exe          # Run a Windows application
+   wine64 winecfg                    # Configure Wine settings
+   wine64 explorer                   # Browse Wine C: drive
+   wine64 regedit                    # Edit Windows registry
+   wine64 cmd                        # Open Windows command prompt
+
+2. DESKTOP SHORTCUTS:
+   - Wine Configuration: Configure Wine settings
+   - Wine Explorer: Browse Wine C: drive
+
+3. WINE PREFIX LOCATION:
+   ~/.wine/                          # Main Wine prefix
+   ~/.wine/drive_c/                 # Windows C: drive
+   ~/.wine/drive_c/Program Files/   # Installed applications
+
+📱 INSTALLING WINDOWS APPLICATIONS:
+
+1. DOWNLOAD AND INSTALL:
+   - Download Windows .exe file
+   - Right-click → Open with → Wine
+   - Or use: wine64 <filename>.exe
+
+2. COMMON APPLICATIONS TO TRY:
+   - Office: Microsoft Office 2016/2019
+   - Development: Visual Studio Community
+   - Design: Adobe Photoshop CS6, Illustrator CS6
+   - Gaming: Windows games via Lutris
+   - Business: QuickBooks, AutoCAD
+
+3. USING WINETRICKS:
+   wine64 winetricks                 # Install Windows components
+   wine64 winetricks corefonts       # Install core fonts
+   wine64 winetricks vcrun2019       # Install Visual C++ 2019
+   wine64 winetricks dotnet35        # Install .NET Framework 3.5
+
+🔧 CONFIGURATION TIPS:
+
+1. WINE SETTINGS (wine64 winecfg):
+   - Graphics: Enable desktop integration
+   - Audio: Configure sound settings
+   - Drives: Map Linux folders to Windows drives
+
+2. PERFORMANCE OPTIMIZATION:
+   - Enable DXVK for DirectX games
+   - Use Gamemode for gaming
+   - Configure MangoHud for monitoring
+
+3. COMMON ISSUES AND SOLUTIONS:
+   - Font issues: Install corefonts via winetricks
+   - Missing DLLs: Install Visual C++ runtimes
+   - Audio problems: Check PulseAudio settings
+
+📁 FILE LOCATIONS:
+
+Wine Prefix: ~/.wine/
+Windows C: Drive: ~/.wine/drive_c/
+Program Files: ~/.wine/drive_c/Program Files/
+Program Files (x86): ~/.wine/drive_c/Program Files (x86)/
+Windows System: ~/.wine/drive_c/windows/
+User Profile: ~/.wine/drive_c/users/
+
+🎮 GAMING WITH WINE:
+
+1. GAME INSTALLATION:
+   - Use Lutris for easy game management
+   - Install games in separate Wine prefixes
+   - Enable DXVK for DirectX 11/12 games
+
+2. PERFORMANCE TIPS:
+   - Use Gamemode: gamemoderun wine64 <game>.exe
+   - Enable MangoHud for FPS monitoring
+   - Configure Wine for your specific game
+
+3. POPULAR GAMES:
+   - Steam games via Proton
+   - Epic Games Store
+   - Battle.net games
+   - Origin games
+
+💼 BUSINESS APPLICATIONS:
+
+1. OFFICE SUITES:
+   - Microsoft Office (Word, Excel, PowerPoint)
+   - Alternative: LibreOffice (native Linux)
+
+2. DESIGN SOFTWARE:
+   - Adobe Creative Suite (Photoshop, Illustrator)
+   - Alternative: GIMP, Inkscape (native Linux)
+
+3. DEVELOPMENT TOOLS:
+   - Visual Studio Community
+   - Alternative: VS Code, Rider (native Linux)
+
+🔍 TROUBLESHOOTING:
+
+1. APPLICATION WON'T START:
+   - Check Wine version: wine64 --version
+   - Verify Wine prefix: ls ~/.wine/
+   - Check logs: wine64 <app>.exe 2>&1 | tee wine.log
+
+2. MISSING DEPENDENCIES:
+   - Install Visual C++ runtimes via winetricks
+   - Install .NET Framework versions
+   - Install core Windows fonts
+
+3. PERFORMANCE ISSUES:
+   - Enable DXVK for DirectX games
+   - Use separate Wine prefixes for different apps
+   - Configure Wine settings for your hardware
+
+📚 USEFUL RESOURCES:
+
+- Wine Compatibility Database: https://appdb.winehq.org/
+- WineHQ Wiki: https://wiki.winehq.org/
+- Lutris Gaming Platform: https://lutris.net/
+- ProtonDB (Steam games): https://www.protondb.com/
+
+🎉 NEXT STEPS:
+
+1. Test Wine: Try running a simple Windows application
+2. Install Applications: Download and install your favorite Windows apps
+3. Configure Settings: Use wine64 winecfg to optimize performance
+4. Explore Gaming: Try installing games via Lutris
+5. Customize: Create additional Wine prefixes for different applications
+
+Your NixOS system is now ready to run Windows applications with full compatibility!

@@ -1,0 +1,1 @@
+/etc/static/nixos/home/shell.nix

@@ -74,36 +74,9 @@
     zoom-us
     discord
 
-    # GNOME Extensions (User-level installation)
-    gnomeExtensions.dash-to-dock
-    gnomeExtensions.blur-my-shell
-    gnomeExtensions.caffeine
-    gnomeExtensions.clipboard-indicator
-    gnomeExtensions.desktop-icons-ng-ding
-    gnomeExtensions.system-monitor
-    gnomeExtensions.system-monitor-next
-    gnomeExtensions.multicore-system-monitor
-    gnomeExtensions.status-icons
-    gnomeExtensions.auto-move-windows
-    gnomeExtensions.all-windows
-    gnomeExtensions.all-windows-saverestore-window-positions
-    gnomeExtensions.arc-menu
-    gnomeExtensions.activity-app-launcher
-    gnomeExtensions.alphabetical-app-grid
-    gnomeExtensions.sound-output-device-chooser
-    gnomeExtensions.removable-drive-menu
-    gnomeExtensions.do-not-disturb-while-screen-sharing-or-recording
-    gnomeExtensions.screenshot-window-sizer
-    gnomeExtensions.light-style
-    gnomeExtensions.compiz-windows-effect
-    gnomeExtensions.runcat
-    gnomeExtensions.slinger
-    gnomeExtensions.shyriiwook
-    gnomeExtensions.reading-strip
-    gnomeExtensions.extension-list
-    gnomeExtensions.user-stylesheet-font
-    gnomeExtensions.lockscreen-extension
-    gnomeExtensions.primary-input-on-lockscreen
+    # GNOME Extensions (managed by system configuration)
+    # Extensions are installed via the gnome-extensions.nix module
+    # All extensions are managed centrally to avoid conflicts
 
     # Professional Themes and Icons
     # Modern GTK Themes
@@ -118,7 +91,6 @@
     papirus-folders
     tela-icon-theme
     numix-icon-theme-circle
-    breeze-icons
 
     # Cursor Themes
     bibata-cursors
@@ -272,61 +244,8 @@
         fi
       }
 
-      # Theme switching functions
-      theme-whitesur() {
-        gsettings set org.gnome.desktop.interface gtk-theme "WhiteSur-dark"
-        gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-        gsettings set org.gnome.desktop.interface cursor-theme "Bibata-Modern-Ice"
-        gsettings set org.gnome.desktop.interface font-name "Inter 10"
-        gsettings set org.gnome.desktop.interface monospace-font-name "JetBrains Mono 10"
-        echo "Switched to WhiteSur Dark theme"
-      }
-
-      theme-nordic() {
-        gsettings set org.gnome.desktop.interface gtk-theme "Nordic"
-        gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-        gsettings set org.gnome.desktop.interface cursor-theme "Bibata-Modern-Ice"
-        gsettings set org.gnome.desktop.interface font-name "Inter 10"
-        gsettings set org.gnome.desktop.interface monospace-font-name "JetBrains Mono 10"
-        echo "Switched to Nordic theme"
-      }
-
-      theme-gruvbox() {
-        gsettings set org.gnome.desktop.interface gtk-theme "Gruvbox-Dark-B"
-        gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-        gsettings set org.gnome.desktop.interface cursor-theme "Bibata-Modern-Ice"
-        gsettings set org.gnome.desktop.interface font-name "Inter 10"
-        gsettings set org.gnome.desktop.interface monospace-font-name "JetBrains Mono 10"
-        echo "Switched to Gruvbox Dark theme"
-      }
-
-      theme-catppuccin() {
-        gsettings set org.gnome.desktop.interface gtk-theme "Catppuccin-Mocha-Standard-Mauve-Dark"
-        gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-        gsettings set org.gnome.desktop.interface cursor-theme "Bibata-Modern-Ice"
-        gsettings set org.gnome.desktop.interface font-name "Inter 10"
-        gsettings set org.gnome.desktop.interface monospace-font-name "JetBrains Mono 10"
-        echo "Switched to Catppuccin Mocha theme"
-      }
-
-      theme-dracula() {
-        gsettings set org.gnome.desktop.interface gtk-theme "Dracula"
-        gsettings set org.gnome.desktop.interface icon-theme "Papirus-Dark"
-        gsettings set org.gnome.desktop.interface cursor-theme "Bibata-Modern-Ice"
-        gsettings set org.gnome.desktop.interface font-name "Inter 10"
-        gsettings set org.gnome.desktop.interface monospace-font-name "JetBrains Mono 10"
-        echo "Switched to Dracula theme"
-      }
-
-      # List available themes
-      list-themes() {
-        echo "Available themes:"
-        echo "  theme-whitesur   - WhiteSur Dark theme"
-        echo "  theme-nordic     - Nordic theme"
-        echo "  theme-gruvbox    - Gruvbox Dark theme"
-        echo "  theme-catppuccin - Catppuccin Mocha theme"
-        echo "  theme-dracula    - Dracula theme"
-      }
+      # Theme switching functions are now handled by the GTK enhanced module
+      # Use the system-wide theme configuration instead
     '';
   };
 
@@ -445,6 +364,7 @@
     mimeApps = {
       enable = true;
       defaultApplications = {
+        # Web and documents
         "text/html" = "firefox.desktop";
         "x-scheme-handler/http" = "firefox.desktop";
         "x-scheme-handler/https" = "firefox.desktop";
@@ -455,87 +375,31 @@
         "image/png" = "eog.desktop";
         "text/plain" = "nvim.desktop";
         "inode/directory" = "nautilus.desktop";
+
+        # Wine and Windows applications
+        "application/x-ms-dos-executable" = "wine.desktop";
+        "application/x-msi" = "wine.desktop";
+        "application/x-msdownload" = "wine.desktop";
+        "application/vnd.ms-excel" = "wine.desktop";
+        "application/vnd.ms-powerpoint" = "wine.desktop";
+        "application/msword" = "wine.desktop";
+        "application/x-msaccess" = "wine.desktop";
+        "application/x-msbinder" = "wine.desktop";
+        "application/x-mscardfile" = "wine.desktop";
+        "application/x-msclip" = "wine.desktop";
+        "application/x-msmediaview" = "wine.desktop";
+        "application/x-msmetafile" = "wine.desktop";
+        "application/x-msmoney" = "wine.desktop";
+        "application/x-mspublisher" = "wine.desktop";
+        "application/x-msschedule" = "wine.desktop";
+        "application/x-msterminal" = "wine.desktop";
+        "application/x-mswrite" = "wine.desktop";
       };
     };
   };
 
-  # Enhanced Fonts configuration
+      # Enhanced Fonts configuration
   fonts.fontconfig.enable = true;
-
-  # Font packages and configuration
-  fonts.fonts = with pkgs; [
-    # Modern Sans-serif fonts
-    inter
-    source-sans-pro
-    source-serif-pro
-    source-code-pro
-
-    # Programming fonts
-    jetbrains-mono
-    fira-code
-    hack
-    ubuntu-font-family
-
-    # Icon fonts
-    noto-fonts
-    noto-fonts-emoji
-    noto-fonts-cjk
-    noto-fonts-extra
-
-    # Additional fonts
-    liberation-fonts
-    dejavu-fonts
-    freefont_ttf
-  ];
-
-  # Fontconfig configuration
-  fonts.fontconfig = {
-    enable = true;
-    defaultFonts = {
-      monospace = [ "JetBrains Mono" "Fira Code" "Hack" "DejaVu Sans Mono" ];
-      sansSerif = [ "Inter" "Source Sans Pro" "DejaVu Sans" ];
-      serif = [ "Source Serif Pro" "DejaVu Serif" ];
-      emoji = [ "Noto Color Emoji" ];
-    };
-
-    # Font substitution
-    substitutions = {
-      monospace = [ "JetBrains Mono" "Fira Code" "Hack" ];
-      sansSerif = [ "Inter" "Source Sans Pro" ];
-      serif = [ "Source Serif Pro" ];
-    };
-
-    # Local font configuration
-    localConf = ''
-      <!-- Enable subpixel rendering -->
-      <match target="font">
-        <edit name="rgba" mode="assign">
-          <const>rgb</const>
-        </edit>
-      </match>
-
-      <!-- Enable LCD filtering -->
-      <match target="font">
-        <edit name="lcdfilter" mode="assign">
-          <const>default</const>
-        </edit>
-      </match>
-
-      <!-- Enable hinting -->
-      <match target="font">
-        <edit name="hinting" mode="assign">
-          <bool>true</bool>
-        </edit>
-      </match>
-
-      <!-- Enable antialiasing -->
-      <match target="font">
-        <edit name="antialias" mode="assign">
-          <bool>true</bool>
-        </edit>
-      </match>
-    '';
-  };
 
   # Services
   services = {
@@ -544,6 +408,78 @@
       enable = true;
       defaultCacheTtl = 1800;
       enableSshSupport = true;
+    };
+  };
+
+  # Desktop entries for Wine applications
+  xdg.desktopEntries = {
+    wine = {
+      name = "Wine";
+      genericName = "Windows Program Loader";
+      comment = "Run Windows applications";
+      exec = "wine %f";
+      icon = "wine";
+      mimeType = [
+        "application/x-ms-dos-executable"
+        "application/x-msi"
+        "application/x-msdownload"
+        "application/vnd.ms-excel"
+        "application/vnd.ms-powerpoint"
+        "application/msword"
+        "application/x-msaccess"
+        "application/x-msbinder"
+        "application/x-mscardfile"
+        "application/x-msclip"
+        "application/x-msmediaview"
+        "application/x-msmetafile"
+        "application/x-msmoney"
+        "application/x-mspublisher"
+        "application/x-msschedule"
+        "application/x-msterminal"
+        "application/x-mswrite"
+      ];
+      categories = ["System" "Emulator"];
+      terminal = false;
+    };
+
+    winecfg = {
+      name = "Wine Configuration";
+      genericName = "Wine Settings";
+      comment = "Configure Wine settings and options";
+      exec = "winecfg";
+      icon = "wine";
+      categories = ["System" "Settings" "Emulator"];
+      terminal = false;
+    };
+
+    winetricks = {
+      name = "Winetricks";
+      genericName = "Wine Components";
+      comment = "Install and configure Wine components";
+      exec = "winetricks";
+      icon = "wine";
+      categories = ["System" "Emulator"];
+      terminal = false;
+    };
+
+    playonlinux = {
+      name = "PlayOnLinux";
+      genericName = "Wine Application Manager";
+      comment = "Manage Wine applications easily";
+      exec = "playonlinux";
+      icon = "wine";
+      categories = ["System" "Emulator"];
+      terminal = false;
+    };
+
+    lutris = {
+      name = "Lutris";
+      genericName = "Game Library Manager";
+      comment = "Manage your game library with Wine support";
+      exec = "lutris";
+      icon = "lutris";
+      categories = ["Game" "Emulator"];
+      terminal = false;
     };
   };
 
@@ -583,7 +519,7 @@
         "clipboard-indicator@tudmotu.com"
         "desktop-icons-ng-ding@rastersoft.com"
         "system-monitor@gnome-shell-extensions.gcampax.github.io"
-        "auto-move-windows@gnome-shell-extensions.gcampax.github.io"
+        # "auto-move-windows@gnome-shell-extensions.gcampax.github.io"  # Managed by system configuration
         "arc-menu@arcmenu.com"
         "sound-output-device-chooser@kgshank.net"
         "screenshot-window-sizer@gnome-shell-extensions.gcampax.github.io"
@@ -721,47 +657,8 @@
     };
   };
 
-  # Enhanced GTK theme configuration
-  gtk = {
-    enable = true;
-
-    # Modern GTK Theme
-    theme = {
-      name = "WhiteSur-dark";
-      package = pkgs.whitesur-gtk-theme;
-    };
-
-    # Professional Icon Theme
-    iconTheme = {
-      name = "Papirus-Dark";
-      package = pkgs.papirus-icon-theme;
-    };
-
-    # Cursor Theme
-    cursorTheme = {
-      name = "Bibata-Modern-Ice";
-      package = pkgs.bibata-cursors;
-      size = 24;
-    };
-
-    # Font Configuration
-    font = {
-      name = "Inter 10";
-      package = pkgs.inter;
-    };
-
-    # GTK Settings
-    gtk3.extraConfig = {
-      gtk-application-prefer-dark-theme = true;
-      gtk-toolbar-style = "GTK_TOOLBAR_ICONS";
-      gtk-menu-images = true;
-      gtk-button-images = true;
-    };
-
-    gtk4.extraConfig = {
-      gtk-application-prefer-dark-theme = true;
-    };
-  };
+  # GTK theme configuration is handled by the GTK enhanced module
+  # to avoid conflicts with system-wide GTK settings
 
   # Enhanced Qt theme configuration
   qt = {

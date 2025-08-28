@@ -6,57 +6,57 @@ with lib;
   options = {
     custom.networking = {
       enable = mkEnableOption "enhanced networking configuration";
-      
+
       hostName = mkOption {
         type = types.str;
         default = "nixos-laptop";
         description = "System hostname";
       };
-      
+
       networkManager.enable = mkOption {
         type = types.bool;
         default = true;
         description = "Enable NetworkManager for network management";
       };
-      
+
       firewall = {
         enable = mkOption {
           type = types.bool;
           default = true;
           description = "Enable enhanced firewall configuration";
         };
-        
+
         allowedTCPPorts = mkOption {
           type = types.listOf types.int;
           default = [ 22 80 443 ];
           description = "TCP ports to allow through firewall";
         };
-        
+
         allowedUDPPorts = mkOption {
           type = types.listOf types.int;
           default = [ 53 123 68 ];
           description = "UDP ports to allow through firewall";
         };
-        
+
         extraRules.enable = mkOption {
           type = types.bool;
           default = true;
           description = "Enable extra iptables rules for enhanced security";
         };
       };
-      
+
       timeZone = mkOption {
         type = types.str;
         default = "UTC";
         description = "System timezone";
       };
-      
+
       locale = mkOption {
         type = types.str;
         default = "en_US.UTF-8";
         description = "System locale";
       };
-      
+
       # Network interfaces configuration
       interfaces = mkOption {
         type = types.attrsOf (types.submodule {
@@ -71,11 +71,11 @@ with lib;
         default = {};
         description = "Network interfaces configuration";
       };
-      
+
       # SMB/Samba sharing options
       samba = {
         enable = mkEnableOption "Samba/SMB file sharing";
-        
+
         shares = mkOption {
           type = types.attrsOf (types.submodule {
             options = {
@@ -135,15 +135,18 @@ with lib;
   config = mkIf config.custom.networking.enable {
     # Set hostname
     networking.hostName = config.custom.networking.hostName;
-    
+
     # Enable network manager for GUI network management
     networking.networkmanager.enable = mkIf config.custom.networking.networkManager.enable true;
-    
+
+    # Disable iwd to avoid conflicts with NetworkManager
+    networking.wireless.iwd.enable = lib.mkForce false;
+
     # Enhanced firewall configuration with iptables
     networking.firewall = mkIf config.custom.networking.firewall.enable {
       enable = true;
       # Allow essential services
-      allowedTCPPorts = config.custom.networking.firewall.allowedTCPPorts ++ 
+      allowedTCPPorts = config.custom.networking.firewall.allowedTCPPorts ++
         (optionals config.custom.networking.samba.enable [ 139 445 ]);
       allowedUDPPorts = config.custom.networking.firewall.allowedUDPPorts ++
         (optionals config.custom.networking.samba.enable [ 137 138 ]);
@@ -158,14 +161,14 @@ with lib;
         iptables -A INPUT -s 192.168.0.0/16 -j ACCEPT
         iptables -A INPUT -s 10.0.0.0/8 -j ACCEPT
         iptables -A INPUT -s 172.16.0.0/12 -j ACCEPT
-        
+
         # Allow mDNS for service discovery
         iptables -A INPUT -p udp --dport 5353 -j ACCEPT
-        
+
         # Allow KDE Connect if needed (comment out if not used)
         # iptables -A INPUT -p tcp --dport 1714:1764 -j ACCEPT
         # iptables -A INPUT -p udp --dport 1714:1764 -j ACCEPT
-        
+
         # Rate limiting for SSH to prevent brute force
         iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --set --name SSH
         iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 4 --rttl --name SSH -j DROP
@@ -176,13 +179,13 @@ with lib;
         iptables -D INPUT -s 172.16.0.0/12 -j ACCEPT 2>/dev/null || true
       '';
     };
-    
+
     # Samba configuration
     services.samba = mkIf config.custom.networking.samba.enable {
       enable = true;
       package = pkgs.samba4Full;
       openFirewall = true;
-      
+
       settings = {
         global = {
           "workgroup" = "WORKGROUP";
@@ -203,7 +206,7 @@ with lib;
           "create mask" = "0666";
           "directory mask" = "0777";
         };
-      } // (mapAttrs (name: cfg: 
+      } // (mapAttrs (name: cfg:
         {
           "path" = cfg.path;
           "browseable" = if cfg.browseable then "yes" else "no";
@@ -219,48 +222,42 @@ with lib;
         })
       ) config.custom.networking.samba.shares);
     };
-    
+
     # Enable NetBIOS name resolution
     services.samba-wsdd = mkIf config.custom.networking.samba.enable {
       enable = true;
       openFirewall = true;
     };
-    
-    # Localization
-    time.timeZone = config.custom.networking.timeZone;
-    i18n.defaultLocale = config.custom.networking.locale;
-    
-    # Hardware acceleration for graphics
-    hardware.graphics = {
-      enable = true;
-      enable32Bit = true;
-    };
-    
+
+    # Localization (handled by system-base.nix)
+
+    # Hardware acceleration for graphics (handled by hardware.nix)
+
     # Networking packages
     environment.systemPackages = import ../packages/networking-packages.nix { inherit pkgs config lib; } ++
       (optionals config.custom.networking.samba.enable [ pkgs.cifs-utils ]);
-    
+
     # Network-related systemd services
     systemd.services = {
       # Fix NetworkManager wait online timeout
       NetworkManager-wait-online.enable = false;
     };
-    
+
     # Additional network configuration
     networking = {
       # Enable IPv6
       enableIPv6 = true;
-      
+
       # DNS configuration
       nameservers = [ "1.1.1.1" "8.8.8.8" "8.8.4.4" ];
-      
+
       # Disable automatic DHCP assignment (NetworkManager handles this)
       useDHCP = false;
-      
+
       # Enable network interface hotplug
       interfaces = {};
     };
-    
+
     # Additional network security settings
     boot.kernel.sysctl = {
       # Network security enhancements

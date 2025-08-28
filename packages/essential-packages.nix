@@ -4,7 +4,7 @@ with pkgs; [
   # Web browsers
   firefox
   chromium  # Better NixOS integration than google-chrome
-  
+
   # GUI essentials from main config
   nautilus
   gnome-terminal
@@ -12,7 +12,7 @@ with pkgs; [
   pavucontrol
   networkmanagerapplet
   python3  # Use default Python 3.12 for better binary compatibility
-  
+
   # Git and credentials
   git-lfs
   gitAndTools.gitFull
@@ -20,7 +20,7 @@ with pkgs; [
   seahorse  # GUI for managing credentials
   libsecret  # For storing credentials securely
   gnome-keyring  # GNOME keyring for credential storage
-  
+
   # System tray and notifications
   libnotify
   gnome-tweaks
@@ -39,7 +39,7 @@ with pkgs; [
   gnomeExtensions.system-monitor
   gnomeExtensions.vitals
   gnomeExtensions.weather-oclock
-  
+
   # Additional GNOME apps
   gnome-photos
   gnome-music
@@ -48,15 +48,15 @@ with pkgs; [
   gnome-weather
   gnome-clocks
   gnome-calendar
-  
+
   # Display and monitor management
   brightnessctl
-  
+
   # Audio
   pulseaudio
   pamixer
   playerctl
-  
+
   # Appearance and themes
   libsForQt5.qt5ct
   gnome-themes-extra
@@ -67,7 +67,7 @@ with pkgs; [
   materia-theme
   nordic
   orchis-theme
-  
+
   # Utilities
   polkit_gnome
   xdg-utils
@@ -79,28 +79,28 @@ with pkgs; [
   xorg.xdpyinfo
   xorg.xrandr
   xorg.xev
-  
+
   # Additional utilities
   starship   # Prompt (system-wide installation)
-  
+
   # Android development tools
   android-tools   # ADB, fastboot, and other Android utilities
   android-udev-rules  # Udev rules for Android devices
-  
+
   # Terminal utilities
   wezterm  # Wez terminal
-  
+
   # Development tools
   github-desktop
   code-cursor  # Code-cursor editor
-  
+
   # Design and media tools
   figma-linux
   ffmpeg  # FFmpeg for media processing
-  
+
   # System utilities
   gparted  # Partition editor
-  
+
   # VPN and networking tools
   riseup-vpn
   shadowsocks-rust  # Shadowsocks client (rust implementation)
@@ -110,20 +110,86 @@ with pkgs; [
   poetry  # Python dependency management
   pipx    # Install Python applications in isolated environments
   yarn    # JavaScript package manager
-  
+
   # Network utilities (advanced)
   netcat
   socat
   openvpn
   wireguard-tools
-  
+
   # System monitoring (advanced)
   iotop
   nethogs
   iftop
   strace
-  
+
   # Archives and compression (additional formats)
   lz4
   zstd
+
+  # Wine and Windows Compatibility
+  wine64
+  wineWowPackages.stable
+  winetricks
+  playonlinux
+  lutris
+  dxvk
+  vkd3d
+  gamemode
+  mangohud
+
+  # NVIDIA Gaming and Performance
+  nvidia-vaapi-driver
+  nvidia-docker
+  nvidia-container-toolkit
+
+    # NVIDIA Performance Monitoring
+  nvtopPackages.nvidia
+
+  # Gaming Performance Tools
+  gamemode
+  mangohud
+  goverlay
+  libstrangle
+  vkbasalt
+
+  # Touchpad and Gesture Support
+  libinput
+  xorg.xf86inputlibinput
+  xorg.xinput
+  xorg.xev
+  xorg.xrandr
+  xorg.xset
+  xorg.xsetroot
+
+  # Gesture Recognition
+  touchegg
+  libgestures
+  libinput-gestures
+
+  # Touchpad Utilities
+  xorg.xf86inputsynaptics
+
+  # Fingerprint Reader Support
+  fprintd
+  libfprint
+  libfprint-tod
+  fprintd-tod
+  open-fprintd
+
+  # .NET Framework and Windows Compatibility
+  mono
+  dotnet-sdk
+  dotnet-runtime
+  q4wine
+  bottles
+
+  # Wine dependencies
+  cabextract
+  p7zip
+  unzip
+  zip
+  corefonts
+  liberation_ttf
+  dejavu_fonts
 ]

@@ -6,90 +6,90 @@ with lib;
   options = {
     custom.home-manager = {
       enable = mkEnableOption "home-manager integration";
-      
+
       user = mkOption {
         type = types.str;
         default = "mahmoud";
         description = "Username for home-manager configuration";
       };
-      
+
       configPath = mkOption {
         type = types.str;
-        default = "./home-manager.nix";
+        default = "./home-manager-base.nix";
         description = "Path to home-manager configuration file";
       };
-      
+
       useGlobalPkgs = mkOption {
         type = types.bool;
         default = true;
         description = "Use global package set for home-manager";
       };
-      
+
       useUserPackages = mkOption {
         type = types.bool;
         default = true;
         description = "Install packages to user profile";
       };
-      
+
       backupFileExtension = mkOption {
         type = types.str;
         default = "backup";
         description = "Extension for backup files";
       };
-      
+
       development = {
         enable = mkOption {
           type = types.bool;
           default = true;
           description = "Enable development tools in home-manager";
         };
-        
+
         languages = mkOption {
           type = types.listOf (types.enum [ "python" "nodejs" "rust" "go" "java" "php" "dart" ]);
           default = [ "python" "nodejs" "dart" "php" ];
           description = "Development languages to enable";
         };
       };
-      
+
       shell = {
         enable = mkOption {
           type = types.bool;
           default = true;
           description = "Configure shell with home-manager";
         };
-        
+
         defaultShell = mkOption {
           type = types.enum [ "zsh" "bash" "fish" ];
           default = "zsh";
           description = "Default shell to configure";
         };
-        
+
         starship = mkOption {
           type = types.bool;
           default = true;
           description = "Enable starship prompt";
         };
-        
+
         direnv = mkOption {
           type = types.bool;
           default = true;
           description = "Enable direnv integration";
         };
       };
-      
+
       desktop = {
         enable = mkOption {
           type = types.bool;
           default = true;
           description = "Configure desktop environment settings";
         };
-        
+
         theme = mkOption {
           type = types.str;
           default = "Adwaita-dark";
           description = "GTK theme name";
         };
-        
+
         iconTheme = mkOption {
           type = types.str;
           default = "Papirus-Dark";
@@ -102,17 +102,17 @@ with lib;
   config = mkIf config.custom.home-manager.enable {
     # Basic home-manager configuration that would be used in flake.nix
     # This provides the structure and options for home-manager integration
-    
+
     # Create a separate home-manager configuration file with modular structure
     environment.etc."nixos/home-manager-base.nix".text = ''
       { config, pkgs, lib, ... }:
-      
+
       {
         home.username = "${config.custom.home-manager.user}";
         home.homeDirectory = "/home/${config.custom.home-manager.user}";
         home.stateVersion = "25.05";
         programs.home-manager.enable = true;
-        
+
         # Import modular home configurations based on enabled options
         imports = [
           ${optionalString config.custom.home-manager.development.enable "./home/development.nix"}
@@ -126,7 +126,7 @@ with lib;
     environment.etc."nixos/home/development.nix" = mkIf config.custom.home-manager.development.enable {
       text = ''
         { config, pkgs, lib, ... }:
-        
+
         {
           home.packages = with pkgs; [
             # Core development tools
@@ -141,18 +141,18 @@ with lib;
             bat
             eza
             fzf
-            
+
             # Container tools
             docker-compose
             podman-compose
-            
+
             # Nix tools
             nil
             nixpkgs-fmt
             alejandra
             nix-tree
             nix-du
-            
+
             # Language-specific packages
             ${optionalString (elem "python" config.custom.home-manager.development.languages) ''
             python311
@@ -184,12 +184,12 @@ with lib;
             go
             ''}
           ];
-          
+
           programs.git = {
             enable = true;
             userName = lib.mkDefault "54ba";
             userEmail = lib.mkDefault "54bao.o@gmail.com";
-            
+
             extraConfig = {
               init.defaultBranch = "main";
               pull.rebase = true;
@@ -205,7 +205,7 @@ with lib;
     environment.etc."nixos/home/shell.nix" = mkIf config.custom.home-manager.shell.enable {
       text = ''
         { config, pkgs, lib, ... }:
-        
+
         {
           programs.${config.custom.home-manager.shell.defaultShell} = {
             enable = true;
@@ -214,21 +214,21 @@ with lib;
             autosuggestion.enable = true;
             syntaxHighlighting.enable = true;
             ''}
-            
+
             shellAliases = {
               ll = "eza -la";
               ls = "eza";
               cat = "bat";
               find = "fd";
               grep = "rg";
-              
+
               # NixOS shortcuts
               nrs = "sudo nixos-rebuild switch";
               nrt = "sudo nixos-rebuild test";
               nrb = "sudo nixos-rebuild boot";
               nrc = "sudo nixos-rebuild switch --flake .";
               nrg = "sudo nix-collect-garbage -d";
-              
+
               # Package management
               nps = "nix search nixpkgs";
               npi = "nix profile install";
@@ -236,7 +236,7 @@ with lib;
               npl = "nix profile list";
             };
           };
-          
+
           ${optionalString config.custom.home-manager.shell.starship ''
           programs.starship = {
             enable = true;
@@ -249,7 +249,7 @@ with lib;
             };
           };
           ''}
-          
+
           ${optionalString config.custom.home-manager.shell.direnv ''
           programs.direnv = {
             enable = true;
@@ -265,7 +265,7 @@ with lib;
     environment.etc."nixos/home/desktop.nix" = mkIf config.custom.home-manager.desktop.enable {
       text = ''
         { config, pkgs, lib, ... }:
-        
+
         {
           gtk = {
             enable = true;
@@ -278,20 +278,20 @@ with lib;
               package = pkgs.papirus-icon-theme;
             };
           };
-          
+
           qt = {
             enable = true;
             platformTheme.name = "adwaita";
             style.name = "adwaita-dark";
           };
-          
+
           xdg = {
             enable = true;
             userDirs = {
               enable = true;
               createDirectories = true;
             };
-            
+
             mimeApps = {
               enable = true;
               defaultApplications = {
@@ -303,13 +303,13 @@ with lib;
               };
             };
           };
-          
+
           # Session variables for Wayland
           home.sessionVariables = {
             EDITOR = "nvim";
             BROWSER = "firefox";
             TERMINAL = "gnome-terminal";
-            
+
             # Wayland optimizations
             WAYLAND_DISPLAY = "wayland-0";
             XDG_SESSION_TYPE = "wayland";
@@ -325,17 +325,17 @@ with lib;
     # System packages needed for home-manager integration
     environment.systemPackages = with pkgs; [
       home-manager
-      
-      # Helper scripts for home-manager management
+
+            # Helper scripts for home-manager management
       (writeScriptBin "hm-rebuild" ''
         #!/bin/bash
         echo "Rebuilding home-manager configuration..."
         home-manager switch -f /etc/nixos/home-manager-base.nix
       '')
-      
+
       (writeScriptBin "hm-edit" ''
         #!/bin/bash
-        $EDITOR /etc/nixos/home-manager.nix
+        $EDITOR /etc/nixos/home-manager-base.nix
       '')
     ];
   };

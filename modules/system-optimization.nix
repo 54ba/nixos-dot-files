@@ -24,7 +24,7 @@ with lib;
         serviceConfig = {
           Type = "oneshot";
           ExecStart = pkgs.writeScript "restart-input-devices" ''
-            #!/bin/bash
+            #!${pkgs.bash}/bin/bash
             # Wait a moment for devices to settle
             sleep 2
             
