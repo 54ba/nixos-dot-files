@@ -67,7 +67,7 @@ with lib;
           gdm = {
             enable = true;
             wayland = config.custom.desktop.wayland.enable;
-            debug = true;
+            debug = false;
           };
           # Ensure proper session handling
           sessionCommands = ''
@@ -129,26 +129,11 @@ with lib;
         polkit_gnome
       ];
 
-      # Ensure polkit authentication agent is running
-      systemd = {
-        user.services.polkit-gnome-authentication-agent-1 = {
-          description = "polkit-gnome-authentication-agent-1";
-          wantedBy = [ "graphical-session.target" ];
-          wants = [ "graphical-session.target" ];
-          after = [ "graphical-session.target" ];
-          serviceConfig = {
-            Type = "simple";
-            ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
-            Restart = "on-failure";
-            RestartSec = 1;
-            TimeoutStopSec = 10;
-          };
-        };
-      };
     })
 
     # GNOME desktop environment configuration
     (mkIf config.custom.desktop.gnome.enable {
+      # Enable GNOME Desktop Manager (which provides session files)
       services.xserver.desktopManager.gnome = {
         enable = true;
         extraGSettingsOverrides = mkIf config.custom.desktop.gnome.theme.enable ''
@@ -192,6 +177,22 @@ with lib;
       ];
 
       # Enable GNOME keyring PAM integration
+      # Disable conflicting polkit authentication agent
+      # systemd.user.services.polkit-gnome-authentication-agent-1.enable = false;
+      # Ensure polkit authentication agent is running
+      systemd.user.services.polkit-gnome-authentication-agent-1 = {
+        description = "polkit-gnome-authentication-agent-1";
+        wantedBy = [ "graphical-session.target" ];
+        wants = [ "graphical-session.target" ];
+        after = [ "graphical-session.target" ];
+        serviceConfig = {
+          Type = "simple";
+          ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+          Restart = "on-failure";
+          RestartSec = 1;
+          TimeoutStopSec = 10;
+        };
+      };
       security.pam.services = {
         gdm.enableGnomeKeyring = true;
         gdm-password.enableGnomeKeyring = true;
