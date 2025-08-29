@@ -31,11 +31,11 @@
     ./modules/void-editor.nix
     
     # Intelligent Recording System
-    # ./modules/desktop-recording.nix              # TEMPORARILY DISABLED - Missing script issue
-    # ./modules/input-capture.nix                  # TEMPORARILY DISABLED - Depends on desktop-recording
-    # ./modules/data-pipeline.nix                  # TEMPORARILY DISABLED - Depends on desktop-recording  
-    # ./modules/ai-orchestrator.nix                # TEMPORARILY DISABLED - Depends on desktop-recording
-    # ./modules/intelligent-recording-system.nix   # TEMPORARILY DISABLED - Depends on desktop-recording
+    # ./modules/desktop-recording.nix
+    # ./modules/input-capture.nix
+    # ./modules/data-pipeline.nix
+    # ./modules/ai-orchestrator.nix
+    # ./modules/intelligent-recording-system.nix
     
     # System utilities
     ./modules/virtualization.nix
@@ -74,9 +74,6 @@
     # ./modules/pam-consolidated.nix  # REMOVED - conflicts with main PAM config
     ./modules/nixai-integration.nix              # ENABLED - NixAI integration
     ./modules/migration-assistant.nix            # ENABLED - System migration tools
-    
-    # ===== AUTOMATION & WORKFLOW ORCHESTRATION =====
-    ./modules/automation-workflow.nix             # ENABLED - Automation and workflow orchestration
   ];
 
   # Allow unfree packages and insecure packages
@@ -347,9 +344,9 @@
   };
 
   # === REMOVED MODULES FOR SIMPLIFICATION ===
-  # NixAI Integration - Now enabled via nixaiIntegration below
-  # Migration Assistant - Now enabled via migrationAssistant below
-  # Home Manager Integration - Now enabled via home-manager below
+  # NixAI Integration - Disabled (module not imported)
+  # Migration Assistant - Disabled (module not imported) 
+  # Home Manager Integration - Disabled (permission issues)
 
   # ===== CRITICAL FIXES FOR SYSTEMD ISSUES =====
   # Fix nsncd service failures by using systemd-resolved instead
@@ -367,18 +364,17 @@
   # Enable GNOME keyring service properly
   services.gnome.gnome-keyring.enable = true;
   
-  # Fix GPU and hardware issues
+  # Fix nouveau GPU channel errors by disabling DRM modesetting and ACPI issues
   boot.kernelParams = [ 
     "nvidia.drm.modeset=0" 
     "nouveau.modeset=1"
     "acpi_osi=!"
     "acpi_osi=\"Windows 2020\""
     "acpi_backlight=vendor"
-    "thinkpad_acpi.fan_control=0"  # Disable thinkpad_acpi fan control
   ];
   
-  # Disable ThinkFan service as it's failing on this hardware (not a ThinkPad)
-  services.thinkfan.enable = lib.mkForce false;
+  # Disable ThinkFan service as it's failing on this hardware
+  services.thinkfan.enable = false;
   
   # Boot generations limit is now handled by custom.boot.grub.generations in modules/boot.nix
   # Health monitoring is now handled by modules/health-monitoring.nix
@@ -746,199 +742,84 @@
   };
   
   # ===== INTELLIGENT RECORDING SYSTEM =====
-  # NOTE: Intelligent recording system configuration is temporarily disabled
-  # Re-enable when desktop-recording modules are restored
-  # custom.intelligentRecordingSystem = {
-  #   enable = true;                         # Enable intelligent recording system
-  #   profile = "development";               # Use development profile for coding workflows
-  #   
-  #   # Component configuration
-  #   components = {
-  #     desktopRecording = true;             # Enable desktop recording
-  #     inputCapture = true;                 # Enable input capture and logging
-  #     dataPipeline = true;                 # Enable data processing pipeline
-  #     aiOrchestrator = true;               # Enable AI orchestration
-  #   };
-  #   
-  #   # Feature configuration
-  #   features = {
-  #     autoRecording = true;                # Enable automatic recording based on AI analysis
-  #     smartEffects = true;                 # Enable intelligent effects and enhancements
-  #     realTimeAnalysis = true;             # Enable real-time content analysis
-  #     streamingIntegration = false;        # Disable streaming for now
-  #     cloudSync = false;                   # Keep everything local for privacy
-  #     privacyMode = true;                  # Enable enhanced privacy protection
-  #   };
-  #   
-  #   # Storage configuration
-  #   storage = {
-  #     centralPath = "/var/lib/intelligent-recording";
-  #     totalQuota = "50G";                  # Allocate 50GB for recording system
-  #     distribution = {
-  #       recordings = 60;                   # 60% for video recordings (30GB)
-  #       logs = 20;                         # 20% for input logs (10GB)
-  #       analysis = 15;                     # 15% for analysis data (7.5GB)
-  #       cache = 5;                         # 5% for cache and temporary files (2.5GB)
-  #     };
-  #     backup = {
-  #       enable = false;                    # Disable automatic backups for now
-  #       location = "/backup/recordings";
-  #       schedule = "weekly";
-  #     };
-  #   };
-  #   
-  #   # Performance configuration
-  #   performance = {
-  #     priority = "normal";                 # Normal system priority
-  #     cpuCores = 4;                        # Use 4 CPU cores
-  #     memoryLimit = "4G";                  # Limit to 4GB memory usage
-  #     gpuAcceleration = true;              # Enable GPU acceleration
-  #   };
-  #   
-  #   # Integration settings
-  #   integration = {
-  #     nixai = true;                        # Enable nixai integration
-  #     development = {
-  #       vscode = true;                     # Enable VS Code integration
-  #       github = false;                    # Disable GitHub integration for now
-  #       documentation = true;              # Enable automatic documentation generation
-  #     };
-  #     streaming = {
-  #       obs = true;                        # Enable OBS Studio integration
-  #       platforms = [];                    # No streaming platforms for now
-  #     };
-  #   };
-  #   
-  #   # Security configuration
-  #   security = {
-  #     encryption = true;                   # Encrypt sensitive recordings
-  #     accessControl = true;                # Enable role-based access control
-  #     auditLogging = true;                 # Enable audit logging
-  #     sandboxing = true;                   # Enable process sandboxing
-  #   };
-  #   
-  #   # UI configuration
-  #   ui = {
-  #     enable = true;                       # Enable graphical user interface
-  #     type = "gtk";                        # Use GTK UI framework
-  #     systray = true;                      # Enable system tray integration
-  #     notifications = true;                # Enable desktop notifications
-  #   };
-  # };
-  
-  # ===== AUTOMATION & WORKFLOW ORCHESTRATION =====
-  # Enable comprehensive automation platform with n8n, Temporal, and Kestra
-  custom.automation-workflow = {
-    enable = true;                         # Enable automation workflow system
-    
-    # Core workflow engines
-    engines = {
-      n8n = {
-        enable = false;                      # Disable n8n for initial setup (enable manually if needed)
-        port = 5678;
-        dataDir = "/var/lib/n8n";
-        encryptionKey = "changeme_automation_key_2024";
-      };
-      
-      nodeRed = {
-        enable = false;                      # Disable Node-RED for initial setup
-        port = 1880;
-        userDir = "/var/lib/node-red";
-      };
-      
-      temporal = {
-        enable = false;                      # Disable Temporal for initial setup (enable manually if needed)
-        frontendPort = 8088;
-        serverPort = 7233;
-        dataDir = "/var/lib/temporal";
-      };
-      
-      kestra = {
-        enable = false;                      # Disable Kestra for initial setup (enable manually if needed) 
-        port = 8081;                        # Use different port to avoid conflicts with Airflow
-        dataDir = "/var/lib/kestra";
-        javaOpts = "-Xmx1G";                 # Reduce memory usage for initial setup
-      };
-    };
-    
-    # API automation tools
-    api = {
-      enable = true;                       # Enable API automation tools
-      tools = {
-        postman = false;                     # Disable GUI tools for server setup
-        insomnia = false;
-        httpie = true;                       # Enable CLI HTTP client
-        curl = true;
-        jq = true;
-        yq = true;
-      };
-    };
-    
-    # CLI automation tools
-    cli = {
-      enable = true;                       # Enable CLI automation
-      tools = {
-        github-cli = true;
-        gitlab-cli = true;
-        slack-cli = false;
-        telegram-cli = false;
-        discord-cli = false;
-        aws-cli = true;
-        azure-cli = true;
-        gcloud-cli = true;
-      };
-    };
-    
-    # Scripting and task automation
-    scripting = {
-      enable = true;                       # Enable scripting tools
-      languages = {
-        python = true;
-        nodejs = true;
-        bash = true;
-        powershell = false;                  # Disable PowerShell for Linux setup
-      };
-      schedulers = {
-        cron = true;
-        systemd-timers = true;
-        at = true;
-      };
-    };
-    
-    # Integration and messaging (basic setup)
-    integration = {
-      enable = true;
-      messaging = {
-        rabbitmq = false;                    # Disable for initial setup
-        redis = false;                       # Disable for initial setup
-        kafka = false;
-        mqtt = false;
-      };
-      databases = {
-        postgresql = false;                  # Use existing PostgreSQL setup
-        mongodb = false;
-        sqlite = true;                       # Enable SQLite for lightweight storage
-        influxdb = false;
-      };
-    };
-    
-    # Development and testing
-    development = {
-      enable = true;
-      testing = {
-        newman = true;                       # API testing
-        jest = false;
-        pytest = true;
-        playwright = false;
-        selenium = false;
-      };
-      debugging = {
-        ngrok = false;
-        mitmproxy = true;
-        burp = false;
-      };
-    };
-  };
+  # AI-powered desktop recording and input capture system
+#   custom.intelligentRecordingSystem = {
+#     enable = true;                         # Enable intelligent recording system
+#     profile = "development";               # Use development profile for coding workflows
+#     
+#     # Component configuration
+#     components = {
+#       desktopRecording = true;             # Enable desktop recording
+#       inputCapture = true;                 # Enable input capture and logging
+#       dataPipeline = true;                 # Enable data processing pipeline
+#       aiOrchestrator = true;               # Enable AI orchestration
+#     };
+#     
+#     # Feature configuration
+#     features = {
+#       autoRecording = true;                # Enable automatic recording based on AI analysis
+#       smartEffects = true;                 # Enable intelligent effects and enhancements
+#       realTimeAnalysis = true;             # Enable real-time content analysis
+#       streamingIntegration = false;        # Disable streaming for now
+#       cloudSync = false;                   # Keep everything local for privacy
+#       privacyMode = true;                  # Enable enhanced privacy protection
+#     };
+#     
+#     # Storage configuration
+#     storage = {
+#       centralPath = "/var/lib/intelligent-recording";
+#       totalQuota = "50G";                  # Allocate 50GB for recording system
+#       distribution = {
+#         recordings = 60;                   # 60% for video recordings (30GB)
+#         logs = 20;                         # 20% for input logs (10GB)
+#         analysis = 15;                     # 15% for analysis data (7.5GB)
+#         cache = 5;                         # 5% for cache and temporary files (2.5GB)
+#       };
+#       backup = {
+#         enable = false;                    # Disable automatic backups for now
+#         location = "/backup/recordings";
+#         schedule = "weekly";
+#       };
+#     };
+#     
+#     # Performance configuration
+#     performance = {
+#       priority = "normal";                 # Normal system priority
+#       cpuCores = 4;                        # Use 4 CPU cores
+#       memoryLimit = "4G";                  # Limit to 4GB memory usage
+#       gpuAcceleration = true;              # Enable GPU acceleration
+#     };
+#     
+#     # Integration settings
+#     integration = {
+#       nixai = true;                        # Enable nixai integration
+#       development = {
+#         vscode = true;                     # Enable VS Code integration
+#         github = false;                    # Disable GitHub integration for now
+#         documentation = true;              # Enable automatic documentation generation
+#       };
+#       streaming = {
+#         obs = true;                        # Enable OBS Studio integration
+#         platforms = [];                    # No streaming platforms for now
+#       };
+#     };
+#     
+#     # Security configuration
+#     security = {
+#       encryption = true;                   # Encrypt sensitive recordings
+#       accessControl = true;                # Enable role-based access control
+#       auditLogging = true;                 # Enable audit logging
+#       sandboxing = true;                   # Enable process sandboxing
+#     };
+#     
+#     # UI configuration
+#     ui = {
+#       enable = true;                       # Enable graphical user interface
+#       type = "gtk";                        # Use GTK UI framework
+#       systray = true;                      # Enable system tray integration
+#       notifications = true;                # Enable desktop notifications
+#     };
+#   };
   
   # ===== STEAMOS AND MOBILE PC INTEGRATION =====
   # NOTE: SteamOS and mobile PC modules are currently disabled due to flake path issues
@@ -972,8 +853,6 @@
     description = "mahmoud";
     extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" ];
     shell = lib.mkForce pkgs.zsh;
-    # Create user without password - password will be set on first login
-    initialPassword = "changeme";
     openssh.authorizedKeys.keys = [
       # Add your SSH public key here if needed
     ];
