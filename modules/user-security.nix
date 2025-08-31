@@ -131,8 +131,8 @@ with lib;
 
     # Environment variables for keyring
     environment.sessionVariables = mkIf config.custom.userSecurity.gnomeKeyring.enable {
-      SSH_AUTH_SOCK = "$XDG_RUNTIME_DIR/keyring/ssh";
-      GNOME_KEYRING_CONTROL = "$XDG_RUNTIME_DIR/keyring";
+      SSH_AUTH_SOCK = "\${XDG_RUNTIME_DIR}/keyring/ssh";
+      GNOME_KEYRING_CONTROL = "\${XDG_RUNTIME_DIR}/keyring";
     };
 
     # udev rules for device access

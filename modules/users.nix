@@ -92,10 +92,12 @@ with lib;
         serviceConfig = {
           Type = "oneshot";
           ExecStart = ''
-            ${pkgs.coreutils}/bin/chmod 755 ${config.custom.users.mainUser.home}
-            ${pkgs.coreutils}/bin/chmod 700 ${config.custom.users.mainUser.home}/.ssh
-            ${pkgs.coreutils}/bin/find ${config.custom.users.mainUser.home} -type d -exec chmod 755 {} +
-            ${pkgs.coreutils}/bin/find ${config.custom.users.mainUser.home} -type f -exec chmod 644 {} +
+            ${pkgs.bash}/bin/bash -c "
+              ${pkgs.coreutils}/bin/chmod 755 ${config.custom.users.mainUser.home} || true
+              ${pkgs.coreutils}/bin/chmod 700 ${config.custom.users.mainUser.home}/.ssh || true
+              ${pkgs.coreutils}/bin/find ${config.custom.users.mainUser.home} -type d -exec chmod 755 {} + || true
+              ${pkgs.coreutils}/bin/find ${config.custom.users.mainUser.home} -type f -exec chmod 644 {} + || true
+            "
           '';
           RemainAfterExit = true;
         };

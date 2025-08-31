@@ -48,21 +48,29 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # NVIDIA driver configuration
+    # NVIDIA driver configuration for hybrid graphics
     services.xserver.videoDrivers = [ "nvidia" ];
 
-    # NVIDIA settings
+    # NVIDIA settings for hybrid graphics (Intel + NVIDIA)
     hardware.nvidia = {
       modesetting.enable = true;
       powerManagement = {
         enable = true;
-        finegrained = false;  # Disabled as it requires offload mode
+        finegrained = true;   # Enable for hybrid graphics power management
       };
       prime = {
-        offload.enable = false;  # Not using hybrid graphics
-        sync.enable = false;
+        # Enable NVIDIA Prime offloading for hybrid graphics
+        offload = {
+          enable = true;
+          enableOffloadCmd = true;  # Enable nvidia-offload command
+        };
+        sync.enable = false;     # Don't use sync mode (offload is better for laptops)
+        
+        # Hardware-specific bus IDs for Lenovo S540 GTX 15IWL
+        intelBusId = "PCI:0:2:0";    # Intel UHD Graphics 620
+        nvidiaBusId = "PCI:2:0:0";   # NVIDIA GTX 1650 Mobile
       };
-      open = cfg.gaming.rayTracing;
+      open = false;  # Use proprietary drivers for better stability
       nvidiaSettings = true;
       package = config.boot.kernelPackages.nvidiaPackages.stable;
     };

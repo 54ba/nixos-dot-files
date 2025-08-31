@@ -8,7 +8,7 @@ let
     # Essential productivity extensions
     productivity = [
       "dash-to-dock"
-      "blur-my-shell"
+      # "blur-my-shell"    # DISABLED - Causes GNOME Shell crashes on this setup
       "caffeine"
       "clipboard-indicator"
       "desktop-icons-ng-ding"
@@ -80,7 +80,7 @@ let
   # macOS migration extensions (familiar macOS-like experience)
   macosMigrationExtensions = [
     "dash-to-dock"                       # Dock-like experience
-    "blur-my-shell"                      # Translucent effects
+    # "blur-my-shell"                    # DISABLED - Causes crashes
     "auto-move-windows"                  # Window management
     "caffeine"                           # Prevent sleep
     "clipboard-indicator"                # Clipboard management

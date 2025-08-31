@@ -1,6 +1,57 @@
+# Backup files
 *.bak*
 *.backup
 *.original
+*~
+
+# Build artifacts
 result
+result-*
+
+# Python files
 *.pyc
 __pycache__/
+
+# Environment variables with sensitive data
+.env
+.env.local
+.env.production
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Hardware configuration (auto-generated, may contain sensitive paths)
+hardware-configuration.nix.backup
+
+# User-specific configuration backups
+configuration.nix.backup
+home-manager.nix.backup
+
+# SSH keys (if accidentally placed here)
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Logs
+*.log
+logs/
+
+# Cache directories
+.cache/
+.nix-defexpr/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.Trash-*
+.fseventsd
+.Spotlight-V100
+.TemporaryItems

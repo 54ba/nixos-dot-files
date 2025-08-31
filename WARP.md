@@ -6,17 +6,20 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ### System Configuration Management
 ```bash
+# Source environment variables first
+source .env
+
 # Build and apply system configuration
-sudo nixos-rebuild switch --flake .#mahmoud-laptop
+sudo nixos-rebuild switch --flake .#${NIXOS_HOSTNAME}
 
 # Test configuration without switching
-sudo nixos-rebuild test --flake .#mahmoud-laptop  
+sudo nixos-rebuild test --flake .#${NIXOS_HOSTNAME}
 
 # Build for next boot (safer)
-sudo nixos-rebuild boot --flake .#mahmoud-laptop
+sudo nixos-rebuild boot --flake .#${NIXOS_HOSTNAME}
 
 # Dry run to see what would change
-nixos-rebuild dry-run --flake .#mahmoud-laptop
+nixos-rebuild dry-run --flake .#${NIXOS_HOSTNAME}
 ```
 
 ### System Maintenance
@@ -33,11 +36,11 @@ journalctl --vacuum-time=7d              # Clean logs
 
 ### Home Manager (Standalone Mode)
 ```bash
-# Switch home-manager configuration  
+# Switch home-manager configuration (script will use environment variables)
 ./hm-switch.sh
 
-# Or manually as user mahmoud
-home-manager switch --flake .#mahmoud
+# Or manually using environment variable for username
+home-manager switch --flake .#${NIXOS_USERNAME}
 ```
 
 ### Development Shells

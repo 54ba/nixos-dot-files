@@ -73,7 +73,7 @@ with lib;
     # Create the health monitoring script
     environment.etc."nixos/scripts/health-monitor.sh" = {
       text = ''
-        #!/bin/bash
+        #!${pkgs.bash}/bin/bash
         
         # System Health Monitor Script
         LOG_FILE="${config.custom.healthMonitoring.logging.logPath}"

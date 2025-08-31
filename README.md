@@ -2,6 +2,77 @@
 
 This is a modular NixOS configuration system that allows you to easily enable or disable different sets of packages and services based on your needs. The system is designed to be minimal by default while providing optional components that can be enabled as needed.
 
+## 🔧 Environment Variables
+
+This configuration uses environment variables to manage sensitive and user-specific data like hostnames, usernames, and network settings. This approach enhances security and makes the configuration more portable.
+
+### Setup Environment Variables
+
+1. **Copy the template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit your configuration:**
+   ```bash
+   vim .env  # or use your preferred editor
+   ```
+
+3. **Source variables before commands:**
+   ```bash
+   source .env
+   ```
+
+### Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NIXOS_HOSTNAME` | System hostname | `my-laptop` |
+| `NIXOS_USERNAME` | Primary username | `john` |
+| `NIXOS_USER_HOME` | User home directory | `/home/john` |
+| `NIXOS_TIMEZONE` | System timezone | `America/New_York` |
+| `NIXOS_LOCALE` | System locale | `en_US.UTF-8` |
+
+### Optional Variables
+
+| Variable | Description | Default |
+|----------|-------------|--------|
+| `NIXOS_REPO_URL` | Git repository URL | Current repo |
+| `NIXOS_CONFIG_PATH` | Configuration path | `/etc/nixos` |
+| `NIXOS_DNS_PRIMARY` | Primary DNS server | `8.8.8.8` |
+| `NIXOS_DNS_SECONDARY` | Secondary DNS server | `8.8.4.4` |
+| `NIXOS_GPU_VENDOR` | GPU vendor | `nvidia` |
+| `NIXOS_HARDWARE_MODEL` | Hardware model | `generic` |
+
+### Feature Flags
+
+Enable/disable major features:
+
+```bash
+# AI Services
+NIXOS_ENABLE_AI_SERVICES=true
+
+# Gaming packages
+NIXOS_ENABLE_GAMING=false
+
+# Development tools
+NIXOS_ENABLE_DEVELOPMENT=true
+
+# Media packages
+NIXOS_ENABLE_MEDIA=true
+
+# Penetration testing tools (use responsibly)
+NIXOS_ENABLE_PENTEST=false
+```
+
+### Security Best Practices
+
+- ✅ **Never commit `.env` files** - They're in `.gitignore`
+- ✅ **Use strong, unique values** for sensitive data
+- ✅ **Regularly rotate credentials** like SSH keys
+- ✅ **Review environment variables** before sharing configurations
+- ⚠️ **Be cautious with** network-related and security tool settings
+
 ## 📁 Directory Structure
 
 ```
@@ -76,9 +147,17 @@ This is a modular NixOS configuration system that allows you to easily enable or
 ### 1. Clone and Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/54ba/nixos-dot-files.git /etc/nixos
-cd /etc/nixos
+# Clone the repository (replace with your repository URL)
+git clone ${NIXOS_REPO_URL:-"https://github.com/your-username/nixos-config.git"} ${NIXOS_CONFIG_PATH:-"/etc/nixos"}
+cd ${NIXOS_CONFIG_PATH:-"/etc/nixos"}
+
+# Copy environment template and configure your settings
+cp .env.example .env
+# Edit .env with your specific configuration values
+vim .env
+
+# Source environment variables
+source .env
 
 # Generate hardware configuration (if not done already)
 sudo nixos-generate-config --root /mnt --show-hardware-config > hardware-configuration.nix
@@ -125,14 +204,20 @@ custom.security = {
 ### 5. Build and Apply Configuration
 
 ```bash
-# Build the configuration with flake
-nixos-rebuild switch --flake .#mahmoud-laptop
+# Source environment variables first
+source .env
+
+# Build the configuration with flake using environment variable
+sudo nixos-rebuild switch --flake .#${NIXOS_HOSTNAME:-"your-hostname"}
 
 # Or test without applying
-nixos-rebuild test --flake .#mahmoud-laptop
+sudo nixos-rebuild test --flake .#${NIXOS_HOSTNAME:-"your-hostname"}
 
-# Build specific hostname (replace with your hostname)
-nixos-rebuild switch --flake .
+# Dry run to see what would change
+nixos-rebuild dry-run --flake .#${NIXOS_HOSTNAME:-"your-hostname"}
+
+# Build for next boot (safer option)
+sudo nixos-rebuild boot --flake .#${NIXOS_HOSTNAME:-"your-hostname"}
 ```
 
 ## 🏠 Home Manager Integration

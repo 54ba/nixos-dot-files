@@ -31,11 +31,11 @@
     ./modules/void-editor.nix
     
     # Intelligent Recording System
-    # ./modules/desktop-recording.nix
-    # ./modules/input-capture.nix
-    # ./modules/data-pipeline.nix
-    # ./modules/ai-orchestrator.nix
-    # ./modules/intelligent-recording-system.nix
+    ./modules/desktop-recording.nix
+    ./modules/input-capture.nix
+    ./modules/data-pipeline.nix
+    ./modules/ai-orchestrator.nix
+    ./modules/intelligent-recording-system.nix
     
     # System utilities
     ./modules/virtualization.nix
@@ -44,10 +44,10 @@
     ./modules/nixgl.nix
     
     # System health monitoring
-    ./modules/health-monitoring.nix               # ENABLED - System health monitoring
+    # ./modules/health-monitoring.nix              # DISABLED - Module not available in flake path
     
     # Rescue system with generation management
-    ./modules/rescue-system.nix                   # ENABLED - Advanced rescue system
+    # ./modules/rescue-system.nix                  # DISABLED - Module causes build issues
     
     # SteamOS and Mobile PC Integration - TEMPORARILY DISABLED FOR TESTING
     # ./modules/steamos-gaming.nix                 # DISABLED - Path issues with flakes
@@ -167,7 +167,7 @@
     grub = {
       theme = "dark";
     #  timeout = 5;
-      generations = 5;  # Reduced from 40 to 5 to prevent EFI partition from filling up
+      generations = 40;
     };
   };
 
@@ -258,53 +258,53 @@
     hardening.enable = true;                         # Enable system hardening
   };
   
-  # Enable comprehensive health monitoring (ENABLED - Module imported)
-  custom.healthMonitoring = {
-    enable = true;                           # Enable system health monitoring
-    monitoring = {
-      interval = "hourly";                   # Run health checks hourly
-      checkDisk = true;                      # Monitor disk health and usage
-      checkMemory = true;                    # Monitor memory usage
-      checkServices = true;                  # Monitor service status
-      checkNetwork = true;                   # Monitor network connectivity
-    };
-    logging.enable = true;                   # Enable health monitoring logs
-  };
+  # Enable comprehensive health monitoring (DISABLED - Module not imported)
+  # custom.healthMonitoring = {
+  #   enable = true;                         # Enable system health monitoring
+  #   monitoring = {
+  #     interval = "hourly";                 # Run health checks hourly
+  #     checkDisk = true;                    # Monitor disk health and usage
+  #     checkMemory = true;                  # Monitor memory usage
+  #     checkServices = true;                # Monitor service status
+  #     checkNetwork = true;                 # Monitor network connectivity
+  #   };
+  #   logging.enable = true;                 # Enable health monitoring logs
+  # };
   
-  # Enable advanced rescue system with generation management (ENABLED - Module imported)
-  custom.rescueSystem = {
-    enable = true;                         # Enable comprehensive rescue system
-    grub = {
-      enableAdvancedMenu = true;           # Advanced GRUB menu with rescue options
-      timeout = 15;                        # 15 second timeout for rescue menu (reduced from 30)
-      enableGenerationSorting = true;      # Sort boot generations by date
-      rescueEntries = true;                # Add dedicated rescue mode entries
-    };
-    generations = {
-      maxCount = 50;                       # Keep up to 50 generations for recovery (reduced from 100)
-      sortBy = "date";                     # Sort by date (newest first)
-      groupBy = "week";                    # Group generations by week
-      autoCleanup = true;                  # Auto-cleanup old generations
-    };
-    rescueTools = {
-      enable = true;                       # Enable comprehensive rescue tools
-      networkTools = true;                 # Network diagnostic and recovery tools
-      diskTools = true;                    # Disk recovery and filesystem tools
-      systemTools = true;                  # System diagnostic and repair tools
-      developmentTools = false;            # Disable dev tools for security
-    };
-    emergencyAccess = {
-      enableRootShell = true;              # Emergency root shell access
-      enableNetworkAccess = true;          # Network access in rescue mode
-      enableSSH = false;                   # Disable SSH for security (enable manually if needed)
-      allowPasswordAuth = true;            # Allow password authentication in rescue mode
-    };
-    autoRescue = {
-      enable = false;                      # Disable auto-rescue for now
-      bootFailureThreshold = 3;            # Trigger after 3 boot failures
-      autoRepair = false;                  # Disable automatic repairs
-    };
-  };
+  # Enable advanced rescue system with generation management (DISABLED - Module not imported)
+  # custom.rescueSystem = {
+  #   enable = true;                         # Enable comprehensive rescue system
+  #   grub = {
+  #     enableAdvancedMenu = true;           # Advanced GRUB menu with rescue options
+  #     timeout = 30;                        # 30 second timeout for rescue menu
+  #     enableGenerationSorting = true;      # Sort boot generations by date
+  #     rescueEntries = true;                # Add dedicated rescue mode entries
+  #   };
+  #   generations = {
+  #     maxCount = 100;                      # Keep up to 100 generations for recovery
+  #     sortBy = "date";                     # Sort by date (newest first)
+  #     groupBy = "week";                    # Group generations by week
+  #     autoCleanup = true;                  # Auto-cleanup old generations
+  #   };
+  #   rescueTools = {
+  #     enable = true;                       # Enable comprehensive rescue tools
+  #     networkTools = true;                 # Network diagnostic and recovery tools
+  #     diskTools = true;                    # Disk recovery and filesystem tools
+  #     systemTools = true;                  # System diagnostic and repair tools
+  #     developmentTools = false;            # Disable dev tools for security
+  #   };
+  #   emergencyAccess = {
+  #     enableRootShell = true;              # Emergency root shell access
+  #     enableNetworkAccess = true;          # Network access in rescue mode
+  #     enableSSH = false;                   # Disable SSH for security (enable manually if needed)
+  #     allowPasswordAuth = true;            # Allow password authentication in rescue mode
+  #   };
+  #   autoRescue = {
+  #     enable = false;                      # Disable auto-rescue for now
+  #     bootFailureThreshold = 3;            # Trigger after 3 boot failures
+  #     autoRepair = false;                  # Disable automatic repairs
+  #   };
+  # };
 
   # ===== CUSTOM SSD2 BIND MOUNTS =====
   custom.binding = {
@@ -328,15 +328,15 @@
 
   # ===== APPLICATION MODULES =====
 
-  # AI Services (using CPU since NVIDIA is disabled for boot stability)
+  # AI Services (disabled by default)
   custom.ai-services = {
     enable = true;  # Enable for AI development
     ollama = {
       enable = true;
-      acceleration = "cpu";               # Use CPU instead of CUDA for stability
+      acceleration = "cuda";
     };
     nvidia = {
-      enable = false;                     # Disable NVIDIA for AI (conflicts with nouveau)
+      enable = true;
       package = "stable";
       powerManagement = false;
     };
@@ -364,62 +364,17 @@
   # Enable GNOME keyring service properly
   services.gnome.gnome-keyring.enable = true;
   
-  # RESTORED WORKING KERNEL PARAMETERS FROM GENERATION 16
-  # Simplified, clean configuration that matches the working generation
-  boot.kernelParams = lib.mkForce [
-    # Base hardware parameters (from hardware-configuration.nix)
-    "usbcore.autosuspend=-1"
-    "usbcore.use_both_schemes=1" 
-    "pcie_aspm=off"
-    "intel_pstate=active"
-    
-    # Intel graphics optimizations (working settings)
-    "i915.enable_psr=0"
-    "i915.enable_fbc=1"
-    
-    # WORKING BOOT CONFIGURATION (matches generation 16)
-    "quiet"                                       # Quiet boot (working configuration)
-    "splash"                                      # Boot splash
-    "rd.udev.log_level=3"                         # Normal udev logging
-    "vt.global_cursor_default=0"                  # Hide cursor
-    
-    # WORKING ACPI CONFIGURATION (from generation 16)
-    "acpi_osi=Linux"                              # Use Linux ACPI (working setting)
-    "acpi_backlight=vendor"                       # Vendor backlight control
-    
-    # WORKING GRAPHICS CONFIGURATION (nouveau only, matches generation 16)
-    "nvidia.drm.modeset=0"                        # Disable NVIDIA DRM (working setting)
-    "nouveau.modeset=1"                           # Enable nouveau (working setting)
-    
-    # Security framework
-    "lsm=landlock,yama,bpf,apparmor"
-    "audit=1"
-    "apparmor=1"
-    
-    # Filesystem
-    "root=fstab"
-    
-    # Boot logging (minimal for stability)
-    "loglevel=0"                                  # Minimal logging (working setting)
+  # Fix nouveau GPU channel errors by disabling DRM modesetting and ACPI issues
+  boot.kernelParams = [ 
+    "nvidia.drm.modeset=0" 
+    "nouveau.modeset=1"
+    "acpi_osi=!"
+    "acpi_osi=\"Windows 2020\""
+    "acpi_backlight=vendor"
   ];
   
   # Disable ThinkFan service as it's failing on this hardware
   services.thinkfan.enable = false;
-  
-  # SIMPLIFIED LOGGING CONFIGURATION (matches working generation 16)
-  # Reduce logging to prevent boot issues
-  services.journald.extraConfig = ''
-    # Persistent storage for logs
-    Storage=persistent
-    # Compress logs to save space
-    Compress=yes
-    # Keep logs for 7 days
-    MaxRetentionSec=604800
-    # Limit journal size to 1GB
-    SystemMaxUse=1G
-    # Keep at least 100MB free
-    SystemKeepFree=100M
-  '';
   
   # Boot generations limit is now handled by custom.boot.grub.generations in modules/boot.nix
   # Health monitoring is now handled by modules/health-monitoring.nix
@@ -568,19 +523,17 @@
 
   # ===== NEWLY ENABLED MODULE CONFIGURATIONS =====
   
-  # NVIDIA Performance Optimizations - DISABLED TO FIX BOOT FAILURES
-  # The NVIDIA performance optimizations are causing conflicts with nouveau drivers
-  # Generation 16 works with nouveau.modeset=1 and nvidia.drm.modeset=0
+  # NVIDIA Performance Optimizations
   custom.nvidiaPerformance = {
-    enable = false;                        # DISABLED - Causes boot failures due to driver conflicts
+    enable = true;                         # Enable NVIDIA performance optimizations
     gaming = {
-      enable = false;                      # Disabled with main module
-      dlss = false;                        # Disabled with main module
-      rayTracing = false;                  # Disabled with main module
+      enable = true;                       # Enable gaming optimizations
+      dlss = true;                         # Enable DLSS support
+      rayTracing = true;                   # Enable ray tracing support
       performanceMode = "performance";     # Performance mode preference
     };
     monitoring = {
-      enable = false;                      # Disabled with main module
+      enable = true;                       # Enable GPU monitoring tools
     };
   };
   
@@ -672,22 +625,13 @@
     };
   };
   
-  # Boot Enhancements - RESTORED FOR GNOME/TTY FIX
+  # Boot Enhancements
   custom.boot.enhancements.enable = true;        # Enable boot enhancements
   custom.boot.plymouth = {
     enable = true;                                # Enable Plymouth boot splash
     theme = "breeze";                            # Use breeze theme
   };
   custom.boot.quietBoot.enable = true;           # Enable quiet boot mode
-  
-  # DIRECT PLYMOUTH CONFIGURATION TO OVERRIDE MODULE ISSUES
-  boot.plymouth = {
-    enable = lib.mkForce true;                    # Force enable Plymouth
-    theme = "breeze";                             # Use breeze theme
-  };
-  
-  # RESTORE MISSING KERNEL PARAMETERS (critical for TTY/display)
-  # These parameters are added to the existing boot.kernelParams below
   
   # User Security Enhancements
   custom.userSecurity = {
@@ -799,83 +743,83 @@
   
   # ===== INTELLIGENT RECORDING SYSTEM =====
   # AI-powered desktop recording and input capture system
-#   custom.intelligentRecordingSystem = {
-#     enable = true;                         # Enable intelligent recording system
-#     profile = "development";               # Use development profile for coding workflows
-#     
-#     # Component configuration
-#     components = {
-#       desktopRecording = true;             # Enable desktop recording
-#       inputCapture = true;                 # Enable input capture and logging
-#       dataPipeline = true;                 # Enable data processing pipeline
-#       aiOrchestrator = true;               # Enable AI orchestration
-#     };
-#     
-#     # Feature configuration
-#     features = {
-#       autoRecording = true;                # Enable automatic recording based on AI analysis
-#       smartEffects = true;                 # Enable intelligent effects and enhancements
-#       realTimeAnalysis = true;             # Enable real-time content analysis
-#       streamingIntegration = false;        # Disable streaming for now
-#       cloudSync = false;                   # Keep everything local for privacy
-#       privacyMode = true;                  # Enable enhanced privacy protection
-#     };
-#     
-#     # Storage configuration
-#     storage = {
-#       centralPath = "/var/lib/intelligent-recording";
-#       totalQuota = "50G";                  # Allocate 50GB for recording system
-#       distribution = {
-#         recordings = 60;                   # 60% for video recordings (30GB)
-#         logs = 20;                         # 20% for input logs (10GB)
-#         analysis = 15;                     # 15% for analysis data (7.5GB)
-#         cache = 5;                         # 5% for cache and temporary files (2.5GB)
-#       };
-#       backup = {
-#         enable = false;                    # Disable automatic backups for now
-#         location = "/backup/recordings";
-#         schedule = "weekly";
-#       };
-#     };
-#     
-#     # Performance configuration
-#     performance = {
-#       priority = "normal";                 # Normal system priority
-#       cpuCores = 4;                        # Use 4 CPU cores
-#       memoryLimit = "4G";                  # Limit to 4GB memory usage
-#       gpuAcceleration = true;              # Enable GPU acceleration
-#     };
-#     
-#     # Integration settings
-#     integration = {
-#       nixai = true;                        # Enable nixai integration
-#       development = {
-#         vscode = true;                     # Enable VS Code integration
-#         github = false;                    # Disable GitHub integration for now
-#         documentation = true;              # Enable automatic documentation generation
-#       };
-#       streaming = {
-#         obs = true;                        # Enable OBS Studio integration
-#         platforms = [];                    # No streaming platforms for now
-#       };
-#     };
-#     
-#     # Security configuration
-#     security = {
-#       encryption = true;                   # Encrypt sensitive recordings
-#       accessControl = true;                # Enable role-based access control
-#       auditLogging = true;                 # Enable audit logging
-#       sandboxing = true;                   # Enable process sandboxing
-#     };
-#     
-#     # UI configuration
-#     ui = {
-#       enable = true;                       # Enable graphical user interface
-#       type = "gtk";                        # Use GTK UI framework
-#       systray = true;                      # Enable system tray integration
-#       notifications = true;                # Enable desktop notifications
-#     };
-#   };
+  custom.intelligentRecordingSystem = {
+    enable = true;                         # Enable intelligent recording system
+    profile = "development";               # Use development profile for coding workflows
+    
+    # Component configuration
+    components = {
+      desktopRecording = true;             # Enable desktop recording
+      inputCapture = true;                 # Enable input capture and logging
+      dataPipeline = true;                 # Enable data processing pipeline
+      aiOrchestrator = true;               # Enable AI orchestration
+    };
+    
+    # Feature configuration
+    features = {
+      autoRecording = true;                # Enable automatic recording based on AI analysis
+      smartEffects = true;                 # Enable intelligent effects and enhancements
+      realTimeAnalysis = true;             # Enable real-time content analysis
+      streamingIntegration = false;        # Disable streaming for now
+      cloudSync = false;                   # Keep everything local for privacy
+      privacyMode = true;                  # Enable enhanced privacy protection
+    };
+    
+    # Storage configuration
+    storage = {
+      centralPath = "/var/lib/intelligent-recording";
+      totalQuota = "50G";                  # Allocate 50GB for recording system
+      distribution = {
+        recordings = 60;                   # 60% for video recordings (30GB)
+        logs = 20;                         # 20% for input logs (10GB)
+        analysis = 15;                     # 15% for analysis data (7.5GB)
+        cache = 5;                         # 5% for cache and temporary files (2.5GB)
+      };
+      backup = {
+        enable = false;                    # Disable automatic backups for now
+        location = "/backup/recordings";
+        schedule = "weekly";
+      };
+    };
+    
+    # Performance configuration
+    performance = {
+      priority = "normal";                 # Normal system priority
+      cpuCores = 4;                        # Use 4 CPU cores
+      memoryLimit = "4G";                  # Limit to 4GB memory usage
+      gpuAcceleration = true;              # Enable GPU acceleration
+    };
+    
+    # Integration settings
+    integration = {
+      nixai = true;                        # Enable nixai integration
+      development = {
+        vscode = true;                     # Enable VS Code integration
+        github = false;                    # Disable GitHub integration for now
+        documentation = true;              # Enable automatic documentation generation
+      };
+      streaming = {
+        obs = true;                        # Enable OBS Studio integration
+        platforms = [];                    # No streaming platforms for now
+      };
+    };
+    
+    # Security configuration
+    security = {
+      encryption = true;                   # Encrypt sensitive recordings
+      accessControl = true;                # Enable role-based access control
+      auditLogging = true;                 # Enable audit logging
+      sandboxing = true;                   # Enable process sandboxing
+    };
+    
+    # UI configuration
+    ui = {
+      enable = true;                       # Enable graphical user interface
+      type = "gtk";                        # Use GTK UI framework
+      systray = true;                      # Enable system tray integration
+      notifications = true;                # Enable desktop notifications
+    };
+  };
   
   # ===== STEAMOS AND MOBILE PC INTEGRATION =====
   # NOTE: SteamOS and mobile PC modules are currently disabled due to flake path issues

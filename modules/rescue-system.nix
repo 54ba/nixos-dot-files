@@ -26,7 +26,7 @@ let
     # Disk and filesystem tools
     parted           # partition management
     gparted          # GUI partition manager
-    gdisk            # GPT partition tools
+    gptfdisk         # GPT partition tools
     dosfstools       # FAT filesystem tools
     ntfs3g           # NTFS filesystem support
     exfat            # exFAT filesystem support
@@ -37,12 +37,10 @@ let
     smartmontools    # disk health monitoring
     hdparm           # hard drive parameters
     ddrescue         # data recovery
-    testdisk         # partition and data recovery
-    photorec         # file recovery
+    testdisk         # partition and data recovery (includes photorec)
     safecopy         # fault-tolerant disk copying
     rsync            # file synchronization
     lsof             # list open files
-    fuser            # identify file users
   ];
   
   systemTools = with pkgs; [
@@ -63,9 +61,8 @@ let
     dmidecode        # hardware information
     memtest86plus    # memory testing
     stress           # system stress testing
-    chroot           # change root environment
     bindfs           # filesystem in userspace
-    squashfs-tools   # compressed filesystem tools
+    squashfsTools    # compressed filesystem tools
   ];
   
   recoveryCLITools = with pkgs; [
@@ -75,14 +72,14 @@ let
     bash zsh fish    # shells
     coreutils        # basic utilities
     findutils        # find utilities
-    grep ripgrep     # search tools
-    sed              # stream editor
-    awk gawk         # text processing
-    less more        # pagers
+    gnugrep ripgrep  # search tools
+    gnused           # stream editor
+    gawk             # text processing
+    less             # pager
     tree             # directory tree
     file             # file type detection
-    hexdump          # hex dump utility
-    strings          # extract strings
+    util-linux       # includes hexdump and other utilities
+    binutils         # includes strings
     mc               # midnight commander
     ranger           # file manager
   ];
@@ -216,8 +213,8 @@ in {
 
   config = mkIf config.custom.rescueSystem.enable {
     # Enhanced GRUB configuration with rescue options
+    boot.loader.timeout = mkDefault config.custom.rescueSystem.grub.timeout;
     boot.loader.grub = {
-      timeout = config.custom.rescueSystem.grub.timeout;
       
       # Custom GRUB theme for rescue system
       theme = mkIf config.custom.rescueSystem.grub.enableAdvancedMenu (pkgs.stdenv.mkDerivation {
@@ -313,7 +310,7 @@ in {
     # Generation management script
     environment.etc."nixos/scripts/generation-manager.sh" = {
       text = ''
-        #!/bin/bash
+        #!${pkgs.bash}/bin/bash
         
         # NixOS Generation Manager and Rescue Tool
         # Provides advanced generation management with sorting and filtering
@@ -636,7 +633,7 @@ in {
     environment.systemPackages = mkMerge [
       # Always include rescue menu script
       [ (pkgs.writeScriptBin "nixos-rescue-menu" ''
-          #!/bin/bash
+          #!${pkgs.bash}/bin/bash
           
           # NixOS Comprehensive Rescue System
           # Advanced recovery and diagnostic tools
@@ -950,84 +947,70 @@ in {
       after = [ "basic.target" ];
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = "${pkgs.bash}/bin/bash -c '''
+        ExecStart = "${pkgs.bash}/bin/bash -c ''
           # Check for rescue boot parameters
           CMDLINE=$(cat /proc/cmdline)
           
-          if [[ "$CMDLINE" == *"rescue-info=true"* ]]; then
+          if [[ \"$$CMDLINE\" == *\"rescue-info=true\"* ]]; then
             /etc/nixos/scripts/generation-manager.sh diagnostics | tee /dev/console
           fi
           
-          if [[ "$CMDLINE" == *"rescue-list-generations=true"* ]]; then
+          if [[ \"$$CMDLINE\" == *\"rescue-list-generations=true\"* ]]; then
             /etc/nixos/scripts/generation-manager.sh list | tee /dev/console
-            echo "Press Enter to continue..." | tee /dev/console
+            echo \"Press Enter to continue...\" | tee /dev/console
             read
           fi
           
-          if [[ "$CMDLINE" == *"rescue-rollback=true"* ]]; then
-            echo "=== RESCUE ROLLBACK MODE ===" | tee /dev/console
+          if [[ \"$$CMDLINE\" == *\"rescue-rollback=true\"* ]]; then
+            echo \"=== RESCUE ROLLBACK MODE ===\" | tee /dev/console
             /etc/nixos/scripts/generation-manager.sh list date week working | head -10 | tee /dev/console
-            echo "Enter generation number to rollback to (or 'cancel'):" | tee /dev/console
+            echo \"Enter generation number to rollback to (or 'cancel'):\" | tee /dev/console
             read -r gen
-            if [[ "$gen" != "cancel" && "$gen" =~ ^[0-9]+$ ]]; then
-              /etc/nixos/scripts/generation-manager.sh rollback "$gen"
+            if [[ \"$$gen\" != \"cancel\" && \"$$gen\" =~ ^[0-9]+$$ ]]; then
+              /etc/nixos/scripts/generation-manager.sh rollback \"$$gen\"
             fi
           fi
           
-          if [[ "$CMDLINE" == *"rescue-cleanup=true"* ]]; then
-            echo "=== RESCUE CLEANUP MODE ===" | tee /dev/console
+          if [[ \"$$CMDLINE\" == *\"rescue-cleanup=true\"* ]]; then
+            echo \"=== RESCUE CLEANUP MODE ===\" | tee /dev/console
             /etc/nixos/scripts/generation-manager.sh cleanup 10 true | tee /dev/console
-            echo "Proceed with cleanup? (yes/no):" | tee /dev/console
+            echo \"Proceed with cleanup? (yes/no):\" | tee /dev/console
             read -r confirm
-            if [[ "$confirm" == "yes" ]]; then
+            if [[ \"$$confirm\" == \"yes\" ]]; then
               /etc/nixos/scripts/generation-manager.sh cleanup 10 false
             fi
           fi
           
-          if [[ "$CMDLINE" == *"rescue-disk-check=true"* ]]; then
-            echo "=== DISK HEALTH CHECK ===" | tee /dev/console
+          if [[ \"$$CMDLINE\" == *\"rescue-disk-check=true\"* ]]; then
+            echo \"=== DISK HEALTH CHECK ===\" | tee /dev/console
             for disk in /dev/sd[a-z] /dev/nvme[0-9]n[0-9]; do
-              if [[ -e "$disk" ]]; then
-                echo "Checking $disk..." | tee /dev/console
-                smartctl -a "$disk" 2>/dev/null | tee /dev/console || true
+              if [[ -e \"$$disk\" ]]; then
+                echo \"Checking $$disk...\" | tee /dev/console
+                smartctl -a \"$$disk\" 2>/dev/null | tee /dev/console || true
               fi
             done
           fi
           
-          if [[ "$CMDLINE" == *"rescue-memory-check=true"* ]]; then
-            echo "=== MEMORY CHECK ===" | tee /dev/console
+          if [[ \"$$CMDLINE\" == *\"rescue-memory-check=true\"* ]]; then
+            echo \"=== MEMORY CHECK ===\" | tee /dev/console
             free -h | tee /dev/console
-            echo "Running memory test (5 seconds)..." | tee /dev/console
-            stress-ng --vm 1 --vm-bytes 75% --timeout 5s | tee /dev/console || true
+            echo \"Running memory test (5 seconds)...\" | tee /dev/console
+            stress-ng --vm 1 --vm-bytes 75%% --timeout 5s | tee /dev/console || true
           fi
           
-          if [[ "$CMDLINE" == *"rescue-network-check=true"* ]]; then
-            echo "=== NETWORK DIAGNOSTIC ===" | tee /dev/console
+          if [[ \"$$CMDLINE\" == *\"rescue-network-check=true\"* ]]; then
+            echo \"=== NETWORK DIAGNOSTIC ===\" | tee /dev/console
             ip addr show | tee /dev/console
-            echo "Testing connectivity..." | tee /dev/console
+            echo \"Testing connectivity...\" | tee /dev/console
             ping -c 3 8.8.8.8 | tee /dev/console || true
           fi
-        ''';
+        ''";
         StandardOutput = "journal+console";
         StandardError = "journal+console";
       };
     };
 
-    # Emergency access configuration
-    systemd.services.emergency-shell = mkIf config.custom.rescueSystem.emergencyAccess.enableRootShell {
-      description = "Emergency Root Shell";
-      wantedBy = [ "rescue.target" ];
-      serviceConfig = {
-        Type = "idle";
-        ExecStart = "${pkgs.bash}/bin/bash --login";
-        StandardInput = "tty-force";
-        StandardOutput = "inherit";
-        StandardError = "inherit";
-        KillMode = "process";
-        IgnoreSIGPIPE = false;
-        SendSIGHUP = true;
-      };
-    };
+    # Note: Emergency shell is provided by systemd's emergency.target by default
 
     # Aliases for easy access
     environment.shellAliases = {
@@ -1038,33 +1021,8 @@ in {
       rescue-help = "/etc/nixos/scripts/generation-manager.sh help";
     };
 
-    # Enable emergency access features
-    boot.kernelParams = mkIf config.custom.rescueSystem.emergencyAccess.enableRootShell [
-      "systemd.setenv=SYSTEMD_SULOGIN_FORCE=1"
-    ];
+    # Emergency access features provided by systemd targets
 
-    # SSH access in rescue mode (careful - security risk)
-    services.openssh = mkIf config.custom.rescueSystem.emergencyAccess.enableSSH {
-      enable = true;
-      settings = {
-        PermitRootLogin = "yes";
-        PasswordAuthentication = true;
-      };
-    };
-    
-    # System services for rescue functionality
-    systemd.services.rescue-system-ready = mkIf cfg.enable {
-      description = "NixOS Rescue System Ready";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
-      
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${pkgs.coreutils}/bin/echo 'NixOS Rescue System Ready'";
-        ExecStartPost = "${pkgs.coreutils}/bin/echo 'Run nixos-rescue-menu for rescue options'";
-        RemainAfterExit = true;
-      };
-    };
     
     # Emergency access configuration
     security.sudo.wheelNeedsPassword = mkIf cfg.emergencyAccess.enableRootShell (mkForce false);
@@ -1080,28 +1038,13 @@ in {
     
     # Generation management
     nix.gc = mkIf cfg.generations.autoCleanup {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 30d --max-freed $((64 * 1024**3))";
+      automatic = mkDefault true;
+      dates = mkDefault "weekly";
+      options = mkDefault "--delete-older-than 30d --max-freed 68719476736";  # 64 GB
     };
     
     # Keep more generations for recovery
-    boot.loader.grub.configurationLimit = cfg.generations.maxCount;
-    
-    # Auto-rescue configuration
-    systemd.services.auto-rescue-monitor = mkIf cfg.autoRescue.enable {
-      description = "Auto Rescue System Monitor";
-      wantedBy = [ "multi-user.target" ];
-      
-      serviceConfig = {
-        Type = "simple";
-        ExecStart = "${pkgs.bash}/bin/bash -c 'while true; do sleep 60; done'";
-        Restart = "always";
-        RestartSec = "10";
-      };
-      
-      # This would be expanded to monitor boot failures and trigger rescue mode
-    };
+    boot.loader.grub.configurationLimit = mkDefault cfg.generations.maxCount;
     
     # Environment variables for rescue system
     environment.variables = {
@@ -1120,12 +1063,10 @@ in {
       chmod 755 /var/log/nixos-rescue
       
       # Create rescue system status file
-      echo "NixOS Rescue System Enabled - $(date)" > /var/lib/nixos-rescue/status
-      echo "Rescue Menu: nixos-rescue-menu" >> /var/lib/nixos-rescue/status
-      echo "Tools Available: ${if cfg.rescueTools.enable then "yes" else "no"}" >> /var/lib/nixos-rescue/status
-      echo "Network Tools: ${if cfg.rescueTools.networkTools then "yes" else "no"}" >> /var/lib/nixos-rescue/status
-      echo "Disk Tools: ${if cfg.rescueTools.diskTools then "yes" else "no"}" >> /var/lib/nixos-rescue/status
-      echo "System Tools: ${if cfg.rescueTools.systemTools then "yes" else "no"}" >> /var/lib/nixos-rescue/status
+      echo "NixOS Rescue System Enabled" > /var/lib/nixos-rescue/status
+      echo "Rescue Menu - nixos-rescue-menu" >> /var/lib/nixos-rescue/status
+      echo "Rescue Tools Available" >> /var/lib/nixos-rescue/status
+      echo "Run nixos-rescue-menu to access rescue tools" >> /var/lib/nixos-rescue/status
     '';
     
     # Console configuration for rescue access
@@ -1134,11 +1075,8 @@ in {
       keyMap = "us";
     };
     
-    # Kernel parameters for rescue functionality
-    boot.kernelParams = [
-      "systemd.show_status=1"
-      "systemd.log_level=info" 
-    ];
+    # Note: Kernel parameters for rescue functionality are set in configuration.nix
+    # to avoid conflicts with mkForce
     
     # Additional rescue kernel modules
     boot.kernelModules = [
@@ -1152,16 +1090,16 @@ in {
       "loop" "overlay" "squashfs"
     ];
     
-    # Networking in rescue mode
-    networking = mkIf cfg.emergencyAccess.enableNetworkAccess {
-      networkmanager.enable = mkDefault true;
-      wireless.enable = mkDefault false;  # Prefer NetworkManager
-    };
-    
-    # Firewall configuration for rescue access
-    networking.firewall = mkIf cfg.emergencyAccess.enableSSH {
-      allowedTCPPorts = [ 22 ];  # SSH access in rescue mode
-    };
+    # Networking configuration for rescue mode
+    networking = mkMerge [
+      (mkIf cfg.emergencyAccess.enableNetworkAccess {
+        networkmanager.enable = mkDefault true;
+        wireless.enable = mkDefault false;  # Prefer NetworkManager
+      })
+      (mkIf cfg.emergencyAccess.enableSSH {
+        firewall.allowedTCPPorts = [ 22 ];  # SSH access in rescue mode
+      })
+    ];
     
     # Create log directory
     systemd.tmpfiles.rules = [

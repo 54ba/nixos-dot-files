@@ -35,13 +35,8 @@ with lib;
       theme = config.custom.boot.plymouth.theme;
     };
     
-    # Kernel parameters for better boot experience
-    boot.kernelParams = mkIf config.custom.boot.quietBoot.enable [
-      "quiet"          # Less verbose boot
-      "splash"         # Show splash screen
-      "rd.udev.log_level=3"  # Reduce udev log noise
-      "vt.global_cursor_default=0"  # Hide cursor during boot
-    ];
+    # Kernel parameters moved to configuration.nix to prevent conflicts
+    # All kernel parameters are now centrally managed to avoid duplicates
     
     # Console settings - fix console setup issues
     boot.consoleLogLevel = mkIf config.custom.boot.quietBoot.enable 0;

@@ -26,7 +26,17 @@ with lib;
 
   config = mkIf config.custom.containers.enable {
     # Enable container support - prefer Podman over Docker for better binary cache usage
-    virtualisation.docker.enable = config.custom.containers.docker.enable;
+    virtualisation.docker = mkIf config.custom.containers.docker.enable {
+      enable = true;
+      enableOnBoot = true;
+      autoPrune.enable = true;
+      daemon = {
+        settings = {
+          log-driver = "journald";
+          storage-driver = "overlay2";
+        };
+      };
+    };
     
     virtualisation.podman = mkIf config.custom.containers.podman.enable {
       enable = true;

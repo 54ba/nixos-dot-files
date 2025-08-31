@@ -32,17 +32,9 @@
     modesetting.enable = true;
   };
 
-  # Consolidated kernel parameters for hardware support
-  boot.kernelParams = [
-    # ACPI configuration with USB fixes
-    "acpi_osi=Linux"
-    "acpi_backlight=vendor"
-    "usbcore.autosuspend=-1"
-    "usbcore.use_both_schemes=1"
-    # PCIe and power management
-    "pcie_aspm=off"
-    "intel_pstate=active"
-  ];
+  # Kernel parameters moved to configuration.nix to avoid conflicts
+  # All kernel parameters are now centrally managed in configuration.nix
+  # using lib.mkForce to override any conflicting parameters from modules
 
   # Filesystem configuration
   fileSystems."/" = {

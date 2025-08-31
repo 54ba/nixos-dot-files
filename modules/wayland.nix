@@ -155,13 +155,6 @@ with lib;
         --disable-gpu-sandbox'';
     };
 
-    # === WAYLAND COMPOSITOR OPTIMIZATIONS ===
-    services.xserver = {
-      enable = true;
-      displayManager.gdm = {
-        wayland = mkDefault true;
-      };
-    };
 
     # === XDG DESKTOP PORTAL CONFIGURATION ===
     xdg.portal = {
@@ -187,11 +180,10 @@ with lib;
     };
     
     # Kernel parameters for better Wayland performance
-    boot.kernelParams = [
-      "i915.enable_psr=0"           # Disable PSR to prevent flickering
-      "i915.enable_fbc=1"           # Enable framebuffer compression
-      "intel_pstate=active"         # Intel CPU power management
-    ];
+    # Note: These parameters are already set in configuration.nix to avoid conflicts
+    # - i915.enable_psr=0 (PSR disabled to prevent flickering)
+    # - i915.enable_fbc=1 (framebuffer compression enabled) 
+    # - intel_pstate=active (Intel CPU power management)
 
     # === SYSTEM-WIDE WAYLAND APPLICATION SUPPORT ===
     programs.sway.enable = mkDefault false;  # Disable if using GNOME
