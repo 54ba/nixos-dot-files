@@ -296,36 +296,38 @@ with lib;
       streaming.enable = config.custom.intelligentRecordingSystem.features.streamingIntegration;
     };
 
-    custom.inputCapture = mkIf config.custom.intelligentRecordingSystem.components.inputCapture {
-      enable = true;
-      
-      keyboard = {
-        enable = true;
-        logLevel = if config.custom.intelligentRecordingSystem.features.privacyMode then "secure"
-                   else if config.custom.intelligentRecordingSystem.profile == "development" then "full"
-                   else "minimal";
-        excludePasswords = config.custom.intelligentRecordingSystem.features.privacyMode;
-      };
-      
-      mouse = {
-        enable = true;
-        trackMovement = config.custom.intelligentRecordingSystem.profile == "professional" || 
-                       config.custom.intelligentRecordingSystem.profile == "development";
-      };
-      
-      storage = {
-        path = "${config.custom.intelligentRecordingSystem.storage.centralPath}/input-logs";
-        maxSize = "${toString (config.custom.intelligentRecordingSystem.storage.distribution.logs * 
-                  (if config.custom.intelligentRecordingSystem.storage.totalQuota == "100G" then 100 else 50) / 100)}G";
-      };
-      
-      privacy = {
-        anonymize = config.custom.intelligentRecordingSystem.features.privacyMode;
-        excludeApplications = if config.custom.intelligentRecordingSystem.features.privacyMode then
-          [ "keepassxc" "bitwarden" "gnome-keyring" "kwallet" "banking" "private" ]
-          else [ "keepassxc" "bitwarden" ];
-      };
-    };
+    # Note: Input capture is currently disabled due to missing script dependencies
+    # This configuration would be used when input-capture.nix is available
+    # custom.inputCapture = mkIf (config.custom.intelligentRecordingSystem.components.inputCapture && config.custom ? inputCapture) {
+    #   enable = true;
+    #   
+    #   keyboard = {
+    #     enable = true;
+    #     logLevel = if config.custom.intelligentRecordingSystem.features.privacyMode then "secure"
+    #                else if config.custom.intelligentRecordingSystem.profile == "development" then "full"
+    #                else "minimal";
+    #     excludePasswords = config.custom.intelligentRecordingSystem.features.privacyMode;
+    #   };
+    #   
+    #   mouse = {
+    #     enable = true;
+    #     trackMovement = config.custom.intelligentRecordingSystem.profile == "professional" || 
+    #                    config.custom.intelligentRecordingSystem.profile == "development";
+    #   };
+    #   
+    #   storage = {
+    #     path = "${config.custom.intelligentRecordingSystem.storage.centralPath}/input-logs";
+    #     maxSize = "${toString (config.custom.intelligentRecordingSystem.storage.distribution.logs * 
+    #               (if config.custom.intelligentRecordingSystem.storage.totalQuota == "100G" then 100 else 50) / 100)}G";
+    #   };
+    #   
+    #   privacy = {
+    #     anonymize = config.custom.intelligentRecordingSystem.features.privacyMode;
+    #     excludeApplications = if config.custom.intelligentRecordingSystem.features.privacyMode then
+    #       [ "keepassxc" "bitwarden" "gnome-keyring" "kwallet" "banking" "private" ]
+    #       else [ "keepassxc" "bitwarden" ];
+    #   };
+    # };
 
     custom.dataPipeline = mkIf config.custom.intelligentRecordingSystem.components.dataPipeline {
       enable = true;

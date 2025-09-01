@@ -643,7 +643,7 @@ in
       
       # System information
       neofetch
-      hardinfo
+      hardinfo2
       
       # Network tools
       nmap
@@ -655,9 +655,6 @@ in
     services = {
       # Network time synchronization (important for gaming and mobile)
       ntp.enable = true;
-      
-      # Hardware sensor monitoring
-      lm_sensors.enable = true;
       
       # Automatic service discovery
       avahi.enable = cfg.networking.enableDiscovery;

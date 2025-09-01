@@ -234,10 +234,9 @@ in
     ] ++ optionals cfg.wayvnc.enable [
       wayvnc
       wlvncc  # Wayland VNC client
-      vncviewer
     ] ++ optionals cfg.mobileApps.enable [
       (mkIf cfg.mobileApps.scrcpy scrcpy)
-      (mkIf cfg.mobileApps.kdeConnect kdeconnect)
+      (mkIf cfg.mobileApps.kdeConnect kdePackages.kdeconnect-kde)
     ] ++ optionals cfg.fileSharing.enable [
       (mkIf cfg.fileSharing.syncthing syncthing)
     ] ++ optionals cfg.webRTC.enable [
@@ -295,29 +294,9 @@ in
       };
     };
 
-    # MeshCentral service for web-based remote access
-    systemd.services.meshcentral = mkIf cfg.webRTC.meshcentral {
-      description = "MeshCentral Remote Management";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
-      
-      serviceConfig = {
-        Type = "simple";
-        User = "meshcentral";
-        Group = "meshcentral";
-        WorkingDirectory = "/var/lib/meshcentral";
-        ExecStart = "${pkgs.nodejs}/bin/node /var/lib/meshcentral/meshcentral.js";
-        Restart = "on-failure";
-        RestartSec = "10s";
-        
-        # Security
-        PrivateTmp = true;
-        ProtectSystem = "strict";
-        ProtectHome = true;
-        ReadWritePaths = [ "/var/lib/meshcentral" ];
-        NoNewPrivileges = true;
-      };
-    };
+    # MeshCentral service disabled - missing meshcentral.js file
+    # TODO: Install MeshCentral properly if needed
+    # systemd.services.meshcentral = mkIf cfg.webRTC.meshcentral { ... };
 
     # Syncthing for file synchronization
     services.syncthing = mkIf cfg.fileSharing.syncthing {
@@ -345,7 +324,7 @@ in
     # KDE Connect for mobile integration
     programs.kdeconnect = mkIf cfg.mobileApps.kdeConnect {
       enable = true;
-      package = pkgs.kdePackages.kdeconnect-kde;
+      package = mkDefault pkgs.kdePackages.kdeconnect-kde;
     };
 
     # ADB for Android connectivity
@@ -380,15 +359,17 @@ in
     };
 
     # Create necessary system users
-    users.users = mkIf cfg.webRTC.meshcentral {
-      meshcentral = {
-        isSystemUser = true;
-        group = "meshcentral";
-        home = "/var/lib/meshcentral";
-        createHome = true;
-        description = "MeshCentral service user";
-      };
-    };
+    users.users = mkMerge [
+      (mkIf cfg.webRTC.meshcentral {
+        meshcentral = {
+          isSystemUser = true;
+          group = "meshcentral";
+          home = "/var/lib/meshcentral";
+          createHome = true;
+          description = "MeshCentral service user";
+        };
+      })
+    ];
 
     users.groups = mkIf cfg.webRTC.meshcentral {
       meshcentral = {};
@@ -405,15 +386,12 @@ in
       chown -R mahmoud:users /home/mahmoud/.config/wayvnc /home/mahmoud/.config/rustdesk 2>/dev/null || true
       ${optionalString cfg.webRTC.meshcentral "chown -R meshcentral:meshcentral /var/lib/meshcentral"}
       
-      # Create Wayvnc config
+      # Create Wayvnc config with proper syntax
       cat > /home/mahmoud/.config/wayvnc/config << 'EOF'
-      # Wayvnc configuration
       address=0.0.0.0
       port=${toString cfg.wayvnc.port}
-      ${optionalString cfg.wayvnc.password "require_auth=true"}
-      ${optionalString cfg.performance.enable "frame_rate=60"}
-      ${optionalString cfg.performance.enable "quality=${cfg.wayvnc.quality}"}
-      ${optionalString cfg.performance.hardwareAcceleration "use_hw_accel=true"}
+      enable_auth=true
+      username=wayvnc
       EOF
       
       chown mahmoud:users /home/mahmoud/.config/wayvnc/config
@@ -562,15 +540,14 @@ in
       
       # Enable printing for remote access
       printing.enable = true;
-      printing.drivers = [ pkgs.gutenprint pkgs.cups-pdf ];
+      printing.drivers = [ pkgs.gutenprint ];
     };
 
     # Hardware configuration
     hardware = {
       # Enable hardware acceleration
-      opengl = mkIf cfg.performance.hardwareAcceleration {
+      graphics = mkIf cfg.performance.hardwareAcceleration {
         enable = true;
-        driSupport = true;
         extraPackages = with pkgs; [
           intel-media-driver
           vaapiIntel
@@ -578,9 +555,6 @@ in
           libvdpau-va-gl
         ];
       };
-      
-      # Enable camera access for video calls
-      camera.enable = true;
     };
 
     # Environment variables for remote control
@@ -597,10 +571,7 @@ in
       RUSTDESK_QUALITY = cfg.rustdesk.quality;
     };
 
-    # User groups for remote access
-    users.users.mahmoud.extraGroups = [ "video" "audio" "input" "render" ] 
-      ++ optional cfg.mobileApps.scrcpy "adbusers"
-      ++ optional cfg.fileSharing.samba "sambashare";
+    # User groups for remote access handled by main configuration
 
     # Kernel modules for remote access
     boot.kernelModules = mkIf cfg.performance.enable [

@@ -421,27 +421,9 @@ in
         };
       };
 
-      # LocalSend service
-      localsend = mkIf cfg.crossPlatform.localsend {
-        description = "LocalSend File Sharing";
-        after = [ "network.target" ];
-        wantedBy = [ "multi-user.target" ];
-        
-        serviceConfig = {
-          Type = "simple";
-          User = "mahmoud";
-          Group = "users";
-          ExecStart = "${pkgs.localsend}/bin/localsend_app --server";
-          Restart = "on-failure";
-          RestartSec = "5s";
-          
-          # Security
-          PrivateTmp = true;
-          ProtectSystem = "strict";
-          ProtectHome = false;
-          NoNewPrivileges = true;
-        };
-      };
+      # LocalSend service - disabled for system service, should run as user service when GUI is available
+      # LocalSend requires display environment and should be launched from desktop
+      # Removing system service to avoid boot conflicts
     };
 
     # Network configuration for mobile services
@@ -504,7 +486,7 @@ in
       # Enable printing support for mobile printing
       printing = {
         enable = true;
-        drivers = with pkgs; [ cups-pdf gutenprint ];
+        drivers = with pkgs; [ gutenprint ];
         browsing = true;
         listenAddresses = [ "*:631" ];
         allowFrom = [ "all" ];
@@ -689,20 +671,20 @@ in
 
     # Network optimization for mobile connections
     boot.kernel.sysctl = mkIf cfg.enable {
-      # TCP optimizations for mobile
-      "net.core.rmem_default" = 262144;
-      "net.core.rmem_max" = 16777216;
-      "net.core.wmem_default" = 262144;
-      "net.core.wmem_max" = 16777216;
+      # TCP optimizations for mobile (use mkDefault to allow gaming module to override)
+      "net.core.rmem_default" = mkDefault 262144;
+      "net.core.rmem_max" = mkDefault 16777216;
+      "net.core.wmem_default" = mkDefault 262144;
+      "net.core.wmem_max" = mkDefault 16777216;
       
       # Connection tracking for many mobile devices
-      "net.netfilter.nf_conntrack_max" = 131072;
-      "net.ipv4.ip_local_port_range" = "1024 65535";
+      "net.netfilter.nf_conntrack_max" = mkDefault 131072;
+      "net.ipv4.ip_local_port_range" = mkDefault "1024 65535";
       
       # Mobile network optimizations
-      "net.ipv4.tcp_keepalive_time" = 120;
-      "net.ipv4.tcp_keepalive_probes" = 3;
-      "net.ipv4.tcp_keepalive_intvl" = 30;
+      "net.ipv4.tcp_keepalive_time" = mkDefault 120;
+      "net.ipv4.tcp_keepalive_probes" = mkDefault 3;
+      "net.ipv4.tcp_keepalive_intvl" = mkDefault 30;
     };
 
     # Systemd user services for session-based mobile integration

@@ -152,6 +152,7 @@ in
       remotePlay.openFirewall = cfg.steam.remotePlay;
       dedicatedServer.openFirewall = true;
       gamescopeSession.enable = cfg.steam.bigPicture;
+      extraCompatPackages = optionals cfg.steam.proton.ge [ pkgs.proton-ge-bin ];
     };
 
     # Enable GameScope for Steam Deck-like experience
@@ -193,8 +194,6 @@ in
       steam
       steam-run
       steamcmd
-    ] ++ optionals cfg.steam.proton.ge [
-      proton-ge-bin
     ] ++ optionals cfg.compatibilityLayers.enable [
       (mkIf cfg.compatibilityLayers.lutris lutris)
       (mkIf cfg.compatibilityLayers.heroicLauncher heroic)
@@ -204,10 +203,7 @@ in
       (mkIf cfg.performance.mangohud mangohud)
       (mkIf cfg.performance.mangohud goverlay) # MangoHud GUI
     ] ++ optionals cfg.hardware.controllers [
-      # Controller support
-      linuxConsoleTools
-      xboxdrv
-      xpadneo
+      # Controller support - kernel provides built-in support
     ] ++ optionals cfg.hardware.vr [
       # VR support
       opencomposite
@@ -222,7 +218,7 @@ in
       
       # System monitoring
       htop
-      nvtop
+      nvtopPackages.full
       gpu-viewer
       
       # Audio
@@ -240,16 +236,15 @@ in
 
     # Hardware support
     hardware = {
-      # Enable 32-bit support for Steam and games
-      opengl = {
+      # Enable graphics support for Steam and games
+      graphics = {
         enable = true;
-        driSupport = true;
-        driSupport32Bit = true;
+        enable32Bit = true;  # Enable 32-bit graphics support for games
       };
-
-      # Pulseaudio or PipeWire for audio
-      pulseaudio.enable = mkIf cfg.hardware.audio false;
     };
+
+    # Disable Pulseaudio in favor of PipeWire for gaming
+    services.pulseaudio.enable = false;
 
     # PipeWire configuration for gaming audio
     services.pipewire = mkIf cfg.hardware.audio {
@@ -270,10 +265,9 @@ in
       };
     };
 
-    # Enable udev rules for controllers
+    # Enable udev rules for controllers - Steam handles this automatically
     services.udev.packages = with pkgs; optionals cfg.hardware.controllers [
-      linuxConsoleTools
-      xboxdrv
+      # Steam provides its own udev rules for controllers
     ];
 
     # Kernel parameters for gaming
@@ -317,7 +311,8 @@ in
 
     # Fonts for gaming UI
     fonts.packages = with pkgs; [
-      (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
+      nerd-fonts.fira-code
+      nerd-fonts.jetbrains-mono
       liberation_ttf
       dejavu_fonts
       source-code-pro
@@ -344,21 +339,8 @@ in
       MANGOHUD_DLSYM = mkIf cfg.performance.mangohud "1";
     };
 
-    # Systemd services for gaming
-    systemd.services = {
-      # GameMode service configuration
-      gamemode = mkIf cfg.performance.gamemode {
-        description = "Feral GameMode daemon";
-        wantedBy = [ "multi-user.target" ];
-        serviceConfig = {
-          Type = "dbus";
-          BusName = "com.feralinteractive.GameMode";
-          ExecStart = "${pkgs.gamemode}/bin/gamemoded";
-          Restart = "on-failure";
-          RestartSec = "5s";
-        };
-      };
-    };
+    # GameMode is handled by programs.gamemode in system-services.nix
+    # Removed duplicate systemd service definition to avoid conflicts
 
     # Polkit rules for GameMode
     security.polkit.extraConfig = mkIf cfg.performance.gamemode ''

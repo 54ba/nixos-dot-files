@@ -62,10 +62,15 @@ with lib;
   };
 
   config = mkIf config.custom.ai-services.enable {
+    # Enable OpenGL drivers for NVIDIA/CUDA
+    hardware.graphics.enable = true;
+    
     # Ollama Configuration with GPU Acceleration
     services.ollama = mkIf config.custom.ai-services.ollama.enable {
       enable = true;
-      acceleration = mkForce config.custom.ai-services.ollama.acceleration;
+      acceleration = config.custom.ai-services.ollama.acceleration;
+      host = "0.0.0.0";  # Allow access from all interfaces
+      port = 11434;
     };
 
     # NVIDIA Configuration for AI Workloads
@@ -82,71 +87,96 @@ with lib;
       open = false;
       nvidiaSettings = true;
     };
+    
+    # Enable NVIDIA driver in xserver and wayland
+    services.xserver.videoDrivers = mkIf config.custom.ai-services.nvidia.enable [ "nvidia" ];
+    
+    # Blacklist nouveau driver to avoid conflicts with NVIDIA
+    boot.blacklistedKernelModules = mkIf config.custom.ai-services.nvidia.enable [ "nouveau" ];
+    
+    # Force load NVIDIA modules
+    boot.kernelModules = mkIf config.custom.ai-services.nvidia.enable [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
 
-    # AI Development packages
-    environment.systemPackages = mkIf (config.custom.ai-services.enable && config.custom.ai-services.packages.enable) (with pkgs; [
-      # Python AI/ML ecosystem
-      python311
-      python311Packages.pip
-      python311Packages.virtualenv
-      python311Packages.numpy
-      python311Packages.pandas
-      python311Packages.scikit-learn
-      python311Packages.matplotlib
-      python311Packages.jupyter
-    ]);
+    # AI Development and nixai packages combined
+    environment.systemPackages = 
+      (optionals (config.custom.ai-services.enable && config.custom.ai-services.packages.enable) (with pkgs; [
+        # NVIDIA CUDA Toolkit and drivers
+        cudatoolkit
+        nvidia-vaapi-driver
+        
+        # Python AI/ML ecosystem
+        python311
+        python311Packages.pip
+        python311Packages.virtualenv
+        python311Packages.numpy
+        python311Packages.pandas
+        python311Packages.scikit-learn
+        python311Packages.matplotlib
+        python311Packages.jupyter
+        python311Packages.torch
+        python311Packages.torchvision
+        python311Packages.transformers
+        
+        # GPU monitoring and testing tools
+        nvtopPackages.nvidia
+        clinfo
+        vulkan-tools
+      ])) ++
+      (optionals config.custom.ai-services.nixai.enable (with pkgs; [
+        # AI and machine learning tools
+        jq
+        yq-go
+        curl
+        wget
+        
+        # Additional AI tools that may be useful with nixai
+        python311Packages.openai
+        python311Packages.requests
+      ]));
 
     # Environment variables for AI development
     environment.sessionVariables = mkIf (config.custom.ai-services.enable && config.custom.ai-services.packages.enable) {
       CUDA_PATH = "${pkgs.cudatoolkit}";
       CUDA_HOME = "${pkgs.cudatoolkit}";
-      LD_LIBRARY_PATH = "${pkgs.cudatoolkit}/lib:$LD_LIBRARY_PATH";
+      LD_LIBRARY_PATH = mkBefore [ "${pkgs.cudatoolkit}/lib" ];
     };
 
-    # System optimization for AI workloads
+    # System optimization for AI workloads - Use proper sysctl configuration
+    boot.kernel.sysctl = mkIf config.custom.ai-services.enable {
+      # Increase shared memory for AI workloads
+      "kernel.shmmax" = 68719476736;  # 64GB shared memory max
+      "kernel.shmall" = 4294967296;   # 16GB shared memory all
+    };
+    
+    # GPU performance tuning service (safer approach)
     systemd.services.ai-performance-tuning = mkIf config.custom.ai-services.enable {
       description = "Optimize system for AI workloads";
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
         ExecStart = pkgs.writeScript "ai-performance-tuning" ''
-          #!/bin/bash
-          # Set GPU performance mode
-          echo performance > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
+          #!${pkgs.bash}/bin/bash
+          # Set GPU performance mode (only if GPU exists)
+          if [ -f /sys/class/drm/card0/device/power_dpm_force_performance_level ]; then
+            echo performance > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true
+          fi
           
-          # Increase shared memory for AI workloads
-          echo 'kernel.shmmax = 68719476736' >> /etc/sysctl.conf 2>/dev/null || true
-          echo 'kernel.shmall = 4294967296' >> /etc/sysctl.conf 2>/dev/null || true
+          # Log that AI optimizations are active
+          echo "AI performance optimizations applied" | systemd-cat -t ai-performance-tuning
         '';
         RemainAfterExit = true;
       };
     };
-  }
-  
-  # nixai configuration
-  // (mkIf config.custom.ai-services.nixai.enable {
-    # Install nixai packages
-    environment.systemPackages = with pkgs; [
-      # AI and machine learning tools
-      jq
-      yq-go
-      curl
-      wget
-      
-      # Additional AI tools that may be useful with nixai
-      python311Packages.openai
-      python311Packages.requests
-    ];
     
     # Create nixai configuration directory and file
-    environment.etc."nixai/nixai-config.yaml" = {
+    environment.etc."nixai/nixai-config.yaml" = mkIf config.custom.ai-services.nixai.enable {
       source = ../packages/nixai-config.yaml;
       mode = "0644";
     };
     
     # Create symlink for easier access
-    environment.etc."nixai-config.yaml" = {
+    environment.etc."nixai-config.yaml" = mkIf config.custom.ai-services.nixai.enable {
       source = config.custom.ai-services.nixai.configPath;
     };
-  });
+  };
 }

@@ -4,6 +4,7 @@
   imports = [
     # === ESSENTIAL CORE MODULES ===
     ./hardware-configuration.nix
+    ./cachix.nix                          # ENABLED - Cachix Python packages cache
     
     # Core system infrastructure
     ./modules/boot.nix
@@ -31,11 +32,11 @@
     ./modules/void-editor.nix
     
     # Intelligent Recording System
-    # ./modules/desktop-recording.nix
-    # ./modules/input-capture.nix
-    # ./modules/data-pipeline.nix
-    # ./modules/ai-orchestrator.nix
-    # ./modules/intelligent-recording-system.nix
+    ./modules/desktop-recording.nix                 # ENABLED - Desktop recording capabilities
+    # ./modules/input-capture.nix                     # DISABLED - Missing scripts
+    ./modules/data-pipeline.nix                     # ENABLED - Data processing pipeline
+    ./modules/ai-orchestrator.nix                   # ENABLED - AI orchestration
+    # ./modules/intelligent-recording-system.nix      # DISABLED - Missing scripts
     
     # System utilities
     ./modules/virtualization.nix
@@ -49,12 +50,12 @@
     # Rescue system with generation management
     ./modules/rescue-system.nix                   # ENABLED - Advanced rescue system
     
-    # SteamOS and Mobile PC Integration - TEMPORARILY DISABLED FOR TESTING
-    # ./modules/steamos-gaming.nix                 # DISABLED - Path issues with flakes
-    # ./modules/steamos-mobile-suite.nix           # DISABLED - Path issues with flakes
-    # ./modules/mobile-integration.nix             # DISABLED - Path issues with flakes
-    # ./modules/remote-control.nix                 # DISABLED - Path issues with flakes
-    # ./modules/ssh-remote-access.nix              # DISABLED - Path issues with flakes
+    # SteamOS and Mobile PC Integration - PARTIAL ENABLE FOR TESTING
+    ./modules/steamos-gaming.nix                 # ENABLED - SteamOS-like gaming environment
+    ./modules/steamos-mobile-suite.nix              # ENABLED - SteamOS mobile suite
+    ./modules/mobile-integration.nix                # ENABLED - Part of mobile suite
+    ./modules/remote-control.nix                    # ENABLED - Remote control capabilities
+    ./modules/ssh-remote-access.nix                 # ENABLED - SSH remote access
     
     # === OPTIONAL MODULES (can be disabled for simplification) ===
     ./modules/boot-enhancements.nix              # ENABLED - Boot enhancements
@@ -328,20 +329,23 @@
 
   # ===== APPLICATION MODULES =====
 
-  # AI Services (using CPU since NVIDIA is disabled for boot stability)
+  # AI Services with NVIDIA GPU and CUDA acceleration - Testing without heavy packages
   custom.ai-services = {
-    enable = true;  # Enable for AI development
+    enable = true;                        # Enable for NVIDIA drivers only
     ollama = {
-      enable = true;
-      acceleration = "cpu";               # Use CPU instead of CUDA for stability
+      enable = false;                     # Disable Ollama to avoid PyTorch
+      acceleration = "cuda";               # Enable CUDA acceleration (for when enabled)
     };
     nvidia = {
-      enable = false;                     # Disable NVIDIA for AI (conflicts with nouveau)
+      enable = true;                      # Enable NVIDIA drivers
       package = "stable";
       powerManagement = false;
     };
-    packages.enable = true;
+    packages.enable = false;              # Disable AI packages to avoid PyTorch build
   };
+
+  # Binary cache management with Cachix - ENABLED via root cachix.nix
+  # Configuration handled by ./cachix.nix import above
 
   # === REMOVED MODULES FOR SIMPLIFICATION ===
   # NixAI Integration - Disabled (module not imported)
@@ -387,9 +391,10 @@
     "acpi_osi=Linux"                              # Use Linux ACPI (working setting)
     "acpi_backlight=vendor"                       # Vendor backlight control
     
-    # WORKING GRAPHICS CONFIGURATION (nouveau only, matches generation 16)
-    "nvidia.drm.modeset=0"                        # Disable NVIDIA DRM (working setting)
-    "nouveau.modeset=1"                           # Enable nouveau (working setting)
+    # NVIDIA GRAPHICS CONFIGURATION (for CUDA acceleration)
+    "nvidia.drm.modeset=1"                        # Enable NVIDIA DRM for Wayland
+    "nvidia_drm.modeset=1"                        # Enable NVIDIA DRM modesetting
+    "nouveau.modeset=0"                           # Disable nouveau to use NVIDIA
     
     # Security framework
     "lsm=landlock,yama,bpf,apparmor"
@@ -716,7 +721,7 @@
     productivity.enable = true;            # Enable productivity packages
     popular.enable = true;                 # Enable popular packages collection
     entertainment.enable = false;          # Disable entertainment packages for now
-    gaming.enable = false;                 # Disable gaming packages for now
+    gaming.enable = true;                  # Enable gaming packages for SteamOS
     pentest.enable = false;                # Disable pentest packages by default (security)
   };
   
@@ -796,90 +801,85 @@
       extras = true;                       # Enable extra nixai packages
     };
   };
-  
-  # ===== INTELLIGENT RECORDING SYSTEM =====
-  # AI-powered desktop recording and input capture system
-#   custom.intelligentRecordingSystem = {
-#     enable = true;                         # Enable intelligent recording system
-#     profile = "development";               # Use development profile for coding workflows
-#     
-#     # Component configuration
-#     components = {
-#       desktopRecording = true;             # Enable desktop recording
-#       inputCapture = true;                 # Enable input capture and logging
-#       dataPipeline = true;                 # Enable data processing pipeline
-#       aiOrchestrator = true;               # Enable AI orchestration
-#     };
-#     
-#     # Feature configuration
-#     features = {
-#       autoRecording = true;                # Enable automatic recording based on AI analysis
-#       smartEffects = true;                 # Enable intelligent effects and enhancements
-#       realTimeAnalysis = true;             # Enable real-time content analysis
-#       streamingIntegration = false;        # Disable streaming for now
-#       cloudSync = false;                   # Keep everything local for privacy
-#       privacyMode = true;                  # Enable enhanced privacy protection
-#     };
-#     
-#     # Storage configuration
-#     storage = {
-#       centralPath = "/var/lib/intelligent-recording";
-#       totalQuota = "50G";                  # Allocate 50GB for recording system
-#       distribution = {
-#         recordings = 60;                   # 60% for video recordings (30GB)
-#         logs = 20;                         # 20% for input logs (10GB)
-#         analysis = 15;                     # 15% for analysis data (7.5GB)
-#         cache = 5;                         # 5% for cache and temporary files (2.5GB)
-#       };
-#       backup = {
-#         enable = false;                    # Disable automatic backups for now
-#         location = "/backup/recordings";
-#         schedule = "weekly";
-#       };
-#     };
-#     
-#     # Performance configuration
-#     performance = {
-#       priority = "normal";                 # Normal system priority
-#       cpuCores = 4;                        # Use 4 CPU cores
-#       memoryLimit = "4G";                  # Limit to 4GB memory usage
-#       gpuAcceleration = true;              # Enable GPU acceleration
-#     };
-#     
-#     # Integration settings
-#     integration = {
-#       nixai = true;                        # Enable nixai integration
-#       development = {
-#         vscode = true;                     # Enable VS Code integration
-#         github = false;                    # Disable GitHub integration for now
-#         documentation = true;              # Enable automatic documentation generation
-#       };
-#       streaming = {
-#         obs = true;                        # Enable OBS Studio integration
-#         platforms = [];                    # No streaming platforms for now
-#       };
-#     };
-#     
-#     # Security configuration
-#     security = {
-#       encryption = true;                   # Encrypt sensitive recordings
-#       accessControl = true;                # Enable role-based access control
-#       auditLogging = true;                 # Enable audit logging
-#       sandboxing = true;                   # Enable process sandboxing
-#     };
-#     
-#     # UI configuration
-#     ui = {
-#       enable = true;                       # Enable graphical user interface
-#       type = "gtk";                        # Use GTK UI framework
-#       systray = true;                      # Enable system tray integration
-#       notifications = true;                # Enable desktop notifications
-#     };
-#   };
+
+  # ===== INTELLIGENT RECORDING SYSTEM COMPONENTS =====
+  # Recording system modules are currently disabled due to missing script dependencies
+  # The intelligent recording system will be configured later when scripts are available
   
   # ===== STEAMOS AND MOBILE PC INTEGRATION =====
-  # NOTE: SteamOS and mobile PC modules are currently disabled due to flake path issues
-  # They can be re-enabled once the path resolution is fixed
+  # SteamOS Mobile Suite - Complete Integration with disabled problematic services
+  custom.steamos-mobile-suite = {
+    enable = true;                         # Enable complete SteamOS mobile suite
+    profile = "balanced";                  # Balanced profile for gaming and productivity
+    
+    features = {
+      steamGaming = true;                  # Enable SteamOS gaming
+      remoteAccess = false;                # Disable remote access temporarily (wayvnc/meshcentral issues)
+      mobileControl = false;               # Disable mobile control temporarily (localsend display issues)
+      fileSharing = true;                  # Enable file sharing (syncthing works)
+      automation = true;                   # Enable automation features
+    };
+    
+    security = {
+      level = "standard";                  # Standard security level
+      requireKeys = true;                  # Require SSH keys
+      allowMobileAuth = true;              # Allow mobile authentication
+      encryptTraffic = true;               # Encrypt remote traffic
+    };
+    
+    networking = {
+      optimizeForGaming = true;            # Gaming network optimizations
+      optimizeForMobile = true;            # Mobile-friendly network settings
+      enableDiscovery = true;              # Service discovery for mobile apps
+    };
+    
+    performance = {
+      prioritizeGaming = true;             # Prioritize gaming performance
+      lowLatency = true;                   # Low-latency optimizations
+      hardwareAcceleration = true;         # Hardware acceleration
+    };
+    
+    monitoring = {
+      enable = true;                       # Enable monitoring
+      mobileNotifications = true;          # Mobile notifications
+      performanceMetrics = true;           # Performance metrics
+    };
+  };
+  
+  # SteamOS Gaming Environment
+  custom.steamos-gaming = {
+    enable = true;                         # Enable SteamOS-like gaming environment
+    steam = {
+      enable = true;                       # Enable Steam gaming platform
+      remotePlay = lib.mkForce true;       # Enable Steam Remote Play (override suite setting)
+      hardware = true;                     # Enable Steam hardware support
+      bigPicture = lib.mkForce true;       # Optimize for Steam Big Picture mode (override suite setting)
+      proton = {
+        enable = true;                     # Enable Proton for Windows games
+        ge = true;                         # Enable Proton-GE for better compatibility
+      };
+    };
+    compatibilityLayers = {
+      enable = true;                       # Enable game compatibility layers
+      lutris = true;                       # Enable Lutris game manager
+      heroicLauncher = true;               # Enable Heroic Games Launcher
+      bottles = true;                      # Enable Bottles for Wine management
+    };
+    performance = {
+      enable = true;                       # Enable gaming performance optimizations
+      gamemode = true;                     # Enable Feral GameMode
+      mangohud = true;                     # Enable MangoHud performance overlay
+      lowLatency = true;                   # Enable low-latency optimizations
+    };
+    hardware = {
+      controllers = true;                  # Enable gaming controller support
+      vr = false;                          # Disable VR support for now
+      audio = true;                        # Enable optimized gaming audio
+    };
+    networking = {
+      gaming = true;                       # Enable gaming network optimizations
+    };
+  };
 
   # ===== COMPREHENSIVE SYSTEM CONFIGURATION =====
 

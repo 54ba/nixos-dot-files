@@ -228,16 +228,19 @@ in
         ClientAliveCountMax = 3;
         TCPKeepAlive = cfg.mobileAccess.keepAlive;
         
+        # SSH Banner
+        Banner = mkIf cfg.security.enable "/etc/ssh/banner";
+        
         # Forwarding settings
         AllowTcpForwarding = mkIf cfg.tunneling.forwarding.tcp "yes";
-        X11Forwarding = cfg.tunneling.forwarding.x11;
+        X11Forwarding = mkDefault cfg.tunneling.forwarding.x11;
         AllowAgentForwarding = cfg.tunneling.forwarding.agent;
         
         # User restrictions
         AllowUsers = mkIf (cfg.security.allowedUsers != []) 
-          (concatStringsSep " " cfg.security.allowedUsers);
+          cfg.security.allowedUsers;
         DenyUsers = mkIf (cfg.security.deniedUsers != []) 
-          (concatStringsSep " " cfg.security.deniedUsers);
+          cfg.security.deniedUsers;
         
         # Logging
         LogLevel = cfg.monitoring.logging;
@@ -319,8 +322,7 @@ in
       keychain
     ] ++ optionals cfg.monitoring.enable [
       tcpdump
-      netstat-nat
-      ss
+      iproute2  # Provides ss command
       lsof
     ] ++ optionals cfg.tunneling.enable [
       sshuttle  # VPN over SSH
@@ -402,7 +404,7 @@ in
 
     # Environment variables for SSH
     environment.sessionVariables = {
-      SSH_AUTH_SOCK = "/run/user/$(id -u)/ssh-agent.socket";
+      SSH_AUTH_SOCK = mkDefault "/run/user/$(id -u)/ssh-agent.socket";
     };
 
     # Systemd user services for SSH agent
@@ -432,7 +434,7 @@ in
 
     # Security hardening
     security.pam.services.sshd = mkIf cfg.security.enable {
-      unixAuth = true;
+      unixAuth = mkDefault true;
       limits = [
         {
           domain = "*";
@@ -469,8 +471,7 @@ in
       echo 'SSH remote access configured successfully'
     '';
 
-    # SSH banner
-    services.openssh.banner = mkIf cfg.security.enable "/etc/ssh/banner";
+    # SSH banner configuration merged with main openssh config above
 
     # Additional SSH security through systemd
     systemd.services.sshd.serviceConfig = mkIf cfg.security.enable {
