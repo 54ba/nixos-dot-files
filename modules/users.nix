@@ -91,14 +91,12 @@ with lib;
         description = "Fix user directory permissions";
         serviceConfig = {
           Type = "oneshot";
-          ExecStart = ''
-            ${pkgs.bash}/bin/bash -c "
-              ${pkgs.coreutils}/bin/chmod 755 ${config.custom.users.mainUser.home} || true
-              ${pkgs.coreutils}/bin/chmod 700 ${config.custom.users.mainUser.home}/.ssh || true
-              ${pkgs.coreutils}/bin/find ${config.custom.users.mainUser.home} -type d -exec chmod 755 {} + || true
-              ${pkgs.coreutils}/bin/find ${config.custom.users.mainUser.home} -type f -exec chmod 644 {} + || true
-            "
-          '';
+        ExecStart = pkgs.writeShellScript "fix-user-permissions" ''
+          ${pkgs.coreutils}/bin/chmod 755 ${config.custom.users.mainUser.home} || true
+          ${pkgs.coreutils}/bin/chmod 700 ${config.custom.users.mainUser.home}/.ssh || true
+          ${pkgs.coreutils}/bin/find ${config.custom.users.mainUser.home} -type d -exec chmod 755 {} + || true
+          ${pkgs.coreutils}/bin/find ${config.custom.users.mainUser.home} -type f -exec chmod 644 {} + || true
+        '';
           RemainAfterExit = true;
         };
         wantedBy = [ "default.target" ];

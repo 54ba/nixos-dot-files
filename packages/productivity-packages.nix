@@ -10,6 +10,9 @@ with pkgs; [
   teams-for-linux
   zoom-us
   
+  # Remote desktop tools
+  anydesk
+  
   # Office suites and document editing
   libreoffice-fresh
   onlyoffice-bin

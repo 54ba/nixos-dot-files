@@ -17,6 +17,11 @@ with lib;
           default = 10;
           description = "Number of generations to keep";
         };
+        timeout = mkOption {
+          type = types.int;
+          default = 5;
+          description = "GRUB timeout in seconds";
+        };
       };
     };
   };
@@ -36,8 +41,11 @@ with lib;
         configurationLimit = config.custom.boot.grub.generations;
         # Add memtest option to GRUB
         memtest86.enable = true;
+        # Simple theme configuration without external packages
+        backgroundColor = mkIf (config.custom.boot.grub.theme == "dark") "#2E3440";
+        splashImage = mkIf (builtins.pathExists /boot/background.png) /boot/background.png;
       };
-      timeout = 5;
+      timeout = config.custom.boot.grub.timeout;
     };
     
     # Boot configuration

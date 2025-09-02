@@ -362,28 +362,32 @@ with lib;
       
       # Optimize for GTK applications
       localConf = ''
-        <!-- GTK application optimizations -->
-        <alias>
-          <family>system-ui</family>
-          <prefer>
-            <family>Cantarell</family>
-            <family>Liberation Sans</family>
-            <family>DejaVu Sans</family>
-          </prefer>
-        </alias>
-        
-        <!-- Better hinting for GUI applications -->
-        <match target="font">
-          <test name="prgname" compare="eq">
-            <string>gtk</string>
-          </test>
-          <edit name="hintstyle" mode="assign">
-            <const>hintslight</const>
-          </edit>
-          <edit name="antialias" mode="assign">
-            <bool>true</bool>
-          </edit>
-        </match>
+        <?xml version="1.0"?>
+        <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+        <fontconfig>
+          <!-- GTK application optimizations -->
+          <alias>
+            <family>system-ui</family>
+            <prefer>
+              <family>Cantarell</family>
+              <family>Liberation Sans</family>
+              <family>DejaVu Sans</family>
+            </prefer>
+          </alias>
+          
+          <!-- Better hinting for GUI applications -->
+          <match target="font">
+            <test name="prgname" compare="eq">
+              <string>gtk</string>
+            </test>
+            <edit name="hintstyle" mode="assign">
+              <const>hintslight</const>
+            </edit>
+            <edit name="antialias" mode="assign">
+              <bool>true</bool>
+            </edit>
+          </match>
+        </fontconfig>
       '';
     };
     

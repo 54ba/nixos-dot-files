@@ -165,27 +165,8 @@ in
       ];
     };
 
-    # Gaming performance optimizations
-    programs.gamemode = mkIf cfg.performance.gamemode {
-      enable = true;
-      enableRenice = true;
-      settings = {
-        general = {
-          renice = 10;
-          ioprio = 0;
-          inhibit_screensaver = 1;
-        };
-        gpu = {
-          apply_gpu_optimisations = "accept-responsibility";
-          gpu_device = 0;
-          amd_performance_level = "high";
-        };
-        custom = {
-          start = "${pkgs.libnotify}/bin/notify-send 'GameMode started'";
-          end = "${pkgs.libnotify}/bin/notify-send 'GameMode ended'";
-        };
-      };
-    };
+    # Gaming performance optimizations - GameMode is handled by system-services.nix
+    # Removed duplicate programs.gamemode configuration to avoid conflicts
 
     # System packages for gaming
     environment.systemPackages = with pkgs; [

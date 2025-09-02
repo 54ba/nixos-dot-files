@@ -19,7 +19,7 @@
     # Desktop environment
     ./modules/display-manager.nix
     ./modules/wayland.nix
-    ./modules/gnome-extensions.nix
+    # ./modules/gnome-extensions.nix           # DISABLED - Causes stage view allocation warnings
     ./modules/gtk-enhanced.nix
     
     # Package management
@@ -166,9 +166,9 @@
   custom.boot = {
     enable = true;
     grub = {
-      theme = "dark";
-    #  timeout = 5;
-      generations = 5;  # Reduced from 40 to 5 to prevent EFI partition from filling up
+      theme = "none";                      # FIXED - Disable theme to prevent boot errors
+      timeout = 10;                        # Allow time to select generations
+      generations = 50;                    # Show all generations for recovery
     };
   };
 
@@ -272,14 +272,14 @@
     logging.enable = true;                   # Enable health monitoring logs
   };
   
-  # Enable advanced rescue system with generation management (ENABLED - Module imported)
+  # Enable advanced rescue system with generation management (DISABLED - Fixing boot issues)
   custom.rescueSystem = {
-    enable = true;                         # Enable comprehensive rescue system
+    enable = false;                        # DISABLED - Causes systemd service parsing errors
     grub = {
-      enableAdvancedMenu = true;           # Advanced GRUB menu with rescue options
+      enableAdvancedMenu = false;          # Disabled with main module
       timeout = 15;                        # 15 second timeout for rescue menu (reduced from 30)
-      enableGenerationSorting = true;      # Sort boot generations by date
-      rescueEntries = true;                # Add dedicated rescue mode entries
+      enableGenerationSorting = false;     # Disabled with main module
+      rescueEntries = false;               # Disabled with main module
     };
     generations = {
       maxCount = 50;                       # Keep up to 50 generations for recovery (reduced from 100)
@@ -288,17 +288,17 @@
       autoCleanup = true;                  # Auto-cleanup old generations
     };
     rescueTools = {
-      enable = true;                       # Enable comprehensive rescue tools
-      networkTools = true;                 # Network diagnostic and recovery tools
-      diskTools = true;                    # Disk recovery and filesystem tools
-      systemTools = true;                  # System diagnostic and repair tools
+      enable = false;                      # Disabled with main module
+      networkTools = false;                # Disabled with main module
+      diskTools = false;                   # Disabled with main module
+      systemTools = false;                 # Disabled with main module
       developmentTools = false;            # Disable dev tools for security
     };
     emergencyAccess = {
-      enableRootShell = true;              # Emergency root shell access
-      enableNetworkAccess = true;          # Network access in rescue mode
+      enableRootShell = false;             # Disabled with main module
+      enableNetworkAccess = false;         # Disabled with main module
       enableSSH = false;                   # Disable SSH for security (enable manually if needed)
-      allowPasswordAuth = true;            # Allow password authentication in rescue mode
+      allowPasswordAuth = false;           # Disabled with main module
     };
     autoRescue = {
       enable = false;                      # Disable auto-rescue for now
@@ -339,7 +339,7 @@
     nvidia = {
       enable = true;                      # Enable NVIDIA drivers
       package = "stable";
-      powerManagement = false;
+      powerManagement = true;             # Enable power management to prevent conflicts
     };
     packages.enable = false;              # Disable AI packages to avoid PyTorch build
   };
@@ -368,6 +368,21 @@
   # Enable GNOME keyring service properly
   services.gnome.gnome-keyring.enable = true;
   
+  # Ensure AccountsService is enabled for GDM user authentication
+  services.accounts-daemon.enable = true;
+  
+  # Fix D-Bus services for GNOME session
+  services.dbus = {
+    enable = true;
+    packages = [ pkgs.gnome-session ];
+  };
+
+  # Ensure IBus is available (fixes 'ibus-daemon not found')
+  i18n.inputMethod.enabled = "ibus";
+  
+  # Disable problematic recovery service to avoid conflicts
+  # systemd.user.services.gnome-session-failed-services-recovery disabled
+  
   # RESTORED WORKING KERNEL PARAMETERS FROM GENERATION 16
   # Simplified, clean configuration that matches the working generation
   boot.kernelParams = lib.mkForce [
@@ -391,9 +406,8 @@
     "acpi_osi=Linux"                              # Use Linux ACPI (working setting)
     "acpi_backlight=vendor"                       # Vendor backlight control
     
-    # NVIDIA GRAPHICS CONFIGURATION (for CUDA acceleration)
-    "nvidia.drm.modeset=1"                        # Enable NVIDIA DRM for Wayland
-    "nvidia_drm.modeset=1"                        # Enable NVIDIA DRM modesetting
+    # NVIDIA GRAPHICS CONFIGURATION (for CUDA acceleration) 
+    "nvidia_drm.modeset=1"                        # Enable NVIDIA DRM modesetting (correct format)
     "nouveau.modeset=0"                           # Disable nouveau to use NVIDIA
     
     # Security framework
@@ -433,10 +447,10 @@
   # Enable desktop environment and GNOME
   custom.desktop = {
     enable = true;                    # Enable desktop environment
-    wayland.enable = true;            # Enable Wayland support
+    wayland.enable = true;            # Enable Wayland (works in generation 45)
     gnome = {
       enable = true;                  # Enable GNOME desktop environment
-      extensions.enable = true;       # Enable GNOME extensions
+      extensions.enable = false;      # DISABLED - Extensions cause stage view allocation warnings
       excludeApps.enable = true;      # Exclude unwanted apps
       theme.enable = true;            # Enable custom theming
     };
@@ -511,9 +525,9 @@
     version = "both";
     theming = {
       enable = true;
-      theme = "Adwaita-dark";
-      iconTheme = "Papirus-Dark";
-      cursorTheme = "Bibata-Modern-Ice";
+      theme = "Adwaita";
+      iconTheme = "Adwaita";
+      cursorTheme = "Adwaita";
       cursorSize = 24;
       fontName = "Cantarell 11";
     };
@@ -537,6 +551,7 @@
     enable = true;
     createDesktopEntry = true;
   };
+
 
   #   # Ensure WAYLAND_DISPLAY is set globally for all applications
   environment.sessionVariables = {
@@ -807,48 +822,48 @@
   # The intelligent recording system will be configured later when scripts are available
   
   # ===== STEAMOS AND MOBILE PC INTEGRATION =====
-  # SteamOS Mobile Suite - Complete Integration with disabled problematic services
+  # SteamOS Mobile Suite - DISABLED (Fixing user service issues)
   custom.steamos-mobile-suite = {
-    enable = true;                         # Enable complete SteamOS mobile suite
+    enable = false;                        # DISABLED - Causes user service permission errors
     profile = "balanced";                  # Balanced profile for gaming and productivity
     
     features = {
-      steamGaming = true;                  # Enable SteamOS gaming
+      steamGaming = false;                 # Disabled with main module
       remoteAccess = false;                # Disable remote access temporarily (wayvnc/meshcentral issues)
       mobileControl = false;               # Disable mobile control temporarily (localsend display issues)
-      fileSharing = true;                  # Enable file sharing (syncthing works)
-      automation = true;                   # Enable automation features
+      fileSharing = false;                 # Disabled with main module
+      automation = false;                  # Disabled with main module
     };
     
     security = {
       level = "standard";                  # Standard security level
       requireKeys = true;                  # Require SSH keys
-      allowMobileAuth = true;              # Allow mobile authentication
+      allowMobileAuth = false;             # Disabled with main module
       encryptTraffic = true;               # Encrypt remote traffic
     };
     
     networking = {
-      optimizeForGaming = true;            # Gaming network optimizations
-      optimizeForMobile = true;            # Mobile-friendly network settings
-      enableDiscovery = true;              # Service discovery for mobile apps
+      optimizeForGaming = false;           # Disabled with main module
+      optimizeForMobile = false;           # Disabled with main module
+      enableDiscovery = false;             # Disabled with main module
     };
     
     performance = {
-      prioritizeGaming = true;             # Prioritize gaming performance
-      lowLatency = true;                   # Low-latency optimizations
-      hardwareAcceleration = true;         # Hardware acceleration
+      prioritizeGaming = false;            # Disabled with main module
+      lowLatency = false;                  # Disabled with main module
+      hardwareAcceleration = false;        # Disabled with main module
     };
     
     monitoring = {
-      enable = true;                       # Enable monitoring
-      mobileNotifications = true;          # Mobile notifications
-      performanceMetrics = true;           # Performance metrics
+      enable = false;                      # Disabled with main module
+      mobileNotifications = false;         # Disabled with main module
+      performanceMetrics = false;          # Disabled with main module
     };
   };
   
-  # SteamOS Gaming Environment
+  # SteamOS Gaming Environment - TEMPORARILY DISABLED
   custom.steamos-gaming = {
-    enable = true;                         # Enable SteamOS-like gaming environment
+    enable = false;                        # DISABLED - Temporarily disable to simplify session startup
     steam = {
       enable = true;                       # Enable Steam gaming platform
       remotePlay = lib.mkForce true;       # Enable Steam Remote Play (override suite setting)
@@ -950,6 +965,43 @@
       hwloc
       iotop
       smartmontools
+      
+      # Hostname compatibility for applications like AnyDesk
+      hostname-debian
+      lsb-release
+      
+      # AnyDesk wrapper script for proper functionality
+      (pkgs.writeShellScriptBin "anydesk-working" ''
+        # Set up proper environment for AnyDesk
+        export PATH="${pkgs.hostname-debian}/bin:$PATH"
+        
+        # GTK/Wayland compatibility settings
+        export GDK_BACKEND=x11
+        export QT_QPA_PLATFORM=xcb
+        export XDG_SESSION_TYPE=x11
+        
+        # Suppress GTK warnings
+        export G_MESSAGES_DEBUG=""
+        export GTK_DEBUG=""
+        
+        # Ensure X11 display is available
+        if [ -z "$DISPLAY" ]; then
+          export DISPLAY=:0
+        fi
+        
+        # Run AnyDesk with error suppression
+        exec ${pkgs.anydesk}/bin/anydesk "$@" 2>/dev/null
+      '')
+      
+      # Desktop entry for AnyDesk
+      (pkgs.makeDesktopItem {
+        name = "anydesk-working";
+        desktopName = "AnyDesk (Working)";
+        comment = "Fast and secure remote desktop application";
+        exec = "anydesk-working";
+        icon = "anydesk";
+        categories = [ "Network" "RemoteAccess" ];
+      })
       
       # Home Manager for manual user management
       home-manager

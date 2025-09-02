@@ -99,14 +99,21 @@ with lib;
     # GameMode for better gaming performance
     programs.gamemode = mkIf config.custom.services.system.gamemode.enable {
       enable = true;
+      enableRenice = true;
       settings = {
         general = {
           renice = 10;
+          ioprio = 0;
+          inhibit_screensaver = 1;
         };
         gpu = {
           apply_gpu_optimisations = "accept-responsibility";
           gpu_device = 0;
           amd_performance_level = "high";
+        };
+        custom = {
+          start = "${pkgs.libnotify}/bin/notify-send 'GameMode started'";
+          end = "${pkgs.libnotify}/bin/notify-send 'GameMode ended'";
         };
       };
     };

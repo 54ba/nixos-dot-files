@@ -154,8 +154,7 @@ with lib;
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = pkgs.writeScript "ai-performance-tuning" ''
-          #!${pkgs.bash}/bin/bash
+        ExecStart = pkgs.writeShellScript "ai-performance-tuning" ''
           # Set GPU performance mode (only if GPU exists)
           if [ -f /sys/class/drm/card0/device/power_dpm_force_performance_level ]; then
             echo performance > /sys/class/drm/card0/device/power_dpm_force_performance_level 2>/dev/null || true

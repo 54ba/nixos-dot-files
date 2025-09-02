@@ -67,12 +67,21 @@ with lib;
           gdm = {
             enable = true;
             wayland = config.custom.desktop.wayland.enable;
+            autoSuspend = false;
             debug = false;
           };
+          # defaultSession = "gnome";  # Removed - deprecated option
           # Ensure proper session handling
           sessionCommands = ''
             # Fix potential TTY issues
-            ${pkgs.kbd}/bin/setfont ter-v16n
+            ${pkgs.kbd}/bin/setfont ter-v16n || true
+            
+            # Ensure proper environment for GNOME session
+            export XDG_SESSION_TYPE="wayland"
+            export GDK_BACKEND="wayland"
+            export QT_QPA_PLATFORM="wayland"
+            export CLUTTER_BACKEND="wayland"
+            export SDL_VIDEODRIVER="wayland"
           '';
         };
       };
@@ -90,6 +99,8 @@ with lib;
           glib-networking.enable = true;
           gnome-settings-daemon.enable = true;
         };
+        # Ensure AccountsService is running for GDM
+        accounts-daemon.enable = true;
       };
 
       # Fix TTY access
@@ -142,38 +153,55 @@ with lib;
           icon-theme='${config.custom.desktop.gnome.theme.iconTheme}'
           cursor-theme='${config.custom.desktop.gnome.theme.cursorTheme}'
           enable-animations=true
-          enable-hot-corners=true
+          enable-hot-corners=false
 
           [org.gnome.desktop.wm.preferences]
           theme='${config.custom.desktop.gnome.theme.gtkTheme}'
           button-layout='appmenu:minimize,maximize,close'
 
           [org.gnome.shell]
-          enabled-extensions=['user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-dock@micxgx.gmail.com']
-
-          [org.gnome.shell.extensions.dash-to-dock]
-          dock-position='BOTTOM'
-          transparency-mode='DYNAMIC'
-          running-indicator-style='DOTS'
-
-          [org.gnome.mutter]
-          experimental-features=['scale-monitor-framebuffer']
-
+          enabled-extensions=[]
+          disable-user-extensions=false
+          
           [org.gnome.desktop.session]
           idle-delay=300
+          
+          [org.gnome.mutter]
+          dynamic-workspaces=true
+          workspaces-only-on-primary=false
+          experimental-features=['scale-monitor-framebuffer']
+          
+          [org.gnome.desktop.wm.keybindings]
+          show-desktop=['<Super>d']
+          
+          [org.gnome.desktop.background]
+          picture-options='zoom'
+          primary-color='#023c88'
+          secondary-color='#5789ca'
+          
+          [org.gnome.desktop.screensaver]
+          picture-options='zoom'
+          primary-color='#023c88'
+          secondary-color='#5789ca'
         '';
       };
 
-      # Essential GNOME packages
+      # Essential GNOME packages (extensions disabled to prevent warnings)
       environment.systemPackages = with pkgs; [
         gnome-tweaks
-        gnome-shell-extensions
+        # gnome-shell-extensions  # DISABLED - Causes stage view allocation warnings
         dconf-editor
         nautilus
         gnome-terminal
         papirus-icon-theme
         adwaita-icon-theme
         gnome-themes-extra
+        gjs  # REQUIRED - GNOME JavaScript interpreter for extensions
+        gtk3  # REQUIRED - GTK3 runtime
+        gtk3.dev  # REQUIRED - GTK3 development files
+        gobject-introspection  # REQUIRED - GObject introspection
+        gnome-desktop
+        gsettings-desktop-schemas
       ];
 
       # Enable GNOME keyring PAM integration
