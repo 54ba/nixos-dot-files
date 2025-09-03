@@ -155,9 +155,9 @@ with lib;
 
             # Language-specific packages
             ${optionalString (elem "python" config.custom.home-manager.development.languages) ''
-            python311
-            python311Packages.pip
-            python311Packages.virtualenv
+            python312
+            python312Packages.pip
+            python312Packages.virtualenv
             poetry
             ''}
             ${optionalString (elem "nodejs" config.custom.home-manager.development.languages) ''

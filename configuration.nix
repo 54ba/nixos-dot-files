@@ -19,7 +19,7 @@
     # Desktop environment
     ./modules/display-manager.nix
     ./modules/wayland.nix
-    # ./modules/gnome-extensions.nix           # DISABLED - Causes stage view allocation warnings
+    ./modules/gnome-extensions.nix           # ENABLED - Testing for stage view allocation warnings
     ./modules/gtk-enhanced.nix
     
     # Package management
@@ -274,7 +274,7 @@
   
   # Enable advanced rescue system with generation management (DISABLED - Fixing boot issues)
   custom.rescueSystem = {
-    enable = false;                        # DISABLED - Causes systemd service parsing errors
+    enable = true;                         # ENABLED - Testing for systemd service parsing errors
     grub = {
       enableAdvancedMenu = false;          # Disabled with main module
       timeout = 15;                        # 15 second timeout for rescue menu (reduced from 30)
@@ -333,7 +333,7 @@
   custom.ai-services = {
     enable = true;                        # Enable for NVIDIA drivers only
     ollama = {
-      enable = false;                     # Disable Ollama to avoid PyTorch
+      enable = true;                      # ENABLED - Testing PyTorch build
       acceleration = "cuda";               # Enable CUDA acceleration (for when enabled)
     };
     nvidia = {
@@ -341,7 +341,7 @@
       package = "stable";
       powerManagement = true;             # Enable power management to prevent conflicts
     };
-    packages.enable = false;              # Disable AI packages to avoid PyTorch build
+    packages.enable = true;               # ENABLED - Testing PyTorch build with binary caches
   };
 
   # Binary cache management with Cachix - ENABLED via root cachix.nix
@@ -450,7 +450,7 @@
     wayland.enable = true;            # Enable Wayland (works in generation 45)
     gnome = {
       enable = true;                  # Enable GNOME desktop environment
-      extensions.enable = false;      # DISABLED - Extensions cause stage view allocation warnings
+      extensions.enable = true;       # ENABLED - Testing for stage view allocation warnings
       excludeApps.enable = true;      # Exclude unwanted apps
       theme.enable = true;            # Enable custom theming
     };
@@ -592,7 +592,7 @@
   # The NVIDIA performance optimizations are causing conflicts with nouveau drivers
   # Generation 16 works with nouveau.modeset=1 and nvidia.drm.modeset=0
   custom.nvidiaPerformance = {
-    enable = false;                        # DISABLED - Causes boot failures due to driver conflicts
+    enable = true;                         # ENABLED - Testing performance optimizations
     gaming = {
       enable = false;                      # Disabled with main module
       dlss = false;                        # Disabled with main module
@@ -735,9 +735,9 @@
     development.enable = true;             # Enable development packages
     productivity.enable = true;            # Enable productivity packages
     popular.enable = true;                 # Enable popular packages collection
-    entertainment.enable = false;          # Disable entertainment packages for now
+    entertainment.enable = true;           # ENABLED - Entertainment software packages
     gaming.enable = true;                  # Enable gaming packages for SteamOS
-    pentest.enable = false;                # Disable pentest packages by default (security)
+    pentest.enable = true;                 # ENABLED - Testing penetration testing tools
   };
   
   # Penetration Testing Tools (handled by custom.packages.pentest.enable above)
@@ -824,7 +824,7 @@
   # ===== STEAMOS AND MOBILE PC INTEGRATION =====
   # SteamOS Mobile Suite - DISABLED (Fixing user service issues)
   custom.steamos-mobile-suite = {
-    enable = false;                        # DISABLED - Causes user service permission errors
+    enable = false;                        # DISABLED - Too many conflicts with gaming module
     profile = "balanced";                  # Balanced profile for gaming and productivity
     
     features = {
@@ -863,9 +863,9 @@
   
   # SteamOS Gaming Environment - TEMPORARILY DISABLED
   custom.steamos-gaming = {
-    enable = false;                        # DISABLED - Temporarily disable to simplify session startup
+    enable = lib.mkForce true;             # ENABLED - Override mobile suite setting
     steam = {
-      enable = true;                       # Enable Steam gaming platform
+      enable = lib.mkForce true;           # Enable Steam gaming platform (override suite)
       remotePlay = lib.mkForce true;       # Enable Steam Remote Play (override suite setting)
       hardware = true;                     # Enable Steam hardware support
       bigPicture = lib.mkForce true;       # Optimize for Steam Big Picture mode (override suite setting)
@@ -882,9 +882,9 @@
     };
     performance = {
       enable = true;                       # Enable gaming performance optimizations
-      gamemode = true;                     # Enable Feral GameMode
-      mangohud = true;                     # Enable MangoHud performance overlay
-      lowLatency = true;                   # Enable low-latency optimizations
+      gamemode = lib.mkForce true;         # Enable Feral GameMode (override suite)
+      mangohud = lib.mkForce true;         # Enable MangoHud performance overlay (override suite)
+      lowLatency = lib.mkForce true;       # Enable low-latency optimizations (override suite)
     };
     hardware = {
       controllers = true;                  # Enable gaming controller support
@@ -892,7 +892,7 @@
       audio = true;                        # Enable optimized gaming audio
     };
     networking = {
-      gaming = true;                       # Enable gaming network optimizations
+      gaming = lib.mkForce true;           # Enable gaming network optimizations (override suite)
     };
   };
 

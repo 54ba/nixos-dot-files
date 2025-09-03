@@ -8,10 +8,10 @@ pkgs.mkShell {
   
   buildInputs = with pkgs; [
     # Python Development
-    python311
-    python311Packages.pip
-    python311Packages.poetry
-    python311Packages.virtualenv
+    python312
+    python312Packages.pip
+    python312Packages.poetry
+    python312Packages.virtualenv
     
     # Node.js/TypeScript Development
     nodejs_20

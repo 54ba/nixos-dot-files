@@ -104,18 +104,19 @@ with lib;
         cudatoolkit
         nvidia-vaapi-driver
         
-        # Python AI/ML ecosystem
-        python311
-        python311Packages.pip
-        python311Packages.virtualenv
-        python311Packages.numpy
-        python311Packages.pandas
-        python311Packages.scikit-learn
-        python311Packages.matplotlib
-        python311Packages.jupyter
-        python311Packages.torch
-        python311Packages.torchvision
-        python311Packages.transformers
+        # Python AI/ML ecosystem - Using Python 3.12 with binary cache optimization
+        python312
+        python312Packages.pip
+        python312Packages.virtualenv
+        python312Packages.numpy
+        python312Packages.pandas
+        python312Packages.scikit-learn
+        python312Packages.matplotlib
+        python312Packages.jupyter
+        # Use pre-built PyTorch from binary caches
+        python312Packages.torch-bin
+        python312Packages.torchvision-bin
+        python312Packages.transformers
         
         # GPU monitoring and testing tools
         nvtopPackages.nvidia
@@ -130,8 +131,8 @@ with lib;
         wget
         
         # Additional AI tools that may be useful with nixai
-        python311Packages.openai
-        python311Packages.requests
+        python312Packages.openai
+        python312Packages.requests
       ]));
 
     # Environment variables for AI development

@@ -106,8 +106,8 @@ with pkgs; [
   podman
   
   # Package managers for other ecosystems
-  # Use consistent Python 3.11 to avoid version conflicts
-  python311Packages.pip
+  # Use consistent Python 3.12 to avoid version conflicts
+  python312Packages.pip
   cargo
   
   # Documentation viewers

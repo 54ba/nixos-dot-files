@@ -9,9 +9,9 @@ with pkgs; [
   deno
   bun
   
-  python311
-  python311Packages.pip
-  python311Packages.virtualenv
+  python312
+  python312Packages.pip
+  python312Packages.virtualenv
   pipenv  # pipenv is a separate package
   poetry
   

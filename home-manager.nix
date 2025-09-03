@@ -9,12 +9,12 @@
     # Home Manager CLI removed to avoid collision (available system-wide)
 
     # AI/ML Development
-    python311  # Use consistent Python 3.11 instead of python3
-    python311Packages.pip
-    python311Packages.virtualenv
+    python312  # Use consistent Python 3.12 instead of python3
+    python312Packages.pip
+    python312Packages.virtualenv
     poetry
-    python311Packages.setuptools
-    python311Packages.wheel
+    python312Packages.setuptools
+    python312Packages.wheel
 
     # Node.js/TypeScript Development
     nodejs  # Default version to avoid conflicts
@@ -335,7 +335,7 @@
     NIXPKGS_ALLOW_UNFREE = "1";
 
     # Python environment
-    PYTHONPATH = "$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH";
+    PYTHONPATH = "$HOME/.local/lib/python3.12/site-packages:$PYTHONPATH";
 
     # Terminal and shell optimizations
     TERM = "xterm-256color";
