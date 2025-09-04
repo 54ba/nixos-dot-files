@@ -219,6 +219,10 @@ with lib;
       smartmontools
       sysstat
       lm_sensors
+      gawk  # Fix for awk command errors in monitoring script
+      procps  # Provides uptime command
+      coreutils  # Basic utilities
+      iproute2  # Network utilities
     ];
     
     # Enable smartd for disk monitoring

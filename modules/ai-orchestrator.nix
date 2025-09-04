@@ -358,11 +358,11 @@ with lib;
           export NOTIFICATION_CHANNELS="${concatStringsSep "," config.custom.aiOrchestrator.notifications.channels}"
           
           # Data integration paths
-          export RECORDING_PATH="${if config.custom.desktopRecording.enable then config.custom.desktopRecording.storage.path else "/dev/null"}"
-          export INPUT_CAPTURE_PATH="${if config.custom.inputCapture.enable then config.custom.inputCapture.storage.path else "/dev/null"}"
-          export PIPELINE_PATH="${if config.custom.dataPipeline.enable then config.custom.dataPipeline.storage.path else "/dev/null"}"
+          export RECORDING_PATH="${if (config.custom ? desktopRecording && config.custom.desktopRecording.enable) then config.custom.desktopRecording.storage.path else "/dev/null"}"
+          export INPUT_CAPTURE_PATH="${if (config.custom ? inputCapture && config.custom.inputCapture.enable) then config.custom.inputCapture.storage.path else "/dev/null"}"
+          export PIPELINE_PATH="${if (config.custom ? dataPipeline && config.custom.dataPipeline.enable) then config.custom.dataPipeline.storage.path else "/dev/null"}"
           
-          exec ${pkgs.python3}/bin/python3 /etc/nixos/modules/scripts/ai-orchestrator.py
+          exec ${pkgs.python3}/bin/python3 /etc/nixos/scripts/ai-orchestrator-service.py
         '';
         
         Restart = "on-failure";
@@ -379,9 +379,9 @@ with lib;
         ReadWritePaths = [ 
           "/var/lib/ai-orchestrator"
           "/tmp"
-        ] ++ optionals config.custom.desktopRecording.enable [ config.custom.desktopRecording.storage.path ]
-          ++ optionals config.custom.inputCapture.enable [ config.custom.inputCapture.storage.path ]
-          ++ optionals config.custom.dataPipeline.enable [ config.custom.dataPipeline.storage.path ];
+        ] ++ optionals (config.custom ? desktopRecording && config.custom.desktopRecording.enable) [ config.custom.desktopRecording.storage.path ]
+          ++ optionals (config.custom ? inputCapture && config.custom.inputCapture.enable) [ config.custom.inputCapture.storage.path ]
+          ++ optionals (config.custom ? dataPipeline && config.custom.dataPipeline.enable) [ config.custom.dataPipeline.storage.path ];
         ProtectHome = true;
         NoNewPrivileges = true;
         

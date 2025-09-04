@@ -339,12 +339,12 @@ with lib;
           export MEMORY_LIMIT="${config.custom.dataPipeline.processing.memoryLimit}"
           
           # Input capture integration
-          export INPUT_CAPTURE_PATH="${if config.custom.inputCapture.enable then config.custom.inputCapture.storage.path else "/dev/null"}"
+          export INPUT_CAPTURE_PATH="${if (config.custom ? inputCapture && config.custom.inputCapture.enable) then config.custom.inputCapture.storage.path else "/dev/null"}"
           
           # Recording integration
-          export RECORDING_PATH="${if config.custom.desktopRecording.enable then config.custom.desktopRecording.storage.path else "/dev/null"}"
+          export RECORDING_PATH="${if (config.custom ? desktopRecording && config.custom.desktopRecording.enable) then config.custom.desktopRecording.storage.path else "/dev/null"}"
           
-          exec ${pkgs.python3}/bin/python3 ${./scripts/data-collector.py}
+          exec ${pkgs.python3}/bin/python3 /etc/nixos/modules/scripts/data-collector.py
         '';
         
         Restart = "on-failure";
@@ -361,8 +361,8 @@ with lib;
         ReadWritePaths = [ 
           config.custom.dataPipeline.storage.path
           "/tmp"
-        ] ++ optionals config.custom.inputCapture.enable [ config.custom.inputCapture.storage.path ]
-          ++ optionals config.custom.desktopRecording.enable [ config.custom.desktopRecording.storage.path ];
+        ] ++ optionals (config.custom ? inputCapture && config.custom.inputCapture.enable) [ config.custom.inputCapture.storage.path ]
+          ++ optionals (config.custom ? desktopRecording && config.custom.desktopRecording.enable) [ config.custom.desktopRecording.storage.path ];
         ProtectHome = true;
         NoNewPrivileges = true;
       };
@@ -391,7 +391,7 @@ with lib;
           export ML_MODELS="${concatStringsSep "," config.custom.dataPipeline.analysis.ml.models}"
           export AUTO_TRAINING="${if config.custom.dataPipeline.analysis.ml.training.auto then "1" else "0"}"
           
-          exec ${pkgs.python3}/bin/python3 ${./scripts/data-processor.py}
+          exec ${pkgs.python3}/bin/python3 /etc/nixos/modules/scripts/data-processor.py
         '';
         
         Restart = "on-failure";
@@ -427,7 +427,7 @@ with lib;
           export METRICS="${concatStringsSep "," config.custom.dataPipeline.analysis.metrics}"
           export DB_BACKEND="${config.custom.dataPipeline.storage.backend}"
           
-          exec ${pkgs.python3}/bin/python3 ${./scripts/analysis-engine.py}
+          exec ${pkgs.python3}/bin/python3 /etc/nixos/modules/scripts/analysis-engine.py
         '';
         
         Restart = "on-failure";
@@ -462,7 +462,7 @@ with lib;
           export STREAMING_PROTOCOL="${config.custom.dataPipeline.streaming.protocol}"
           export BUFFER_SIZE="${toString config.custom.dataPipeline.streaming.bufferSize}"
           
-          exec ${pkgs.python3}/bin/python3 ${./scripts/pipeline-api.py}
+          exec ${pkgs.python3}/bin/python3 /etc/nixos/modules/scripts/pipeline-api.py
         '';
         
         Restart = "on-failure";
@@ -500,7 +500,7 @@ with lib;
           find . -name "*aggregated*" -type f -mtime +$AGGREGATED_RETENTION -delete
           
           # Database cleanup
-          ${pkgs.python3}/bin/python3 ${./scripts/cleanup-database.py}
+          ${pkgs.python3}/bin/python3 /etc/nixos/modules/scripts/cleanup-database.py
           
           echo "Data retention cleanup completed"
         '';
@@ -534,7 +534,7 @@ with lib;
           export ML_MODELS="${concatStringsSep "," config.custom.dataPipeline.analysis.ml.models}"
           export DB_BACKEND="${config.custom.dataPipeline.storage.backend}"
           
-          ${pkgs.python3}/bin/python3 ${./scripts/ml-trainer.py}
+          ${pkgs.python3}/bin/python3 /etc/nixos/modules/scripts/ml-trainer.py
         '';
         
         User = "root";
@@ -573,7 +573,7 @@ with lib;
           export ALERTS="${concatStringsSep "," config.custom.dataPipeline.monitoring.alerts}"
           export METRICS_ENABLED="${if config.custom.dataPipeline.monitoring.metrics then "1" else "0"}"
           
-          exec ${pkgs.python3}/bin/python3 ${./scripts/pipeline-monitor.py}
+          exec ${pkgs.python3}/bin/python3 /etc/nixos/modules/scripts/pipeline-monitor.py
         '';
         
         Restart = "on-failure";

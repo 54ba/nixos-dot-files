@@ -73,6 +73,23 @@ with lib;
       };
 
       # SMB/Samba sharing options
+      # WiFi and wireless connectivity options
+      wifi = {
+        enable = mkEnableOption "Enhanced WiFi connectivity tools";
+        
+        commandLineTools = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Install command-line WiFi management tools";
+        };
+        
+        advancedTools = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Install advanced wireless analysis tools";
+        };
+      };
+
       samba = {
         enable = mkEnableOption "Samba/SMB file sharing";
 

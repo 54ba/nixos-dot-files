@@ -31,11 +31,11 @@
     ./modules/electron-apps.nix
     ./modules/void-editor.nix
     
-    # Intelligent Recording System
-    ./modules/desktop-recording.nix                 # ENABLED - Desktop recording capabilities
+    # Intelligent Recording System - DISABLED DUE TO CONFLICTS
+    # ./modules/desktop-recording.nix                 # DISABLED - Desktop recording capabilities (conflicts)
     # ./modules/input-capture.nix                     # DISABLED - Missing scripts
-    ./modules/data-pipeline.nix                     # ENABLED - Data processing pipeline
-    ./modules/ai-orchestrator.nix                   # ENABLED - AI orchestration
+    # ./modules/data-pipeline.nix                     # DISABLED - Data processing pipeline (conflicts)
+    # ./modules/ai-orchestrator.nix                   # DISABLED - AI orchestration (conflicts)
     # ./modules/intelligent-recording-system.nix      # DISABLED - Missing scripts
     
     # System utilities
@@ -45,34 +45,34 @@
     ./modules/nixgl.nix
     
     # System health monitoring
-    ./modules/health-monitoring.nix               # ENABLED - System health monitoring
+    # ./modules/health-monitoring.nix             # DISABLED - System health monitoring (per user request)
     
     # Rescue system with generation management
-    ./modules/rescue-system.nix                   # ENABLED - Advanced rescue system
+    # ./modules/rescue-system.nix                 # DISABLED - Advanced rescue system (per user request)
     
-    # SteamOS and Mobile PC Integration - PARTIAL ENABLE FOR TESTING
-    ./modules/steamos-gaming.nix                 # ENABLED - SteamOS-like gaming environment
-    ./modules/steamos-mobile-suite.nix              # ENABLED - SteamOS mobile suite
-    ./modules/mobile-integration.nix                # ENABLED - Part of mobile suite
-    ./modules/remote-control.nix                    # ENABLED - Remote control capabilities
-    ./modules/ssh-remote-access.nix                 # ENABLED - SSH remote access
+    # SteamOS and Mobile PC Integration - DISABLED DUE TO CONFLICTS
+    # ./modules/steamos-gaming.nix                 # DISABLED - SteamOS-like gaming environment (conflicts)
+    # ./modules/steamos-mobile-suite.nix           # DISABLED - SteamOS mobile suite (conflicts)
+    # ./modules/mobile-integration.nix             # DISABLED - Part of mobile suite (conflicts)
+    # ./modules/remote-control.nix                 # DISABLED - Remote control capabilities (conflicts)
+    # ./modules/ssh-remote-access.nix              # DISABLED - SSH remote access (conflicts)
     
     # === OPTIONAL MODULES (can be disabled for simplification) ===
     ./modules/boot-enhancements.nix              # ENABLED - Boot enhancements
-    ./modules/security-services.nix
-    ./modules/user-security.nix                  # ENABLED - User security enhancements
-    ./modules/device-permissions.nix             # ENABLED - Device permission management
+    # ./modules/security-services.nix             # DISABLED - Security services (conflicts)
+    # ./modules/user-security.nix                 # DISABLED - User security enhancements (conflicts)
+    # ./modules/device-permissions.nix            # DISABLED - Device permission management (conflicts)
     ./modules/system-optimization.nix
     ./modules/system-services.nix
     ./modules/optional-packages.nix              # ENABLED - Optional package collections
-    ./modules/pentest.nix                        # ENABLED - Penetration testing tools
-    ./modules/wine-support.nix                   # ENABLED - Wine compatibility layer
+    # ./modules/pentest.nix                       # DISABLED - Penetration testing tools (conflicts)
+    # ./modules/wine-support.nix                  # DISABLED - Wine compatibility layer (conflicts)
     ./modules/package-recommendations.nix        # ENABLED - Package recommendations
-    ./modules/windows-compatibility.nix          # ENABLED - Windows app compatibility
+    # ./modules/windows-compatibility.nix         # DISABLED - Windows app compatibility (conflicts)
     ./modules/lenovo-s540-gtx-15iwl.nix         # ENABLED - Lenovo hardware optimizations
     ./modules/home-manager-integration.nix       # ENABLED - Home manager integration
-    ./modules/nvidia-performance.nix             # ENABLED - NVIDIA gaming optimizations
-    # ./modules/pam-consolidated.nix  # REMOVED - conflicts with main PAM config
+    # ./modules/nvidia-performance.nix            # DISABLED - NVIDIA gaming optimizations (conflicts with ai-services)
+    # ./modules/pam-consolidated.nix              # DISABLED - conflicts with main PAM config
     ./modules/nixai-integration.nix              # ENABLED - NixAI integration
     ./modules/migration-assistant.nix            # ENABLED - System migration tools
   ];
@@ -259,53 +259,11 @@
     hardening.enable = true;                         # Enable system hardening
   };
   
-  # Enable comprehensive health monitoring (ENABLED - Module imported)
-  custom.healthMonitoring = {
-    enable = true;                           # Enable system health monitoring
-    monitoring = {
-      interval = "hourly";                   # Run health checks hourly
-      checkDisk = true;                      # Monitor disk health and usage
-      checkMemory = true;                    # Monitor memory usage
-      checkServices = true;                  # Monitor service status
-      checkNetwork = true;                   # Monitor network connectivity
-    };
-    logging.enable = true;                   # Enable health monitoring logs
-  };
+  # Health Monitoring - DISABLED (module commented out)
+  # custom.healthMonitoring configuration removed to prevent option errors
   
-  # Enable advanced rescue system with generation management (DISABLED - Fixing boot issues)
-  custom.rescueSystem = {
-    enable = true;                         # ENABLED - Testing for systemd service parsing errors
-    grub = {
-      enableAdvancedMenu = false;          # Disabled with main module
-      timeout = 15;                        # 15 second timeout for rescue menu (reduced from 30)
-      enableGenerationSorting = false;     # Disabled with main module
-      rescueEntries = false;               # Disabled with main module
-    };
-    generations = {
-      maxCount = 50;                       # Keep up to 50 generations for recovery (reduced from 100)
-      sortBy = "date";                     # Sort by date (newest first)
-      groupBy = "week";                    # Group generations by week
-      autoCleanup = true;                  # Auto-cleanup old generations
-    };
-    rescueTools = {
-      enable = false;                      # Disabled with main module
-      networkTools = false;                # Disabled with main module
-      diskTools = false;                   # Disabled with main module
-      systemTools = false;                 # Disabled with main module
-      developmentTools = false;            # Disable dev tools for security
-    };
-    emergencyAccess = {
-      enableRootShell = false;             # Disabled with main module
-      enableNetworkAccess = false;         # Disabled with main module
-      enableSSH = false;                   # Disable SSH for security (enable manually if needed)
-      allowPasswordAuth = false;           # Disabled with main module
-    };
-    autoRescue = {
-      enable = false;                      # Disable auto-rescue for now
-      bootFailureThreshold = 3;            # Trigger after 3 boot failures
-      autoRepair = false;                  # Disable automatic repairs
-    };
-  };
+  # Rescue System - DISABLED (module commented out)
+  # custom.rescueSystem configuration removed to prevent option errors
 
   # ===== CUSTOM SSD2 BIND MOUNTS =====
   custom.binding = {
@@ -558,112 +516,19 @@
     WAYLAND_DISPLAY = "wayland-0";
   };
 
-  # NVIDIA Performance Optimizations
-  #custom.nvidiaPerformance = {
-  #  enable = true;               # Enable NVIDIA performance optimizations
-  #  gaming = {
-  #    enable = true;             # Enable gaming optimizations
-  #    dlss = true;               # Enable DLSS support
-  #    rayTracing = true;         # Enable ray tracing support
-  #    performanceMode = "performance"; # Performance mode preference
-  #  };
-   # overclocking = {
-   #   enable = false;            # Disable overclocking for stability
-   #   powerLimit = 100;          # Power limit percentage
-   #   memoryOverclock = 0;       # Memory overclock in MHz
-   #   coreOverclock = 0;         # Core overclock in MHz
-   # };
-   # monitoring = {
-   #  enable = true;             # Enable GPU monitoring tools
-   #   nvtop = true;              # Enable nvtop for GPU monitoring
-   # greenWithEnvy = true;      # Enable GreenWithEnvy for advanced GPU control
-   # };
-   # optimization = {
-   #   enable = true;             # Enable performance optimizations
-   #   powerMizer = "prefer_maximum_performance"; # PowerMizer mode for performance
-   #   textureQuality = "performance"; # Texture quality preference
-   #   shaderCache = true;        # Enable shader cache for better performance
-   # };
-  #};
+  # NVIDIA Performance Optimizations - DISABLED (module commented out)
+  # custom.nvidiaPerformance configuration removed to prevent option errors
 
   # ===== NEWLY ENABLED MODULE CONFIGURATIONS =====
   
-  # NVIDIA Performance Optimizations - DISABLED TO FIX BOOT FAILURES
-  # The NVIDIA performance optimizations are causing conflicts with nouveau drivers
-  # Generation 16 works with nouveau.modeset=1 and nvidia.drm.modeset=0
-  custom.nvidiaPerformance = {
-    enable = true;                         # ENABLED - Testing performance optimizations
-    gaming = {
-      enable = false;                      # Disabled with main module
-      dlss = false;                        # Disabled with main module
-      rayTracing = false;                  # Disabled with main module
-      performanceMode = "performance";     # Performance mode preference
-    };
-    monitoring = {
-      enable = false;                      # Disabled with main module
-    };
-  };
+  # NVIDIA Performance Optimizations - DISABLED (module commented out)
+  # custom.nvidiaPerformance configuration removed to prevent option errors
   
-  # Wine Support for Windows Applications
-  custom.wine = {
-    enable = true;                         # Enable Wine support
-    packages = {
-      wine64 = true;                       # Install Wine 64-bit
-      wine32 = true;                       # Install Wine 32-bit for compatibility
-      winetricks = true;                   # Install Winetricks for easy configuration
-      playonlinux = true;                  # Install PlayOnLinux for game management
-      lutris = true;                       # Install Lutris for comprehensive game management
-      dxvk = true;                         # Install DXVK for DirectX 11/10 support
-      vkd3d = true;                        # Install VKD3D for DirectX 12 support
-      mono = true;                         # Install Wine Mono for .NET applications
-      gecko = true;                        # Install Wine Gecko for web browser support
-    };
-    performance = {
-      enable = true;                       # Enable Wine performance optimizations
-      esync = true;                        # Enable Esync for better performance
-      fsync = true;                        # Enable Fsync for better performance (kernel 5.16+)
-      gamemode = true;                     # Enable Feral GameMode for performance
-      mangohud = true;                     # Enable MangoHud for performance monitoring
-    };
-    compatibility = {
-      enable = true;                       # Enable Wine compatibility features
-      virtualDesktop = false;              # Disable virtual desktop mode for better integration
-      dpiScaling = true;                   # Enable DPI scaling support
-      audio = true;                        # Enable enhanced audio support
-      networking = true;                   # Enable enhanced networking support
-    };
-  };
+  # Wine Support for Windows Applications - DISABLED (module commented out)
+  # custom.wine configuration removed to prevent option errors
   
-  # Windows Compatibility Layer
-  custom.windowsCompatibility = {
-    enable = true;                         # Enable Windows compatibility layer
-    dotnet = {
-      enable = true;                       # Enable .NET Framework support
-      versions = [ "4.8" "4.7.2" "3.5" ];  # Install multiple .NET versions
-      mono = true;                         # Enable Mono runtime support
-      core = true;                         # Enable .NET Core support
-    };
-    applications = {
-      office = true;                       # Enable Office applications
-      development = true;                  # Enable Development tools
-      design = true;                       # Enable Design applications
-      gaming = true;                       # Enable Gaming applications
-      business = false;                    # Disable Business applications for now
-    };
-    wine = {
-      performance = {
-        esync = true;                      # Enable esync for better performance
-        fsync = true;                      # Enable fsync for better performance
-        gamemode = true;                   # Enable gamemode integration
-      };
-    };
-    alternatives = {
-      enable = true;                       # Install Linux alternatives to Windows apps
-      office = true;                       # Install LibreOffice/OnlyOffice
-      design = true;                       # Install GIMP/Inkscape
-      development = true;                  # Install VS Code/Rider
-    };
-  };
+  # Windows Compatibility Layer - DISABLED (module commented out)
+  # custom.windowsCompatibility configuration removed to prevent option errors
   
   # Migration Assistant
   custom.migrationAssistant = {
@@ -709,24 +574,11 @@
   # RESTORE MISSING KERNEL PARAMETERS (critical for TTY/display)
   # These parameters are added to the existing boot.kernelParams below
   
-  # User Security Enhancements
-  custom.userSecurity = {
-    enable = true;                         # Enable user security enhancements
-    mainUser = {
-      name = "mahmoud";                      # Main user name
-      extraGroups = [ "wheel" "audio" "video" "input" "storage" "network" "docker" "libvirtd" "kvm" ];
-    };
-    sudo = {
-      enable = true;                       # Enable sudo access
-      noPassword = true;                   # Allow sudo without password for convenience
-    };
-    polkit.enable = true;                  # Enable polkit for GUI privilege escalation
-    pam.enable = true;                     # Enable PAM configuration enhancements
-    gnomeKeyring.enable = true;            # Enable GNOME Keyring for credential storage
-  };
+  # User Security Enhancements - DISABLED (module commented out)
+  # custom.userSecurity configuration removed to prevent option errors
   
-  # Device Permission Management
-  custom.device-permissions.enable = true;      # Enable device permission management
+  # Device Permission Management - DISABLED (module commented out)
+  # custom.device-permissions configuration removed to prevent option errors
   
   # Optional Package Collections
   custom.packages = {
@@ -822,79 +674,11 @@
   # The intelligent recording system will be configured later when scripts are available
   
   # ===== STEAMOS AND MOBILE PC INTEGRATION =====
-  # SteamOS Mobile Suite - DISABLED (Fixing user service issues)
-  custom.steamos-mobile-suite = {
-    enable = false;                        # DISABLED - Too many conflicts with gaming module
-    profile = "balanced";                  # Balanced profile for gaming and productivity
-    
-    features = {
-      steamGaming = false;                 # Disabled with main module
-      remoteAccess = false;                # Disable remote access temporarily (wayvnc/meshcentral issues)
-      mobileControl = false;               # Disable mobile control temporarily (localsend display issues)
-      fileSharing = false;                 # Disabled with main module
-      automation = false;                  # Disabled with main module
-    };
-    
-    security = {
-      level = "standard";                  # Standard security level
-      requireKeys = true;                  # Require SSH keys
-      allowMobileAuth = false;             # Disabled with main module
-      encryptTraffic = true;               # Encrypt remote traffic
-    };
-    
-    networking = {
-      optimizeForGaming = false;           # Disabled with main module
-      optimizeForMobile = false;           # Disabled with main module
-      enableDiscovery = false;             # Disabled with main module
-    };
-    
-    performance = {
-      prioritizeGaming = false;            # Disabled with main module
-      lowLatency = false;                  # Disabled with main module
-      hardwareAcceleration = false;        # Disabled with main module
-    };
-    
-    monitoring = {
-      enable = false;                      # Disabled with main module
-      mobileNotifications = false;         # Disabled with main module
-      performanceMetrics = false;          # Disabled with main module
-    };
-  };
+  # SteamOS Mobile Suite - DISABLED (module commented out)
+  # custom.steamos-mobile-suite configuration removed to prevent option errors
   
-  # SteamOS Gaming Environment - TEMPORARILY DISABLED
-  custom.steamos-gaming = {
-    enable = lib.mkForce true;             # ENABLED - Override mobile suite setting
-    steam = {
-      enable = lib.mkForce true;           # Enable Steam gaming platform (override suite)
-      remotePlay = lib.mkForce true;       # Enable Steam Remote Play (override suite setting)
-      hardware = true;                     # Enable Steam hardware support
-      bigPicture = lib.mkForce true;       # Optimize for Steam Big Picture mode (override suite setting)
-      proton = {
-        enable = true;                     # Enable Proton for Windows games
-        ge = true;                         # Enable Proton-GE for better compatibility
-      };
-    };
-    compatibilityLayers = {
-      enable = true;                       # Enable game compatibility layers
-      lutris = true;                       # Enable Lutris game manager
-      heroicLauncher = true;               # Enable Heroic Games Launcher
-      bottles = true;                      # Enable Bottles for Wine management
-    };
-    performance = {
-      enable = true;                       # Enable gaming performance optimizations
-      gamemode = lib.mkForce true;         # Enable Feral GameMode (override suite)
-      mangohud = lib.mkForce true;         # Enable MangoHud performance overlay (override suite)
-      lowLatency = lib.mkForce true;       # Enable low-latency optimizations (override suite)
-    };
-    hardware = {
-      controllers = true;                  # Enable gaming controller support
-      vr = false;                          # Disable VR support for now
-      audio = true;                        # Enable optimized gaming audio
-    };
-    networking = {
-      gaming = lib.mkForce true;           # Enable gaming network optimizations (override suite)
-    };
-  };
+  # SteamOS Gaming Environment - DISABLED (module commented out)
+  # custom.steamos-gaming configuration removed to prevent option errors
 
   # ===== COMPREHENSIVE SYSTEM CONFIGURATION =====
 
