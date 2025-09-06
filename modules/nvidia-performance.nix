@@ -48,32 +48,53 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # NVIDIA driver configuration for hybrid graphics
-    services.xserver.videoDrivers = [ "nvidia" ];
-
-    # NVIDIA settings for hybrid graphics (Intel + NVIDIA)
-    hardware.nvidia = {
-      modesetting.enable = true;
-      powerManagement = {
-        enable = true;
-        finegrained = true;   # Enable for hybrid graphics power management
-      };
-      prime = {
-        # Enable NVIDIA Prime offloading for hybrid graphics
-        offload = {
-          enable = true;
-          enableOffloadCmd = true;  # Enable nvidia-offload command
+    # NVIDIA performance optimizations that extend AI services configuration
+    # This module adds gaming-specific optimizations on top of the base AI services setup
+    
+    # Use mkMerge to handle both scenarios without conflicts
+    hardware.nvidia = mkMerge [
+      # When AI services are managing the drivers, just add Prime offloading
+      (mkIf config.custom.ai-services.nvidia.enable {
+        prime = {
+          offload = {
+            enable = true;
+            enableOffloadCmd = true;  # Enable nvidia-offload command for gaming
+          };
+          sync.enable = false;     # Don't use sync mode (offload is better for laptops)
+          
+          # Hardware-specific bus IDs for Lenovo S540 GTX 15IWL
+          intelBusId = "PCI:0:2:0";    # Intel UHD Graphics 620
+          nvidiaBusId = "PCI:2:0:0";   # NVIDIA GTX 1650 Mobile
         };
-        sync.enable = false;     # Don't use sync mode (offload is better for laptops)
-        
-        # Hardware-specific bus IDs for Lenovo S540 GTX 15IWL
-        intelBusId = "PCI:0:2:0";    # Intel UHD Graphics 620
-        nvidiaBusId = "PCI:2:0:0";   # NVIDIA GTX 1650 Mobile
-      };
-      open = false;  # Use proprietary drivers for better stability
-      nvidiaSettings = true;
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
-    };
+      })
+      
+      # Standalone NVIDIA configuration if AI services are not enabled
+      (mkIf (!config.custom.ai-services.nvidia.enable) {
+        modesetting.enable = true;
+        powerManagement = {
+          enable = true;
+          finegrained = true;   # Enable for hybrid graphics power management
+        };
+        prime = {
+          # Enable NVIDIA Prime offloading for hybrid graphics
+          offload = {
+            enable = true;
+            enableOffloadCmd = true;  # Enable nvidia-offload command
+          };
+          sync.enable = false;     # Don't use sync mode (offload is better for laptops)
+          
+          # Hardware-specific bus IDs for Lenovo S540 GTX 15IWL
+          intelBusId = "PCI:0:2:0";    # Intel UHD Graphics 620
+          nvidiaBusId = "PCI:2:0:0";   # NVIDIA GTX 1650 Mobile
+        };
+        open = false;  # Use proprietary drivers for better stability
+        nvidiaSettings = true;
+        package = config.boot.kernelPackages.nvidiaPackages.stable;
+      })
+    ];
+    
+    # Video drivers - only set if not managed by AI services
+    services.xserver.videoDrivers = mkIf (!config.custom.ai-services.nvidia.enable) [ "nvidia" ];
 
     # Hardware acceleration
     hardware.graphics = {
@@ -99,15 +120,25 @@ in {
       winetricks
     ];
 
-    # Environment variables for performance
-    environment.variables = {
-      # NVIDIA specific
-      __GL_SYNC_TO_VBLANK = "0";
-      __GL_THREADED_OPTIMIZATIONS = "1";
+    # Environment variables for performance - merged with AI services variables
+    environment.sessionVariables = {
+      # NVIDIA gaming-specific optimizations
+      __GL_SYNC_TO_VBLANK = mkDefault "0";            # Disable VSync for gaming
+      __GL_THREADED_OPTIMIZATIONS = mkDefault "1";    # Enable threaded optimizations
+      __GL_SHADER_DISK_CACHE = mkDefault "1";         # Enable shader caching
+      __GL_SHADER_DISK_CACHE_SKIP_CLEANUP = mkDefault "1";  # Keep shader cache
       
-      # Vulkan configuration
-      VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.json";
-      VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.json";
+      # Vulkan configuration for gaming
+      VK_DRIVER_FILES = mkDefault "/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.json";
+      VK_ICD_FILENAMES = mkDefault "/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.json";
+      
+      # Performance mode settings
+      __GL_GSYNC_ALLOWED = mkDefault "1";
+      __GL_VRR_ALLOWED = mkDefault "1";
+      
+      # NVIDIA Prime offloading support
+      __NV_PRIME_RENDER_OFFLOAD = mkDefault "1";
+      __GLX_VENDOR_LIBRARY_NAME = mkDefault "nvidia";
     };
 
     # Performance monitoring

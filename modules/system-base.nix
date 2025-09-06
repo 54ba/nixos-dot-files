@@ -108,8 +108,8 @@ with lib;
       EDITOR = "vim";
       BROWSER = "firefox";
 
-            # Gaming Performance
-      DXVK_HUD = "1";
+      # Gaming Performance (can be overridden by Wine module)
+      DXVK_HUD = mkDefault "1";
       DXVK_STATE_CACHE = "1";
       VKD3D_CONFIG = "dxr,dxr11";
     };

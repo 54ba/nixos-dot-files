@@ -48,7 +48,8 @@ with lib;
       # === CORE WAYLAND SETTINGS ===
       WAYLAND_DISPLAY = "wayland-0";
       XDG_SESSION_TYPE = "wayland";
-      XDG_CURRENT_DESKTOP = "gnome";  # Helps with protocol negotiations
+      XDG_CURRENT_DESKTOP = "gnome:GNOME";  # Enhanced for proper portal detection
+      XDG_SESSION_DESKTOP = "gnome";
       
       # === APPLICATION BACKEND PREFERENCES ===
       NIXOS_OZONE_WL = "1";                    # Chromium/Electron apps
@@ -67,11 +68,12 @@ with lib;
       WAYLAND_DEBUG = "0";                     # Disable debug output
       XDG_RUNTIME_DIR = "/run/user/1000";
       
-      # === GRAPHICS AND PERFORMANCE ===
+      # === SCREEN SHARING AND GRAPHICS ===
       LIBGL_ALWAYS_SOFTWARE = "0";            # Use hardware acceleration
       MESA_LOADER_DRIVER_OVERRIDE = "iris";    # Intel graphics optimization
       __GL_GSYNC_ALLOWED = "1";               # Enable G-Sync if available
       __GL_VRR_ALLOWED = "1";                 # Variable refresh rate
+      WEBKIT_DISABLE_DMABUF_RENDERER = "1";   # Fixes screen sharing issues in browsers
       
       # === MEMORY AND PROCESS OPTIMIZATION ===
       MALLOC_CHECK_ = "0";                    # Disable malloc debugging
@@ -157,14 +159,33 @@ with lib;
 
 
     # === XDG DESKTOP PORTAL CONFIGURATION ===
+    # Enhanced portal configuration for screen sharing
     xdg.portal = {
       enable = mkDefault true;
-      wlr.enable = mkIf (config.services.xserver.displayManager.gdm.wayland) true;
+      wlr.enable = mkIf (config.services.xserver.displayManager.gdm.wayland) false;  # Disable wlr for GNOME
+      
+      # Configure portals in priority order
+      config = {
+        common = {
+          default = [ "gnome" ];
+        };
+        gnome = {
+          default = [ "gnome" "gtk" ];
+          "org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
+          "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+          "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+          "org.freedesktop.impl.portal.Wallpaper" = [ "gnome" ];
+          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+        };
+      };
+      
       extraPortals = with pkgs; [
-        xdg-desktop-portal-gtk
-        xdg-desktop-portal-gnome
+        xdg-desktop-portal-gnome   # Primary portal for GNOME
+        xdg-desktop-portal-gtk     # Fallback portal
       ];
     };
+    
+    # Note: All screen sharing environment variables are now included in the main sessionVariables block above
 
     # === ADDITIONAL WAYLAND OPTIMIZATIONS ===
     # Enable hardware video acceleration

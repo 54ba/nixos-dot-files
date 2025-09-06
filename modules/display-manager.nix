@@ -126,7 +126,7 @@ with lib;
           ];
           config = {
             common = {
-              default = [ "gnome" "gtk" ];
+              default = mkDefault [ "gnome" "gtk" ];  # Allow override by wayland module
             };
           };
         };

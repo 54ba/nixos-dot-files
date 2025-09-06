@@ -77,7 +77,7 @@ with lib;
           # Registry and system tools (included with wine package)
   ];
 
-    # Wine environment variables
+    # Wine environment variables with NVIDIA GPU support
     environment.sessionVariables = {
       # Wine configuration
       WINEPREFIX = "$HOME/.wine";
@@ -87,17 +87,31 @@ with lib;
       WINEDEBUG = "-all";
       WINEDLLOVERRIDES = "mscoree,mshtml=";
 
-      # DirectX compatibility
-      DXVK_HUD = "1";
-      DXVK_LOG_LEVEL = "info";
+      # DirectX compatibility with NVIDIA optimization
+      DXVK_HUD = lib.mkForce "fps,memory,gpu";  # Override system-base setting
+      DXVK_LOG_LEVEL = "warn";  # Reduce log verbosity for performance
+      DXVK_CONFIG_FILE = "$HOME/.config/dxvk.conf";
+      
+      # NVIDIA GPU acceleration
+      __GL_SHADER_DISK_CACHE = "1";
+      __GL_SHADER_DISK_CACHE_PATH = "$HOME/.cache/nv_GLCache";
+      __GL_THREADED_OPTIMIZATIONS = "1";
+      __GL_SYNC_TO_VBLANK = "0";  # Disable VSync for better performance
+      WINE_LARGE_ADDRESS_AWARE = "1";  # Enable 4GB memory support
+      
+      # Gaming performance
+      WINE_CPU_TOPOLOGY = "4:2";  # 4 cores, 2 logical processors per core
+      STAGING_WRITECOPY = "1";     # Enable staging writecopy optimization
+      STAGING_SHARED_MEMORY = "1"; # Enable shared memory optimization
 
       # Audio configuration
-      PULSE_LATENCY_MSEC = "60";
+      PULSE_LATENCY_MSEC = "30";   # Lower latency for gaming
       ALSA_PCM_CARD = "0";
       ALSA_PCM_DEVICE = "0";
+      WINEPULSE_TIMING = "1";      # Enable PulseAudio timing
     };
 
-    # Wine system configuration
+    # Wine system configuration with NVIDIA optimizations
     systemd.user.services = {
       # Wine services for better integration
       "wine-prefix-update" = {
@@ -106,6 +120,17 @@ with lib;
         serviceConfig = {
           Type = "oneshot";
           ExecStart = "${pkgs.bash}/bin/bash -c 'if [ -d $HOME/.wine ]; then wineboot --update; fi'";
+          User = "mahmoud";
+          Environment = [ "__GL_THREADED_OPTIMIZATIONS=1" "WINEDEBUG=-all" ];
+        };
+      };
+      
+      # DXVK cache optimization service
+      "dxvk-cache-optimize" = {
+        description = "Optimize DXVK cache for NVIDIA GPU";
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${pkgs.bash}/bin/bash -c 'mkdir -p $HOME/.cache/nv_GLCache $HOME/.cache/dxvk'";
           User = "mahmoud";
         };
       };
