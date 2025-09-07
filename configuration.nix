@@ -71,7 +71,7 @@
     # ./modules/windows-compatibility.nix         # DISABLED - Windows app compatibility (conflicts)
     ./modules/lenovo-s540-gtx-15iwl.nix         # ENABLED - Lenovo hardware optimizations
     ./modules/home-manager-integration.nix       # ENABLED - Home manager integration
-    # ./modules/nvidia-performance.nix            # DISABLED - NVIDIA gaming optimizations (conflicts with ai-services)
+    ./modules/nvidia-performance.nix             # ENABLED - NVIDIA gaming optimizations (compatible with ai-services)
     # ./modules/pam-consolidated.nix              # DISABLED - conflicts with main PAM config
     ./modules/nixai-integration.nix              # ENABLED - NixAI integration
     ./modules/migration-assistant.nix            # ENABLED - System migration tools
@@ -516,8 +516,19 @@
     WAYLAND_DISPLAY = "wayland-0";
   };
 
-  # NVIDIA Performance Optimizations - DISABLED (module commented out)
-  # custom.nvidiaPerformance configuration removed to prevent option errors
+  # NVIDIA Performance Optimizations - ENABLED with minimal configuration
+  custom.nvidiaPerformance = {
+    enable = true;                               # Enable NVIDIA performance optimizations
+    gaming = {
+      enable = true;                             # Enable gaming optimizations
+      dlss = true;                               # Enable DLSS support
+      rayTracing = true;                         # Enable ray tracing
+      performanceMode = "performance";           # Use performance mode
+    };
+    monitoring = {
+      enable = false;                            # Disable monitoring to avoid systemd conflicts
+    };
+  };
 
   # ===== NEWLY ENABLED MODULE CONFIGURATIONS =====
   
