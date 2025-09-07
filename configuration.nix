@@ -66,12 +66,12 @@
     ./modules/system-services.nix
     ./modules/optional-packages.nix              # ENABLED - Optional package collections
     # ./modules/pentest.nix                       # DISABLED - Penetration testing tools (conflicts)
-    ./modules/wine-support.nix                   # ENABLED - Wine compatibility layer for gaming
+    # ./modules/wine-support.nix                  # DISABLED - Wine compatibility layer (conflicts)
     ./modules/package-recommendations.nix        # ENABLED - Package recommendations
     # ./modules/windows-compatibility.nix         # DISABLED - Windows app compatibility (conflicts)
     ./modules/lenovo-s540-gtx-15iwl.nix         # ENABLED - Lenovo hardware optimizations
     ./modules/home-manager-integration.nix       # ENABLED - Home manager integration
-    ./modules/nvidia-performance.nix            # ENABLED - NVIDIA gaming optimizations (compatible with ai-services)
+    # ./modules/nvidia-performance.nix            # DISABLED - NVIDIA gaming optimizations (conflicts with ai-services)
     # ./modules/pam-consolidated.nix              # DISABLED - conflicts with main PAM config
     ./modules/nixai-integration.nix              # ENABLED - NixAI integration
     ./modules/migration-assistant.nix            # ENABLED - System migration tools
@@ -205,7 +205,7 @@
       name = "mahmoud";
       home = "/home/mahmoud";
       description = "mahmoud";
-      shell = pkgs.zsh;          # Use zsh to match Home Manager config
+      shell = pkgs.bash;         # Use bash for minimal setup
     };
   };
 
@@ -241,25 +241,6 @@
     android.enable = false;                          # Disable Android tools for now
     fuse.enable = true;                              # Enable FUSE support
   };
-  
-  # ===== PIPEWIRE AND SCREEN SHARING CONFIGURATION =====
-  # Enable PipeWire for screen sharing and better audio
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    jack.enable = true;
-    
-    # Screen sharing support
-    wireplumber.enable = true;
-  };
-  
-  # Disable PulseAudio to avoid conflicts with PipeWire
-  services.pulseaudio.enable = false;
-  
-  # Enable real-time scheduling for audio
-  security.rtkit.enable = true;
   
   # Enable enhanced security services
   custom.services.security = {
@@ -355,10 +336,7 @@
   };
 
   # Ensure IBus is available (fixes 'ibus-daemon not found')
-  i18n.inputMethod = {
-    enabled = "ibus";
-    type = "ibus";
-  };
+  i18n.inputMethod.enabled = "ibus";
   
   # Disable problematic recovery service to avoid conflicts
   # systemd.user.services.gnome-session-failed-services-recovery disabled
@@ -533,55 +511,21 @@
   };
 
 
-
   #   # Ensure WAYLAND_DISPLAY is set globally for all applications
   environment.sessionVariables = {
     WAYLAND_DISPLAY = "wayland-0";
   };
 
-  # ===== NVIDIA PERFORMANCE OPTIMIZATIONS =====
-  # NVIDIA Performance module - works alongside AI services
-  custom.nvidiaPerformance = {
-    enable = true;                         # Enable NVIDIA gaming optimizations
-    gaming = {
-      enable = true;                       # Enable gaming-specific optimizations
-      dlss = true;                         # Enable DLSS support
-      rayTracing = true;                   # Enable ray tracing
-      performanceMode = "performance";     # Maximum performance mode
-    };
-    monitoring = {
-      enable = false;                      # Disable built-in monitor (conflicts with nvtop)
-    };
-  };
+  # NVIDIA Performance Optimizations - DISABLED (module commented out)
+  # custom.nvidiaPerformance configuration removed to prevent option errors
 
   # ===== NEWLY ENABLED MODULE CONFIGURATIONS =====
   
-  # Wine Support for Windows Applications - ENABLED for gaming performance
-  custom.wine = {
-    enable = true;                         # Enable Wine for gaming
-    packages = {
-      wine64 = true;                       # 64-bit Wine
-      winetricks = true;                   # Wine configuration tool
-      lutris = true;                       # Game launcher
-      dxvk = true;                         # DirectX 11/10 → Vulkan
-      vkd3d = true;                        # DirectX 12 → Vulkan
-      mono = true;                         # .NET support
-      gecko = true;                        # Web browser support
-    };
-    performance = {
-      enable = true;                       # Performance optimizations
-      esync = true;                        # Event synchronization
-      fsync = true;                        # File synchronization (kernel 5.16+)
-      gamemode = true;                     # Feral GameMode
-      mangohud = true;                     # Performance overlay
-    };
-    compatibility = {
-      enable = true;                       # Compatibility features
-      dpiScaling = true;                   # DPI scaling
-      audio = true;                        # Enhanced audio
-      networking = true;                   # Network support
-    };
-  };
+  # NVIDIA Performance Optimizations - DISABLED (module commented out)
+  # custom.nvidiaPerformance configuration removed to prevent option errors
+  
+  # Wine Support for Windows Applications - DISABLED (module commented out)
+  # custom.wine configuration removed to prevent option errors
   
   # Windows Compatibility Layer - DISABLED (module commented out)
   # custom.windowsCompatibility configuration removed to prevent option errors
@@ -638,7 +582,6 @@
   
   # Optional Package Collections
   custom.packages = {
-    minimal.enable = true;                 # Enable minimal packages (includes zoxide)
     essential.enable = true;               # Enable essential packages
     media.enable = true;                   # Enable media and graphics packages
     development.enable = true;             # Enable development packages
@@ -770,9 +713,6 @@
     ];
   };
 
-  # Enable ADB support for Android development
-  programs.adb.enable = true;
-
   # System-wide environment variables
   environment = {
     systemPackages = with pkgs; [
@@ -801,78 +741,6 @@
       gcc
       cmake
       ninja
-      
-      # Flutter Development Environment
-      flutter
-      dart
-      pkg-config
-      clang
-      llvm
-      
-      # GTK development libraries for Linux Flutter apps
-      gtk3
-      gtk3.dev
-      gtk4
-      gtk4.dev
-      glib
-      glib.dev
-      cairo
-      cairo.dev
-      pango
-      pango.dev
-      gdk-pixbuf
-      gdk-pixbuf.dev
-      atk
-      atk.dev
-      
-      # X11 development libraries
-      xorg.libX11
-      xorg.libX11.dev
-      xorg.libXext
-      xorg.libXext.dev
-      xorg.libXrender
-      xorg.libXrender.dev
-      xorg.libXrandr
-      xorg.libXrandr.dev
-      xorg.libXi
-      xorg.libXi.dev
-      xorg.libXfixes
-      xorg.libXfixes.dev
-      xorg.libXcursor
-      xorg.libXcursor.dev
-      xorg.libXdamage
-      xorg.libXdamage.dev
-      xorg.libXcomposite
-      xorg.libXcomposite.dev
-      xorg.xorgproto
-      xorg.libXtst
-      xorg.libXinerama
-      xorg.libXxf86vm
-      xorg.libXScrnSaver
-      
-      # Mesa and OpenGL for graphics
-      mesa
-      libGL
-      libGLU
-      
-      # Font libraries
-      fontconfig
-      freetype
-      harfbuzz
-      
-      # Audio libraries (for multimedia Flutter apps)
-      alsa-lib
-      pulseaudio
-      pipewire
-      
-      # Additional development tools
-      unzip
-      zip
-      which
-      file
-      
-      # Android development tools
-      android-tools
 
       # System tools
       pciutils
@@ -934,33 +802,6 @@
       COLORTERM = "truecolor";
       LC_ALL = "en_US.UTF-8";
       LANG = "en_US.UTF-8";
-      
-      # Flutter and Dart configuration
-      FLUTTER_ROOT = "${pkgs.flutter}";
-      DART_ROOT = "${pkgs.dart}";
-      CHROME_EXECUTABLE = "${pkgs.chromium}/bin/chromium";
-      
-      # PKG_CONFIG_PATH for development headers
-      PKG_CONFIG_PATH = lib.makeSearchPath "lib/pkgconfig" [
-        pkgs.gtk3.dev
-        pkgs.gtk4.dev
-        pkgs.glib.dev
-        pkgs.cairo.dev
-        pkgs.pango.dev
-        pkgs.gdk-pixbuf.dev
-        pkgs.atk.dev
-        pkgs.xorg.libX11.dev
-        pkgs.xorg.libXext.dev
-        pkgs.xorg.libXrender.dev
-        pkgs.xorg.libXrandr.dev
-        pkgs.xorg.libXi.dev
-        pkgs.xorg.libXfixes.dev
-        pkgs.xorg.libXcursor.dev
-        pkgs.xorg.libXdamage.dev
-        pkgs.xorg.libXcomposite.dev
-        pkgs.fontconfig.dev
-        pkgs.freetype.dev
-      ];
     };
   };
 
