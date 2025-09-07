@@ -66,7 +66,7 @@
     ./modules/system-services.nix
     ./modules/optional-packages.nix              # ENABLED - Optional package collections
     # ./modules/pentest.nix                       # DISABLED - Penetration testing tools (conflicts)
-    # ./modules/wine-support.nix                  # DISABLED - Wine compatibility layer (conflicts)
+    ./modules/wine-support.nix                   # ENABLED - Wine compatibility layer for gaming
     ./modules/package-recommendations.nix        # ENABLED - Package recommendations
     # ./modules/windows-compatibility.nix         # DISABLED - Windows app compatibility (conflicts)
     ./modules/lenovo-s540-gtx-15iwl.nix         # ENABLED - Lenovo hardware optimizations
@@ -524,8 +524,32 @@
   # NVIDIA Performance Optimizations - DISABLED (module commented out)
   # custom.nvidiaPerformance configuration removed to prevent option errors
   
-  # Wine Support for Windows Applications - DISABLED (module commented out)
-  # custom.wine configuration removed to prevent option errors
+  # Wine Support for Windows Applications - ENABLED with minimal configuration
+  custom.wine = {
+    enable = true;                        # Enable Wine support
+    packages = {
+      wine64 = true;                      # Enable Wine 64-bit
+      winetricks = true;                  # Enable Winetricks
+      lutris = true;                      # Enable Lutris
+      dxvk = true;                        # Enable DXVK for DirectX
+      vkd3d = true;                       # Enable VKD3D for DirectX 12
+      mono = true;                        # Enable .NET support
+      gecko = true;                       # Enable web browser support
+    };
+    performance = {
+      enable = true;                      # Enable performance optimizations
+      esync = true;                       # Enable Esync
+      fsync = true;                       # Enable Fsync
+      gamemode = true;                    # Enable GameMode
+      mangohud = true;                    # Enable MangoHud
+    };
+    compatibility = {
+      enable = true;                      # Enable compatibility features
+      dpiScaling = true;                  # Enable DPI scaling
+      audio = true;                       # Enable enhanced audio
+      networking = true;                  # Enable networking support
+    };
+  };
   
   # Windows Compatibility Layer - DISABLED (module commented out)
   # custom.windowsCompatibility configuration removed to prevent option errors
