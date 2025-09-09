@@ -287,17 +287,17 @@
 
   # ===== APPLICATION MODULES =====
 
-  # AI Services with NVIDIA GPU and CUDA acceleration - Testing without heavy packages
+  # AI Services with CUDA acceleration - NVIDIA drivers handled by nvidia-performance module
   custom.ai-services = {
-    enable = true;                        # Enable for NVIDIA drivers only
+    enable = true;                        # Enable AI services
     ollama = {
       enable = true;                      # ENABLED - Testing PyTorch build
-      acceleration = "cuda";               # Enable CUDA acceleration (for when enabled)
+      acceleration = "cuda";               # Enable CUDA acceleration
     };
     nvidia = {
-      enable = true;                      # Enable NVIDIA drivers
+      enable = false;                     # DISABLED - Let nvidia-performance module handle NVIDIA drivers
       package = "stable";
-      powerManagement = true;             # Enable power management to prevent conflicts
+      powerManagement = true;
     };
     packages.enable = true;               # ENABLED - Testing PyTorch build with binary caches
   };
@@ -534,9 +534,7 @@
   };
 
   # ===== NEWLY ENABLED MODULE CONFIGURATIONS =====
-  
-  # NVIDIA Performance Optimizations - DISABLED (module commented out)
-  # custom.nvidiaPerformance configuration removed to prevent option errors
+  # (NVIDIA Performance configuration moved above to avoid duplicates)
   
   # Wine Support for Windows Applications - ENABLED with minimal configuration
   custom.wine = {
