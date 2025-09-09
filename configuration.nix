@@ -519,7 +519,7 @@
     WAYLAND_DISPLAY = "wayland-0";
   };
 
-  # NVIDIA Performance Optimizations - ENABLED with minimal configuration
+  # NVIDIA Performance Optimizations - ENABLED with enhanced configuration
   custom.nvidiaPerformance = {
     enable = true;                               # Enable NVIDIA performance optimizations
     gaming = {
@@ -529,7 +529,13 @@
       performanceMode = "performance";           # Use performance mode
     };
     monitoring = {
-      enable = false;                            # Disable monitoring to avoid systemd conflicts
+      enable = false;                            # Disable monitoring packages (safer for boot)
+      autoStart = false;                         # Disable auto-start of monitoring services
+      tools = {
+        nvitop = true;                           # Enable nvitop GPU monitoring tool when monitoring is enabled
+        nvtop = true;                            # Enable nvtop GPU monitoring tool when monitoring is enabled 
+        gpustat = true;                          # Enable gpustat GPU monitoring tool when monitoring is enabled
+      };
     };
   };
 
