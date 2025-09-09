@@ -185,7 +185,7 @@
   custom.hardware = {
     enable = true;
     bluetooth.enable = true;     # Enable Bluetooth support
-    #audio.enable = true;         # Enable audio like live USB
+    audio.enable = false;        # Disable - audio handled by system services
     input.enable = true;         # Enable input devices (keyboard/mouse)
     graphics.enable = true;      # Enable graphics for basic GUI
   };
@@ -335,8 +335,11 @@
     packages = [ pkgs.gnome-session ];
   };
 
-  # Ensure IBus is available (fixes 'ibus-daemon not found')
-  i18n.inputMethod.enabled = "ibus";
+  # Ensure IBus is available (fixes 'ibus-daemon not found') - using new syntax
+  i18n.inputMethod = {
+    enable = true;
+    type = "ibus";
+  };
   
   # Disable problematic recovery service to avoid conflicts
   # systemd.user.services.gnome-session-failed-services-recovery disabled
