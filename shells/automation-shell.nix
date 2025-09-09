@@ -16,7 +16,7 @@ pkgs.mkShell {
     python3
     python3Packages.pip
     python3Packages.virtualenv
-    python3Packages.pipenv
+    # python3Packages.pipenv  # Not available in current nixpkgs
     poetry
     
     # Essential Python packages for automation
@@ -54,7 +54,7 @@ pkgs.mkShell {
     
     # Node.js ecosystem for automation
     nodejs
-    npm
+    # npm  # npm comes with nodejs package
     yarn
     pnpm
     nodePackages.pm2                  # Process manager
@@ -188,7 +188,7 @@ pkgs.mkShell {
     # Archive handling
     unzip
     zip
-    tar
+    gnutar  # tar command
     gzip
     xz
     
@@ -201,7 +201,7 @@ pkgs.mkShell {
     nano
     
     # Development utilities
-    make                              # Build automation
+    gnumake                           # Build automation (make command)
     cmake                             # Cross-platform build system
     ninja                             # Small build system
     
@@ -212,7 +212,7 @@ pkgs.mkShell {
     # ===== MESSAGING & COMMUNICATION =====
     
     # Message brokers (clients)
-    mosquitto-clients                 # MQTT clients
+    mosquitto                         # MQTT clients
     
     # Email tools
     msmtp                             # SMTP client

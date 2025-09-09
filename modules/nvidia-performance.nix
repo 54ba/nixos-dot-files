@@ -125,7 +125,8 @@ in {
     # GPU Monitoring tools (conditional)
     ++ lib.optionals cfg.monitoring.enable (lib.flatten [
       (lib.optional cfg.monitoring.tools.nvitop nvitop)
-      (lib.optional cfg.monitoring.tools.nvtop nvtop)
+      # nvtop package may not be available in current nixpkgs
+      # (lib.optional cfg.monitoring.tools.nvtop nvtop)
       (lib.optional cfg.monitoring.tools.gpustat python3Packages.gpustat)
     ])
     # Wine packages moved to wine-support.nix module to avoid conflicts

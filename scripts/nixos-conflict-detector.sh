@@ -272,6 +272,12 @@ check_systemd_conflicts() {
     if ! $conflicts_found; then
         echo -e "${GREEN}✓ No obvious systemd service conflicts detected${NC}"
     fi
+    
+    # Return proper exit code
+    if $conflicts_found; then
+        return 1
+    fi
+    return 0
 }
 
 check_gnome_gtk_conflicts() {

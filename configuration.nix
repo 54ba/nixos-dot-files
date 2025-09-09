@@ -529,8 +529,8 @@
       performanceMode = "performance";           # Use performance mode
     };
     monitoring = {
-      enable = false;                            # Disable monitoring packages (safer for boot)
-      autoStart = false;                         # Disable auto-start of monitoring services
+      enable = false;                            # Monitoring packages work, but disabled by default for safety
+      autoStart = false;                         # Auto-start disabled for safety
       tools = {
         nvitop = true;                           # Enable nvitop GPU monitoring tool when monitoring is enabled
         nvtop = true;                            # Enable nvtop GPU monitoring tool when monitoring is enabled 
