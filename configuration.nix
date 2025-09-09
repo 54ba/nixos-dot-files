@@ -367,9 +367,9 @@
     "acpi_osi=Linux"                              # Use Linux ACPI (working setting)
     "acpi_backlight=vendor"                       # Vendor backlight control
     
-    # NVIDIA GRAPHICS CONFIGURATION (for CUDA acceleration) 
-    "nvidia_drm.modeset=1"                        # Enable NVIDIA DRM modesetting (correct format)
-    "nouveau.modeset=0"                           # Disable nouveau to use NVIDIA
+    # NVIDIA GRAPHICS CONFIGURATION - DISABLED temporarily to fix login loop
+    # "nvidia_drm.modeset=1"                        # Enable NVIDIA DRM modesetting (disabled)
+    # "nouveau.modeset=0"                           # Disable nouveau to use NVIDIA (disabled)
     
     # Security framework
     "lsm=landlock,yama,bpf,apparmor"
@@ -519,9 +519,9 @@
     WAYLAND_DISPLAY = "wayland-0";
   };
 
-  # NVIDIA Performance Optimizations - ENABLED with enhanced configuration
+  # NVIDIA Performance Optimizations - DISABLED temporarily to fix login/logout loop
   custom.nvidiaPerformance = {
-    enable = true;                               # Enable NVIDIA performance optimizations
+    enable = false;                              # Disable NVIDIA performance optimizations temporarily
     gaming = {
       enable = true;                             # Enable gaming optimizations
       dlss = true;                               # Enable DLSS support
