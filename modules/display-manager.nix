@@ -98,6 +98,8 @@ with lib;
           evolution-data-server.enable = true;
           glib-networking.enable = true;
           gnome-settings-daemon.enable = true;
+          # Enable Remote Desktop for screen sharing
+          gnome-remote-desktop.enable = true;
         };
         # Ensure AccountsService is running for GDM
         accounts-daemon.enable = true;
@@ -171,6 +173,14 @@ with lib;
           workspaces-only-on-primary=false
           experimental-features=['scale-monitor-framebuffer']
           
+          [org.gnome.desktop.remote-desktop.rdp]
+          screen-share-mode='extend'
+          
+          [org.gnome.desktop.privacy]
+          disable-camera=false
+          disable-microphone=false
+          report-technical-problems=false
+          
           [org.gnome.desktop.wm.keybindings]
           show-desktop=['<Super>d']
           
@@ -202,6 +212,8 @@ with lib;
         gobject-introspection  # REQUIRED - GObject introspection
         gnome-desktop
         gsettings-desktop-schemas
+        # SCREEN SHARING SUPPORT
+        gnome-remote-desktop  # REQUIRED - GNOME screen sharing and remote desktop
       ];
 
       # Enable GNOME keyring PAM integration
@@ -219,6 +231,18 @@ with lib;
           Restart = "on-failure";
           RestartSec = 1;
           TimeoutStopSec = 10;
+        };
+      };
+      
+      # Auto-start GNOME Remote Desktop for screen sharing
+      systemd.user.services.gnome-remote-desktop-autostart = {
+        description = "Auto-enable GNOME Remote Desktop for screen sharing";
+        wantedBy = [ "graphical-session.target" ];
+        after = [ "gnome-session.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "/bin/sh -c 'sleep 5 && systemctl --user start gnome-remote-desktop.service || true'";
+          RemainAfterExit = true;
         };
       };
       security.pam.services = {

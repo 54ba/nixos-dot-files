@@ -121,6 +121,76 @@ with lib;
 
 
 
+    # Nix configuration for user access and binary caches
+    nix = {
+      # Package and build settings
+      package = pkgs.nixVersions.stable;
+      
+      settings = {
+        # Experimental features
+        experimental-features = [ "nix-command" "flakes" ];
+        
+        # Binary cache and substitution settings
+        substituters = [
+          "https://cache.nixos.org/"
+          "https://nix-community.cachix.org/"
+          "https://devenv.cachix.org/"
+          "https://nixpkgs-unfree.cachix.org/"
+          "https://cuda-maintainers.cachix.org/"
+          "https://hyprland.cachix.org/"
+        ];
+        trusted-public-keys = [
+          "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+          "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+          "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
+          "nixpkgs-unfree.cachix.org-1:hqvoInulhbV4nJ9yJOEr+4wxhDV4xq2d1DK7S6Nj6rs="
+          "cuda-maintainers.cachix.org-1:0dq3bujKpuEPiCgBV8vQQGjqozR5lnLBcBJKqKzR6bE="
+          "hyprland.cachix.org-1:a7pgxzMz7+chwVL3rkCI6Vd0HQRSIo3VbK+LSnRVQCQ="
+        ];
+        
+        # User access control
+        trusted-users = [ "root" "@wheel" "mahmoud" ];
+        allowed-users = [ "@wheel" "mahmoud" ];
+        
+        # Build optimization
+        builders-use-substitutes = true;   # Use substituters for building
+        substitute = true;                 # Enable substitution from binary caches
+        require-sigs = true;
+        fallback = true;                   # Allow source builds when caches fail
+        connect-timeout = 30;
+        stalled-download-timeout = 300;
+        max-jobs = 2;  # Allow local builds when substitutes fail
+        cores = 2;
+        keep-outputs = false;
+        keep-derivations = false;
+        auto-optimise-store = true;
+        allow-import-from-derivation = true;
+        sandbox = true;   # Re-enable sandboxing for security
+        max-substitution-jobs = 16;
+        warn-dirty = false;
+      };
+
+      # Additional Nix configuration
+      extraOptions = ''
+        experimental-features = nix-command flakes
+        keep-outputs = false
+        keep-derivations = false
+        builders-use-substitutes = true
+        substitute = true
+        stalled-download-timeout = 300
+        connect-timeout = 30
+        max-substitution-jobs = 16
+        warn-dirty = false
+      '';
+
+      # Garbage collection
+      gc = {
+        automatic = true;
+        dates = "weekly";
+        options = "--delete-older-than 7d";
+      };
+    };
+    
     # System state version
     system.stateVersion = "25.05";
   };

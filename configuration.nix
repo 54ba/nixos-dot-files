@@ -12,6 +12,10 @@
     ./modules/hardware.nix
     ./modules/networking.nix
     
+    # Enhanced application support
+    ./modules/screen-sharing.nix
+    ./modules/enhanced-packages.nix
+    
     # Security framework (simplified)
     ./modules/security.nix
     ./modules/users.nix
@@ -87,17 +91,6 @@
   };
 
  networking.nameservers = ["8.8.8.8" "8.8.4.4"];
-
-# Disable networking.wireless in favor of NetworkManager
- # networking.wireless = {
- #  enable = true;
- #  networks = {
- #    "Yogurt" = {
- #       hidden = true;
- #       psk = "Kitty1520";
- #      };
- #    };
- #  };
 
   # Binary cache and build optimization settings
   nix.settings = {
@@ -225,6 +218,8 @@
 
   # Enable additional modules
   custom.wayland.enable = true;                     # Enable Wayland optimizations
+  custom.screen-sharing.enable = true;              # Enable enhanced screen sharing support
+  custom.enhanced-packages.enable = true;           # Enable enhanced application packages
   
   # Enable system optimization
   custom.system-optimization.enable = true;         # Enable system performance optimizations
@@ -240,6 +235,143 @@
     gamemode.enable = true;                          # Enable GameMode
     android.enable = false;                          # Disable Android tools for now
     fuse.enable = true;                              # Enable FUSE support
+  };
+  
+  # Enable PipeWire for screen sharing and audio
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    jack.enable = true;
+    
+    # Enable WirePlumber session manager
+    wireplumber.enable = true;
+    
+    # PipeWire configuration for screen sharing
+    extraConfig.pipewire = {
+      "context.properties" = {
+        "link.max-buffers" = 16;
+        "log.level" = 2;
+        "default.clock.rate" = 48000;
+        "default.clock.quantum" = 1024;
+        "default.clock.min-quantum" = 32;
+        "default.clock.max-quantum" = 8192;
+        "core.daemon" = true;
+        "core.name" = "pipewire-0";
+      };
+      "context.modules" = [
+        {
+          name = "libpipewire-module-rtkit";
+          args = {
+            "nice.level" = -15;
+            "rt.prio" = 88;
+            "rt.time.soft" = 200000;
+            "rt.time.hard" = 200000;
+          };
+          flags = [ "ifexists" "nofail" ];
+        }
+        { name = "libpipewire-module-protocol-native"; }
+        { name = "libpipewire-module-profiler"; }
+        { name = "libpipewire-module-metadata"; }
+        { name = "libpipewire-module-spa-device-factory"; }
+        { name = "libpipewire-module-spa-node-factory"; }
+        { name = "libpipewire-module-client-node"; }
+        { name = "libpipewire-module-client-device"; }
+        {
+          name = "libpipewire-module-portal";
+          flags = [ "ifexists" "nofail" ];
+        }
+        {
+          name = "libpipewire-module-access";
+          args = {};
+        }
+        { name = "libpipewire-module-adapter"; }
+        { name = "libpipewire-module-link-factory"; }
+        { name = "libpipewire-module-session-manager"; }
+      ];
+    };
+  };
+  
+  # Disable PulseAudio since we're using PipeWire
+  services.pulseaudio.enable = false;
+  
+  # Enable real-time scheduling for audio
+  security.rtkit.enable = true;
+  
+  # Enhanced touchpad support with gestures - Override module settings
+  services.libinput = {
+    enable = lib.mkForce true;
+    touchpad = {
+      # Basic touchpad settings
+      tapping = lib.mkForce true;                    # Enable tap-to-click
+      tappingDragLock = lib.mkForce true;           # Enable drag lock after tapping
+      naturalScrolling = lib.mkForce true;           # Natural (reverse) scrolling like macOS
+      scrollMethod = lib.mkForce "twofinger";        # Two-finger scrolling
+      disableWhileTyping = lib.mkForce true;        # Disable touchpad while typing
+      
+      # Advanced gesture settings
+      clickMethod = lib.mkForce "clickfinger";       # Click method for multi-touch
+      accelProfile = lib.mkForce "adaptive";         # Adaptive acceleration profile
+      accelSpeed = lib.mkForce "0.3";               # Moderate acceleration speed (override module)
+      
+      # Gesture recognition settings
+      horizontalScrolling = lib.mkForce true;       # Enable horizontal scrolling
+      middleEmulation = lib.mkForce true;           # Enable middle mouse button emulation
+      
+      # Additional libinput options for gestures
+      additionalOptions = lib.mkForce ''
+        # Enhanced gesture support
+        Option "Tapping" "on"
+        Option "TappingDrag" "on"
+        Option "TappingDragLock" "on"
+        Option "NaturalScrolling" "true"
+        Option "ScrollMethod" "twofinger"
+        Option "HorizontalScrolling" "true"
+        Option "ClickMethod" "clickfinger"
+        
+        # Multi-touch gesture support
+        Option "PalmDetection" "on"
+        Option "PalmMinWidth" "8"
+        Option "PalmMinZ" "100"
+        
+        # Gesture thresholds
+        Option "SwipeThreshold" "0.25"
+        Option "PinchThreshold" "0.25"
+        
+        # Disable edge scrolling in favor of two-finger
+        Option "EdgeScrolling" "off"
+        Option "VertEdgeScroll" "off"
+        Option "HorizEdgeScroll" "off"
+      '';
+    };
+  };
+  
+  # Enable GNOME Remote Desktop for screen sharing
+  services.gnome.gnome-remote-desktop.enable = true;
+  
+  # XDG Desktop Portal configuration for screen sharing
+  xdg.portal = {
+    enable = lib.mkForce true;
+    wlr.enable = lib.mkForce false;  # Disable wlr portal as we're using GNOME
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gnome
+      xdg-desktop-portal-gtk
+    ];
+    config = lib.mkForce {
+      common = {
+        default = [ "gnome" "gtk" ];
+        "org.freedesktop.impl.portal.Screencast" = [ "gnome" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+        "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+      };
+      gnome = {
+        default = [ "gnome" "gtk" ];
+        "org.freedesktop.impl.portal.Screencast" = [ "gnome" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+        "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+      };
+    };
   };
   
   # Enable enhanced security services
@@ -317,8 +449,7 @@
   services.resolved.enable = true;            # Enable modern DNS resolver
   services.resolved.dnssec = "false";         # Avoid DNSSEC issues on some networks
   
-  # Ensure NetworkManager uses systemd-resolved
-  networking.networkmanager.dns = "systemd-resolved";
+  # NetworkManager configuration is now handled by modules/networking.nix
   
   # Enable SSD TRIM support for better performance and longevity
   services.fstrim.enable = true;
@@ -470,7 +601,7 @@
     features = {
       starship = true; direnv = true; fzf = true; bat = true;
       exa = true; fd = true; ripgrep = true; jq = true;
-      htop = true; tmux = true;
+      htop = true; tmux = true; zoxide = true;
     };
     aliases = {
       enable = true;
@@ -783,6 +914,142 @@
       gcc
       cmake
       ninja
+      
+      # Firefox with enhanced Wayland screen sharing support
+      (pkgs.firefox.override {
+        # Enable WebRTC and PipeWire screen sharing
+        cfg.enablePipeWire = true;
+      })
+      
+      # Firefox wrapper with WebRTC PipeWire support
+      (pkgs.writeShellScriptBin "firefox-screenshare" ''
+        # Firefox with enhanced screen sharing support
+        export MOZ_ENABLE_WAYLAND=1
+        export MOZ_USE_XINPUT2=1
+        export MOZ_WEBRENDER=1
+        export MOZ_ACCELERATED=1
+        
+        # WebRTC PipeWire environment
+        export PIPEWIRE_RUNTIME_DIR="/run/user/$(id -u)"
+        
+        # Set Firefox preferences for screen sharing
+        FIREFOX_PREFS_DIR="$HOME/.mozilla/firefox"
+        if [ -d "$FIREFOX_PREFS_DIR" ]; then
+            # Find default profile
+            PROFILE=$(find "$FIREFOX_PREFS_DIR" -name "*.default*" -type d | head -n1)
+            if [ -n "$PROFILE" ] && [ -d "$PROFILE" ]; then
+                # Create or update user.js with screen sharing preferences
+                cat >> "$PROFILE/user.js" << 'EOF'
+// Enable WebRTC screen sharing with PipeWire on Wayland
+user_pref("media.webrtc.pipewire", true);
+user_pref("media.webrtc.capture.allow-capturer", true);
+user_pref("media.navigator.mediadatadecoder_vpx_enabled", true);
+user_pref("media.ffmpeg.vaapi.enabled", true);
+user_pref("widget.dmabuf.force-enabled", true);
+user_pref("media.webrtc.hw.h264.enabled", true);
+user_pref("media.webrtc.hw.vp8.enabled", true);
+user_pref("media.webrtc.hw.vp9.enabled", true);
+EOF
+            fi
+        fi
+        
+        exec ${pkgs.firefox}/bin/firefox "$@"
+      '')
+      
+      # Chrome with comprehensive screen sharing support
+      (pkgs.google-chrome.override {
+        commandLineArgs = [
+          # Wayland and screen sharing
+          "--ozone-platform-hint=auto"
+          "--enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder,VaapiIgnoreDriverChecks,WebRTCPipeWireCapturer,WebRTCScreenCaptureV2"
+          "--disable-features=UseChromeOSDirectVideoDecoder"
+          "--enable-wayland-ime"
+          "--disable-gpu-sandbox"
+          
+          # Additional WebRTC and screen sharing optimizations
+          "--enable-webrtc-pipewire-capturer"
+          "--rtc-use-pipewire"
+          "--enable-gpu-rasterization"
+          "--enable-zero-copy"
+          "--ignore-gpu-blocklist"
+          
+          # Force PipeWire for screen capture
+          "--webrtc-max-cpu-consumption-percentage=100"
+          "--force-dark-mode"
+        ];
+      })
+      
+      # Chromium with enhanced screen sharing support  
+      (pkgs.chromium.override {
+        commandLineArgs = [
+          # Wayland and screen sharing  
+          "--ozone-platform-hint=auto"
+          "--enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder,WebRTCPipeWireCapturer,WebRTCScreenCaptureV2"
+          "--enable-wayland-ime"
+          "--disable-gpu-sandbox"
+          
+          # WebRTC PipeWire support
+          "--enable-webrtc-pipewire-capturer"
+          "--rtc-use-pipewire"
+          "--enable-gpu-rasterization"
+          "--enable-zero-copy"
+        ];
+      })
+      
+      # Zoom with screen sharing support (if using system package)
+      (pkgs.writeShellScriptBin "zoom-screenshare" ''
+        # Set up screen sharing environment for Zoom
+        export XDG_SESSION_TYPE="wayland"
+        export XDG_CURRENT_DESKTOP="gnome"
+        export WAYLAND_DISPLAY="wayland-0"
+        export QT_QPA_PLATFORM="wayland;xcb"
+        export GDK_BACKEND="wayland,x11"
+        
+        # WebRTC and PipeWire support
+        export PIPEWIRE_RUNTIME_DIR="/run/user/$(id -u)"
+        export PIPEWIRE_MEDIA_SESSION_CONFIG_DIR="/etc/pipewire/media-session.d"
+        
+        exec ${pkgs.zoom-us}/bin/zoom "$@"
+      '')
+      
+      # Discord with enhanced Wayland support
+      (pkgs.writeShellScriptBin "discord-wayland" ''
+        # Discord with Wayland screen sharing support
+        export XDG_SESSION_TYPE="wayland"
+        export XDG_CURRENT_DESKTOP="gnome"
+        export WAYLAND_DISPLAY="wayland-0"
+        
+        # Enable Ozone/Wayland for Electron
+        export ELECTRON_OZONE_PLATFORM_HINT="auto"
+        export NIXOS_OZONE_WL="1"
+        
+        # WebRTC flags for screen sharing
+        FLAGS="--enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer,VaapiVideoDecoder"
+        FLAGS="$FLAGS --ozone-platform=wayland --enable-wayland-ime"
+        FLAGS="$FLAGS --enable-webrtc-pipewire-capturer --rtc-use-pipewire"
+        
+        exec ${pkgs.discord}/bin/discord $FLAGS "$@"
+      '')
+      
+      # Slack with Wayland screen sharing
+      (pkgs.writeShellScriptBin "slack-wayland" ''
+        # Slack with enhanced Wayland screen sharing
+        export XDG_SESSION_TYPE="wayland"
+        export XDG_CURRENT_DESKTOP="gnome"
+        export WAYLAND_DISPLAY="wayland-0"
+        
+        # Electron Wayland support
+        export ELECTRON_OZONE_PLATFORM_HINT="auto"
+        export NIXOS_OZONE_WL="1"
+        
+        # WebRTC screen sharing flags
+        FLAGS="--enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer"
+        FLAGS="$FLAGS --ozone-platform=wayland --enable-wayland-ime"
+        FLAGS="$FLAGS --enable-webrtc-pipewire-capturer --rtc-use-pipewire"
+        FLAGS="$FLAGS --disable-gpu-sandbox"
+        
+        exec ${pkgs.slack}/bin/slack $FLAGS "$@"
+      '')
 
       # System tools
       pciutils
@@ -791,6 +1058,87 @@
       hwloc
       iotop
       smartmontools
+      
+      # XDG Desktop utilities and integration tools
+      xdg-utils                # XDG desktop integration utilities (xdg-open, xdg-mime, etc.)
+      xdg-user-dirs           # XDG user directory management
+      xdg-user-dirs-gtk       # GTK frontend for XDG user dirs
+      desktop-file-utils      # Desktop entry validation and processing
+      shared-mime-info        # MIME type database
+      hicolor-icon-theme      # Base icon theme
+      
+      # Enhanced XDG and desktop integration - CRITICAL FOR SCREEN SHARING
+      xdg-desktop-portal      # Desktop portal framework for sandboxed apps
+      xdg-desktop-portal-gnome # GNOME implementation of desktop portals
+      xdg-desktop-portal-gtk  # GTK implementation of desktop portals
+      xdg-desktop-portal-wlr  # wlroots implementation for additional support
+      xdg-ninja              # Check for XDG Base Directory compliance
+      handlr                  # Better xdg-utils alternative for file associations
+      mimeo                   # File association and MIME type manager
+      
+      # CRITICAL SCREEN SHARING PACKAGES
+      gst_all_1.gstreamer   # GStreamer 1.x multimedia framework
+      gst_all_1.gst-plugins-base    # Base GStreamer plugins
+      gst_all_1.gst-plugins-good    # Good quality GStreamer plugins
+      gst_all_1.gst-plugins-bad     # Additional GStreamer plugins
+      gst_all_1.gst-plugins-ugly    # Additional GStreamer plugins
+      pipewire              # Audio/video server (includes GStreamer plugin)
+      wireplumber           # PipeWire session manager
+      
+      # TOUCHPAD GESTURE SUPPORT PACKAGES
+      libinput              # Modern input handling library
+      libinput-gestures     # Gesture recognition for touchpad
+      touchegg              # Multi-touch gesture recognizer
+      fusuma               # Multi-touch gesture recognizer for Linux
+      evtest               # Input event testing tool
+      xdotool              # X11 automation tool for gesture actions
+      ydotool              # Wayland automation tool for gesture actions
+      
+      # File association and MIME tools
+      file                    # File type detection utility (includes libmagic)
+      perlPackages.FileMimeInfo # Perl MIME info utilities
+      
+      # Desktop environment integration
+      glib                    # GLib library with desktop integration tools
+      gsettings-desktop-schemas # Desktop schemas for GSettings
+      dbus                    # D-Bus system for desktop communication
+      at-spi2-core           # Accessibility toolkit
+      
+      # Icon and theme management
+      adwaita-icon-theme      # GNOME Adwaita icon theme
+      gnome-icon-theme       # Classic GNOME icon theme
+      papirus-icon-theme     # Papirus icon theme
+      numix-icon-theme       # Numix icon theme
+      
+      # Font management and XDG fonts
+      fontconfig              # Font configuration and management (includes fc-list)
+      
+      # Application launchers and desktop tools
+      rofi                    # Application launcher and window switcher
+      ulauncher              # Application launcher for Linux
+      
+      # Clipboard and desktop utilities
+      xclip                   # Command line clipboard interface
+      xsel                    # Command line clipboard selection tool
+      
+      # Notification system (XDG notifications)
+      libnotify               # Desktop notification library
+      dunst                   # Lightweight notification daemon
+      
+      # Dialog and menu tools for GUI wrappers
+      dialog                  # Terminal dialog boxes
+      newt                    # Provides whiptail command for dialog menus
+      zenity                  # GTK dialog boxes
+      
+      # MAC Address Spoofing and Network Tools
+      macchanger              # Change MAC addresses of network interfaces
+      ethtool                 # Display and change ethernet device settings
+      iw                      # Wireless configuration utility
+      wirelesstools          # Wireless network configuration tools
+      aircrack-ng             # Wireless network security tools (includes aireplay-ng)
+      wireshark              # Network protocol analyzer
+      nmap                    # Network discovery and security auditing
+      nettools               # Network configuration tools (ifconfig, route, etc.)
       
       # Hostname compatibility for applications like AnyDesk
       hostname-debian
@@ -810,13 +1158,31 @@
         export G_MESSAGES_DEBUG=""
         export GTK_DEBUG=""
         
-        # Ensure X11 display is available
+        # Ensure X11 display is available for AnyDesk
         if [ -z "$DISPLAY" ]; then
           export DISPLAY=:0
         fi
         
+        # Enable screen sharing capabilities
+        export WAYLAND_DISPLAY=""
+        
         # Run AnyDesk with error suppression
         exec ${pkgs.anydesk}/bin/anydesk "$@" 2>/dev/null
+      '')
+      
+      # RustDesk wrapper with Wayland support
+      (pkgs.writeShellScriptBin "rustdesk-wayland" ''
+        # RustDesk with Wayland optimizations
+        export WAYLAND_DISPLAY="wayland-0"
+        export XDG_SESSION_TYPE="wayland"
+        export GDK_BACKEND="wayland,x11"
+        export QT_QPA_PLATFORM="wayland;xcb"
+        
+        # Enable screen sharing
+        export ELECTRON_OZONE_PLATFORM_HINT="auto"
+        export NIXOS_OZONE_WL="1"
+        
+        exec ${pkgs.rustdesk}/bin/rustdesk "$@"
       '')
       
       # Desktop entry for AnyDesk
@@ -829,8 +1195,205 @@
         categories = [ "Network" "RemoteAccess" ];
       })
       
+      # Desktop entry for RustDesk with Wayland support
+      (pkgs.makeDesktopItem {
+        name = "rustdesk-wayland";
+        desktopName = "RustDesk (Wayland)";
+        comment = "Remote desktop application with Wayland screen sharing";
+        exec = "rustdesk-wayland";
+        icon = "rustdesk";
+        categories = [ "Network" "RemoteAccess" ];
+      })
+      
       # Home Manager for manual user management
       home-manager
+      
+      # MAC Address Management Script
+      (pkgs.writeShellScriptBin "mac-manager" ''
+        exec ${pkgs.bash}/bin/bash /etc/nixos/scripts/mac-manager.sh "$@"
+      '')
+      
+      # XDG Utilities Management Script
+      (pkgs.writeShellScriptBin "xdg-manager" ''
+        exec ${pkgs.bash}/bin/bash /etc/nixos/scripts/xdg-manager.sh "$@"
+      '')
+      
+      # GUI MAC Address Manager with interactive menu
+      (pkgs.writeShellScriptBin "mac-manager-gui" ''
+        # Interactive MAC Address Manager GUI
+        DIALOG_HEIGHT=20
+        DIALOG_WIDTH=70
+        
+        # Check if dialog/whiptail is available
+        if command -v whiptail &>/dev/null; then
+            DIALOG=whiptail
+        elif command -v dialog &>/dev/null; then
+            DIALOG=dialog
+        else
+            # Fallback to zenity for GUI environments
+            if command -v zenity &>/dev/null; then
+                # Use zenity GUI version
+                exec zenity --question --text="MAC Address Manager\n\nChoose an action:" --ok-label="Open Terminal Manager" --cancel-label="Cancel"
+                if [ $? -eq 0 ]; then
+                    exec gnome-terminal -- sudo mac-manager
+                fi
+                exit 0
+            else
+                # Final fallback to gnome-terminal with menu
+                exec gnome-terminal --title="MAC Address Manager" -- bash -c '
+                    echo "MAC Address Manager"
+                    echo "=================="
+                    echo
+                    sudo /etc/nixos/scripts/mac-manager.sh list
+                    echo
+                    echo "Available Commands:"
+                    echo "  list                    - Show this interface list"
+                    echo "  randomize-wifi         - Randomize all WiFi MACs"
+                    echo "  restore wifi           - Restore WiFi MACs"
+                    echo "  restore all            - Restore all MACs"
+                    echo "  nm-configure           - Configure NetworkManager"
+                    echo "  help                   - Show detailed help"
+                    echo
+                    echo -n "Enter command (or press Enter to exit): "
+                    read cmd
+                    if [ -n "$cmd" ]; then
+                        sudo /etc/nixos/scripts/mac-manager.sh $cmd
+                        echo
+                        echo "Press Enter to continue..."
+                        read
+                    fi
+                '
+                exit 0
+            fi
+        fi
+        
+        while true; do
+            # Main menu
+            CHOICE=$($DIALOG --title "MAC Address Manager" --menu "Choose an action:" $DIALOG_HEIGHT $DIALOG_WIDTH 10 \
+                "1" "List all network interfaces" \
+                "2" "Randomize WiFi MAC addresses" \
+                "3" "Restore WiFi MAC addresses" \
+                "4" "Restore all MAC addresses" \
+                "5" "Configure NetworkManager" \
+                "6" "Show NetworkManager status" \
+                "7" "Generate random MAC address" \
+                "8" "Manual MAC change" \
+                "9" "Help" \
+                "0" "Exit" \
+                3>&1 1>&2 2>&3)
+            
+            if [ $? -ne 0 ]; then
+                break
+            fi
+            
+            case $CHOICE in
+                1)
+                    gnome-terminal --title="Interface List" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh list; echo; echo 'Press Enter to continue...'; read"
+                    ;;
+                2)
+                    if $DIALOG --title "Confirm" --yesno "Randomize MAC addresses for all WiFi interfaces?\n\nThis will temporarily change your network identity." 10 50; then
+                        gnome-terminal --title="Randomizing WiFi MACs" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh randomize-wifi; echo; echo 'Press Enter to continue...'; read"
+                    fi
+                    ;;
+                3)
+                    if $DIALOG --title "Confirm" --yesno "Restore original MAC addresses for WiFi interfaces?" 8 50; then
+                        gnome-terminal --title="Restoring WiFi MACs" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh restore wifi; echo; echo 'Press Enter to continue...'; read"
+                    fi
+                    ;;
+                4)
+                    if $DIALOG --title "Confirm" --yesno "Restore original MAC addresses for ALL interfaces?" 8 50; then
+                        gnome-terminal --title="Restoring All MACs" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh restore all; echo; echo 'Press Enter to continue...'; read"
+                    fi
+                    ;;
+                5)
+                    if $DIALOG --title "Confirm" --yesno "Configure NetworkManager for enhanced MAC randomization?\n\nThis will modify NetworkManager settings." 10 60; then
+                        gnome-terminal --title="Configuring NetworkManager" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh nm-configure; echo; echo 'Press Enter to continue...'; read"
+                    fi
+                    ;;
+                6)
+                    gnome-terminal --title="NetworkManager Status" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh nm-status; echo; echo 'Press Enter to continue...'; read"
+                    ;;
+                7)
+                    MAC=$(sudo /etc/nixos/scripts/mac-manager.sh generate | grep "Generated MAC:" | cut -d: -f2- | xargs)
+                    $DIALOG --title "Generated MAC Address" --msgbox "Generated MAC: $MAC\n\nThis address can be used for manual MAC changes." 8 50
+                    ;;
+                8)
+                    INTERFACE=$($DIALOG --title "Manual MAC Change" --inputbox "Enter interface name (e.g., wlan0):" 8 40 3>&1 1>&2 2>&3)
+                    if [ $? -eq 0 ] && [ -n "$INTERFACE" ]; then
+                        MAC_ADDR=$($DIALOG --title "Manual MAC Change" --inputbox "Enter new MAC address\n(format: XX:XX:XX:XX:XX:XX)\nor enter 'random' for random MAC:" 10 50 3>&1 1>&2 2>&3)
+                        if [ $? -eq 0 ] && [ -n "$MAC_ADDR" ]; then
+                            gnome-terminal --title="Changing MAC Address" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh change $INTERFACE $MAC_ADDR; echo; echo 'Press Enter to continue...'; read"
+                        fi
+                    fi
+                    ;;
+                9)
+                    gnome-terminal --title="MAC Manager Help" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh help; echo; echo 'Press Enter to continue...'; read"
+                    ;;
+                0)
+                    break
+                    ;;
+            esac
+        done
+      '')
+      
+      # Desktop entry for MAC Manager
+      (pkgs.makeDesktopItem {
+        name = "mac-manager";
+        desktopName = "MAC Address Manager";
+        comment = "Manage and randomize network interface MAC addresses";
+        exec = "mac-manager-gui";
+        icon = "network-wired";
+        categories = [ "Network" "System" ];
+        terminal = false;
+      })
+      
+      # Desktop entry for XDG Manager
+      (pkgs.makeDesktopItem {
+        name = "xdg-manager";
+        desktopName = "XDG Utilities Manager";
+        comment = "Manage XDG Base Directory Specification and file associations";
+        exec = "gnome-terminal -- xdg-manager tools";
+        icon = "folder";
+        categories = [ "System" "Utility" ];
+        terminal = true;
+      })
+      
+      # Enhanced Screen Sharing Application Launchers
+      (pkgs.makeDesktopItem {
+        name = "firefox-screenshare";
+        desktopName = "Firefox (Screen Share)";
+        comment = "Firefox with enhanced WebRTC PipeWire screen sharing support";
+        exec = "firefox-screenshare";
+        icon = "firefox";
+        categories = [ "Network" "WebBrowser" ];
+      })
+      
+      (pkgs.makeDesktopItem {
+        name = "discord-wayland";
+        desktopName = "Discord (Wayland)";
+        comment = "Discord with Wayland screen sharing support";
+        exec = "discord-wayland";
+        icon = "discord";
+        categories = [ "Network" "InstantMessaging" ];
+      })
+      
+      (pkgs.makeDesktopItem {
+        name = "slack-wayland";
+        desktopName = "Slack (Wayland)";
+        comment = "Slack with Wayland screen sharing support";
+        exec = "slack-wayland";
+        icon = "slack";
+        categories = [ "Network" "InstantMessaging" "Office" ];
+      })
+      
+      (pkgs.makeDesktopItem {
+        name = "zoom-screenshare";
+        desktopName = "Zoom (Screen Share)";
+        comment = "Zoom with enhanced screen sharing support";
+        exec = "zoom-screenshare";
+        icon = "zoom";
+        categories = [ "Network" "AudioVideo" "VideoConference" ];
+      })
     ];
 
     # Global environment variables
@@ -844,6 +1407,50 @@
       COLORTERM = "truecolor";
       LC_ALL = "en_US.UTF-8";
       LANG = "en_US.UTF-8";
+      
+      # Firefox Wayland screen sharing support
+      MOZ_ENABLE_WAYLAND = "1";
+      MOZ_USE_XINPUT2 = "1";
+      MOZ_WEBRENDER = "1";
+      MOZ_ACCELERATED = "1";
+      
+      # XDG Base Directory Specification
+      XDG_CONFIG_HOME = "$HOME/.config";
+      XDG_DATA_HOME = "$HOME/.local/share";
+      XDG_CACHE_HOME = "$HOME/.cache";
+      XDG_STATE_HOME = "$HOME/.local/state";
+      XDG_RUNTIME_DIR = "/run/user/$(id -u)";
+      
+      # XDG User Directories (will be overridden by xdg-user-dirs if configured)
+      XDG_DESKTOP_DIR = "$HOME/Desktop";
+      XDG_DOWNLOAD_DIR = "$HOME/Downloads";
+      XDG_TEMPLATES_DIR = "$HOME/Templates";
+      XDG_PUBLICSHARE_DIR = "$HOME/Public";
+      XDG_DOCUMENTS_DIR = "$HOME/Documents";
+      XDG_MUSIC_DIR = "$HOME/Music";
+      XDG_PICTURES_DIR = "$HOME/Pictures";
+      XDG_VIDEOS_DIR = "$HOME/Videos";
+      
+      # XDG Desktop Integration
+      XDG_CURRENT_DESKTOP = "GNOME";
+      XDG_SESSION_DESKTOP = "gnome";
+      XDG_MENU_PREFIX = "gnome-";
+      
+      # Desktop file and MIME handling (XDG_DATA_DIRS is managed by system)
+      XDG_CONFIG_DIRS = "/etc/xdg";
+      
+      # Desktop portal settings
+      XDG_DESKTOP_PORTAL_DIR = "/run/current-system/sw/share/xdg-desktop-portal/portals";
+      
+      # Application defaults for better XDG compliance
+      BROWSER = "firefox";
+      FILE_MANAGER = "nautilus";
+      TERMINAL = "gnome-terminal";
+      
+      # Ensure applications use XDG directories
+      HISTFILE = "$XDG_STATE_HOME/bash/history";
+      INPUTRC = "$XDG_CONFIG_HOME/readline/inputrc";
+      WGETRC = "$XDG_CONFIG_HOME/wget/wgetrc";
     };
   };
 

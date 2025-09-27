@@ -33,7 +33,8 @@ with lib;
 
   config = mkIf config.custom.wayland.enable {
     # Enhanced Wayland protocols and compositor support
-    environment.systemPackages = mkIf config.custom.wayland.protocolSupport.enable (with pkgs; [
+    environment.systemPackages = with pkgs; [
+      # Basic Wayland support
       wayland-protocols          # Latest Wayland protocols
       wayland-utils             # Wayland utilities
       wl-clipboard              # Wayland clipboard support
@@ -41,7 +42,15 @@ with lib;
       xwayland                  # X11 compatibility
       mesa                      # Graphics drivers
       libdrm                    # Direct Rendering Manager
-    ]);
+      
+      # CRITICAL: Screen sharing and portal support (always enabled)
+      xdg-desktop-portal        # Desktop portal framework
+      xdg-desktop-portal-gnome  # GNOME portal implementation
+      xdg-desktop-portal-gtk    # GTK portal implementation
+      xdg-desktop-portal-wlr    # wlroots portal implementation
+      pipewire                  # Audio/video server
+      wireplumber              # PipeWire session manager
+    ];
 
     # Core Wayland and application environment variables
     environment.sessionVariables = {
@@ -65,7 +74,6 @@ with lib;
       
       # === WAYLAND PROTOCOL ENHANCEMENTS ===
       WAYLAND_DEBUG = "0";                     # Disable debug output
-      XDG_RUNTIME_DIR = "/run/user/1000";
       
       # === GRAPHICS AND PERFORMANCE ===
       LIBGL_ALWAYS_SOFTWARE = "0";            # Use hardware acceleration
@@ -84,6 +92,39 @@ with lib;
       # === TERMINAL OPTIMIZATION ===
       TERM = "xterm-256color";
       COLORTERM = "truecolor";
+      
+      # === XDG BASE DIRECTORY SPECIFICATION ===
+      XDG_CONFIG_HOME = "$HOME/.config";
+      XDG_DATA_HOME = "$HOME/.local/share";
+      XDG_CACHE_HOME = "$HOME/.cache";
+      XDG_STATE_HOME = "$HOME/.local/state";
+      XDG_RUNTIME_DIR = "/run/user/$(id -u)";
+      
+      # === XDG USER DIRECTORIES ===
+      XDG_DESKTOP_DIR = "$HOME/Desktop";
+      XDG_DOWNLOAD_DIR = "$HOME/Downloads";
+      XDG_TEMPLATES_DIR = "$HOME/Templates";
+      XDG_PUBLICSHARE_DIR = "$HOME/Public";
+      XDG_DOCUMENTS_DIR = "$HOME/Documents";
+      XDG_MUSIC_DIR = "$HOME/Music";
+      XDG_PICTURES_DIR = "$HOME/Pictures";
+      XDG_VIDEOS_DIR = "$HOME/Videos";
+      
+      # === XDG DESKTOP INTEGRATION ===
+      XDG_SESSION_DESKTOP = "gnome";
+      XDG_MENU_PREFIX = "gnome-";
+      XDG_CONFIG_DIRS = "/etc/xdg";
+      XDG_DESKTOP_PORTAL_DIR = "/run/current-system/sw/share/xdg-desktop-portal/portals";
+      
+      # === APPLICATION DEFAULTS ===
+      BROWSER = "firefox";
+      FILE_MANAGER = "nautilus";
+      TERMINAL = "gnome-terminal";
+      
+      # === XDG COMPLIANCE ===
+      HISTFILE = "$XDG_STATE_HOME/bash/history";
+      INPUTRC = "$XDG_CONFIG_HOME/readline/inputrc";
+      WGETRC = "$XDG_CONFIG_HOME/wget/wgetrc";
     } // (mkIf config.custom.wayland.electronApps.suppressWarnings {
       # === ELECTRON WARNING SUPPRESSION ===
       ELECTRON_ENABLE_LOGGING = "0";
@@ -125,32 +166,32 @@ with lib;
         --password-store=gnome \
         ${if config.custom.wayland.electronApps.suppressWarnings then "--disable-logging --log-level=3" else ""}'';
         
-      # Discord - Optimized for Wayland
+      # Discord - Optimized for Wayland with screen sharing
       discord = lib.mkDefault ''discord \
         --ozone-platform-hint=auto \
-        --enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder \
+        --enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder,WebRTCPipeWireCapturer \
         --enable-wayland-ime \
         --disable-gpu-sandbox \
         ${if config.custom.wayland.electronApps.suppressWarnings then "--disable-logging --log-level=3" else ""}'';
 
-      # Chromium browsers - Enhanced support
+      # Chromium browsers - Enhanced support with screen sharing
       google-chrome = lib.mkDefault ''google-chrome \
         --ozone-platform-hint=auto \
-        --enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder,VaapiIgnoreDriverChecks \
+        --enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder,VaapiIgnoreDriverChecks,WebRTCPipeWireCapturer \
         --disable-features=UseChromeOSDirectVideoDecoder \
         --enable-wayland-ime \
         --disable-gpu-sandbox'';
         
       chrome = lib.mkDefault ''google-chrome \
         --ozone-platform-hint=auto \
-        --enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder,VaapiIgnoreDriverChecks \
+        --enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder,VaapiIgnoreDriverChecks,WebRTCPipeWireCapturer \
         --disable-features=UseChromeOSDirectVideoDecoder \
         --enable-wayland-ime \
         --disable-gpu-sandbox'';
         
       chromium = lib.mkDefault ''chromium \
         --ozone-platform-hint=auto \
-        --enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder \
+        --enable-features=UseOzonePlatform,WaylandWindowDecorations,VaapiVideoDecoder,WebRTCPipeWireCapturer \
         --enable-wayland-ime \
         --disable-gpu-sandbox'';
     };
@@ -163,8 +204,38 @@ with lib;
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk
         xdg-desktop-portal-gnome
+        xdg-desktop-portal-wlr  # For wlroots-based compositors and screen capture
       ];
+      # Configure screen sharing portals for GNOME/Wayland
+      config = {
+        common = {
+          default = [ "gnome" "gtk" ];
+          "org.freedesktop.impl.portal.Screencast" = [ "gnome" ];
+          "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+          "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+        };
+        gnome = {
+          default = [ "gnome" "gtk" ];
+          "org.freedesktop.impl.portal.Screencast" = [ "gnome" ];
+          "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+          "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+        };
+        x11 = {
+          default = [ "gtk" ];
+          "org.freedesktop.impl.portal.Screencast" = [ "gtk" ];
+          "org.freedesktop.impl.portal.Screenshot" = [ "gtk" ];
+        };
+      };
     };
+    
+    # Ensure XDG desktop portal services are enabled
+    services.xserver.desktopManager.gnome.enable = mkDefault true;
+    
+    # Enable screen sharing in GNOME
+    services.gnome.gnome-remote-desktop.enable = mkDefault true;
+    
+    # Configure dconf settings for GNOME screen sharing
+    programs.dconf.enable = mkDefault true;
 
     # === ADDITIONAL WAYLAND OPTIMIZATIONS ===
     # Enable hardware video acceleration
