@@ -48,28 +48,57 @@ with lib;
 
     # Graphics configuration handled by Lenovo module
 
-    # Input device configuration with Lenovo-specific fixes
+    # Enhanced touchpad support with gestures - Override module settings
     services.libinput = mkIf config.custom.hardware.input.enable {
-      enable = true;
+      enable = mkForce true;
       touchpad = {
         # Basic touchpad settings
-        tapping = true;
-        naturalScrolling = true;
-        scrollMethod = "twofinger";
-        disableWhileTyping = true;
-        clickMethod = "clickfinger";
-        accelProfile = "adaptive";
-        accelSpeed = "0.5";
-
+        tapping = mkForce true;                    # Enable tap-to-click
+        tappingDragLock = mkForce true;           # Enable drag lock after tapping
+        naturalScrolling = mkForce true;           # Natural (reverse) scrolling like macOS
+        scrollMethod = mkForce "twofinger";        # Two-finger scrolling
+        disableWhileTyping = mkForce true;        # Disable touchpad while typing
+        
+        # Advanced gesture settings
+        clickMethod = mkForce "clickfinger";       # Click method for multi-touch
+        accelProfile = mkForce "adaptive";         # Adaptive acceleration profile
+        accelSpeed = mkForce "0.3";               # Moderate acceleration speed (override module)
+        
+        # Gesture recognition settings
+        horizontalScrolling = mkForce true;       # Enable horizontal scrolling
+        middleEmulation = mkForce true;           # Enable middle mouse button emulation
+        
         # Lenovo-specific touchpad fixes
         leftHanded = false;
-        middleEmulation = true;
-        horizontalScrolling = true;
-
-        # Gesture support - tapButtonMap not available in current libinput
-
+        
         # Sensitivity and acceleration
         calibrationMatrix = "1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0";
+        
+        # Additional libinput options for gestures
+        additionalOptions = mkForce ''
+          # Enhanced gesture support
+          Option "Tapping" "on"
+          Option "TappingDrag" "on"
+          Option "TappingDragLock" "on"
+          Option "NaturalScrolling" "true"
+          Option "ScrollMethod" "twofinger"
+          Option "HorizontalScrolling" "true"
+          Option "ClickMethod" "clickfinger"
+          
+          # Multi-touch gesture support
+          Option "PalmDetection" "on"
+          Option "PalmMinWidth" "8"
+          Option "PalmMinZ" "100"
+          
+          # Gesture thresholds
+          Option "SwipeThreshold" "0.25"
+          Option "PinchThreshold" "0.25"
+          
+          # Disable edge scrolling in favor of two-finger
+          Option "EdgeScrolling" "off"
+          Option "VertEdgeScroll" "off"
+          Option "HorizEdgeScroll" "off"
+        '';
       };
 
       mouse = {
@@ -79,6 +108,17 @@ with lib;
         middleEmulation = true;
       };
     };
+    
+    # TOUCHPAD GESTURE SUPPORT PACKAGES
+    environment.systemPackages = mkIf config.custom.hardware.input.enable (with pkgs; [
+      libinput              # Modern input handling library
+      libinput-gestures     # Gesture recognition for touchpad
+      touchegg              # Multi-touch gesture recognizer
+      fusuma               # Multi-touch gesture recognizer for Linux
+      evtest               # Input event testing tool
+      xdotool              # X11 automation tool for gesture actions
+      ydotool              # Wayland automation tool for gesture actions
+    ]);
 
     # Session management
     services.logind = {

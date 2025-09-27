@@ -41,8 +41,34 @@ in {
     monitoring = {
       enable = mkOption {
         type = types.bool;
-        default = true;
-        description = "Enable GPU monitoring tools";
+        default = false;
+        description = "Enable GPU monitoring tools (system-wide)";
+      };
+      
+      autoStart = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Automatically start monitoring service on boot";
+      };
+      
+      tools = {
+        nvitop = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Enable nvitop GPU monitoring tool";
+        };
+        
+        nvtop = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Enable nvtop GPU monitoring tool";
+        };
+        
+        gpustat = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Enable gpustat GPU monitoring tool";
+        };
       };
     };
   };
@@ -106,19 +132,26 @@ in {
       ];
     };
 
-    # Gaming optimizations
-    environment.systemPackages = with pkgs; [
-      # Performance monitoring tools
-      nvitop
-      
-      # Gaming utilities
+    # System packages for NVIDIA performance and gaming
+    environment.systemPackages = with pkgs; ([
+      # Gaming utilities (always enabled when NVIDIA performance is enabled)
       gamemode
       mangohud
+      glxinfo
+      vulkan-tools
       
-      # Wine and DirectX support if needed
-      wineWowPackages.stable
-      winetricks
-    ];
+      # NVIDIA utilities (nvidia-offload is created by hardware.nvidia.prime.offload)
+      config.hardware.nvidia.package  # NVIDIA driver package
+    ] 
+    # GPU Monitoring tools (conditional)
+    ++ lib.optionals cfg.monitoring.enable (lib.flatten [
+      (lib.optional cfg.monitoring.tools.nvitop nvitop)
+      # nvtop package may not be available in current nixpkgs
+      # (lib.optional cfg.monitoring.tools.nvtop nvtop)
+      (lib.optional cfg.monitoring.tools.gpustat python3Packages.gpustat)
+    ])
+    # Wine packages moved to wine-support.nix module to avoid conflicts
+    );
 
     # Environment variables for performance - merged with AI services variables
     environment.sessionVariables = {
@@ -141,15 +174,62 @@ in {
       __GLX_VENDOR_LIBRARY_NAME = mkDefault "nvidia";
     };
 
-    # Performance monitoring
-    systemd.user.services.nvidia-monitor = mkIf cfg.monitoring.enable {
-      description = "NVIDIA GPU Monitor";
-      wantedBy = [ "graphical-session.target" ];
+    # System-wide GPU monitoring services
+    systemd.services.nvidia-smi-logger = mkIf (cfg.monitoring.enable && cfg.monitoring.autoStart) {
+      description = "NVIDIA GPU Statistics Logger";
+      wantedBy = [ "multi-user.target" ];
+      path = [ config.hardware.nvidia.package ];
       serviceConfig = {
         Type = "simple";
-        ExecStart = "${pkgs.nvitop}/bin/nvitop";
+        User = "root";
+        ExecStart = "${pkgs.writeShellScript "nvidia-smi-logger" ''
+          #!/bin/sh
+          while true; do
+            nvidia-smi --query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv -l 30
+          done
+        ''}";
         Restart = "always";
-        RestartSec = "5";
+        RestartSec = "10";
+        StandardOutput = "journal";
+        StandardError = "journal";
+      };
+    };
+    
+    # Enable NVIDIA persistence daemon for better performance (if available)
+    # Note: nvidia-persistenced may not be available in all NVIDIA driver versions
+    systemd.services.nvidia-persistenced = mkIf (cfg.enable && false) {  # Disabled for now
+      description = "NVIDIA Persistence Daemon";
+      wantedBy = [ "multi-user.target" ];
+      path = [ config.hardware.nvidia.package ];
+      serviceConfig = {
+        Type = "forking";
+        PIDFile = "/var/run/nvidia-persistenced/nvidia-persistenced.pid";
+        Restart = "always";
+        ExecStart = "nvidia-persistenced --verbose";
+        ExecStopPost = "/bin/rm -rf /var/run/nvidia-persistenced";
+        User = "root";
+      };
+      preStart = "mkdir -p /var/run/nvidia-persistenced";
+    };
+    
+    # Additional GPU monitoring tools as system services (optional)
+    systemd.services.gpu-monitor-web = mkIf (cfg.monitoring.enable && cfg.monitoring.tools.nvitop) {
+      description = "GPU Monitoring Web Interface";
+      wantedBy = mkIf cfg.monitoring.autoStart [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "simple";
+        User = "nobody";
+        Group = "nogroup";
+        ExecStart = "${pkgs.writeShellScript "gpu-monitor-web" ''
+          #!/bin/sh
+          # Simple GPU monitoring accessible via command line
+          echo "GPU monitoring tools available:"
+          echo "  nvitop - Interactive GPU process monitor"
+          echo "  nvidia-smi - NVIDIA system management interface"
+          echo "  vulkan-tools - Vulkan debugging and info"
+          sleep infinity
+        ''}";
+        Restart = "no";
       };
     };
   };

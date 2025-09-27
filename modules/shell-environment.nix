@@ -18,6 +18,7 @@ with lib;
         jq = mkEnableOption "JSON processor";
         htop = mkEnableOption "better top";
         tmux = mkEnableOption "terminal multiplexer";
+        zoxide = mkEnableOption "smart directory navigation";
       };
 
       aliases = {
@@ -65,6 +66,7 @@ with lib;
       (mkIf config.custom.shellEnvironment.features.jq jq)
       (mkIf config.custom.shellEnvironment.features.htop htop)
       (mkIf config.custom.shellEnvironment.features.tmux tmux)
+      (mkIf config.custom.shellEnvironment.features.zoxide zoxide)
     ];
 
     # Configure shell aliases
@@ -98,6 +100,9 @@ with lib;
           source ${pkgs.fzf}/share/fzf/completion.zsh
           source ${pkgs.fzf}/share/fzf/key-bindings.zsh
         '' else ""}
+
+        # Initialize zoxide if enabled
+        ${if config.custom.shellEnvironment.features.zoxide then "eval \"$(zoxide init zsh)\"" else ""}
       '';
     };
   };

@@ -62,8 +62,8 @@ with lib;
   };
 
   config = mkIf config.custom.ai-services.enable {
-    # Enable OpenGL drivers for NVIDIA/CUDA
-    hardware.graphics.enable = true;
+    # Enable OpenGL drivers for NVIDIA/CUDA - Only if nvidia-performance module is not enabled
+    hardware.graphics.enable = mkIf (!config.custom.nvidiaPerformance.enable) true;
     
     # Ollama Configuration with GPU Acceleration
     services.ollama = mkIf config.custom.ai-services.ollama.enable {
@@ -73,8 +73,8 @@ with lib;
       port = 11434;
     };
 
-    # NVIDIA Configuration for AI Workloads
-    hardware.nvidia = mkIf config.custom.ai-services.nvidia.enable {
+    # NVIDIA Configuration for AI Workloads - Minimal to avoid conflicts with nvidia-performance module
+    hardware.nvidia = mkIf (config.custom.ai-services.nvidia.enable && !config.custom.nvidiaPerformance.enable) {
       package = if config.custom.ai-services.nvidia.package == "stable" then
         config.boot.kernelPackages.nvidiaPackages.stable
       else if config.custom.ai-services.nvidia.package == "beta" then
@@ -88,8 +88,8 @@ with lib;
       nvidiaSettings = true;
     };
     
-    # Enable NVIDIA driver in xserver and wayland
-    services.xserver.videoDrivers = mkIf config.custom.ai-services.nvidia.enable [ "nvidia" ];
+    # Enable NVIDIA driver in xserver and wayland - Only if nvidia-performance module doesn't handle it
+    services.xserver.videoDrivers = mkIf (config.custom.ai-services.nvidia.enable && !config.custom.nvidiaPerformance.enable) [ "nvidia" ];
     
     # Blacklist nouveau driver to avoid conflicts with NVIDIA
     boot.blacklistedKernelModules = mkIf config.custom.ai-services.nvidia.enable [ "nouveau" ];
@@ -135,11 +135,18 @@ with lib;
         python312Packages.requests
       ]));
 
-    # Environment variables for AI development
+    # Environment variables for AI development - Compatible with nvidia-performance module
     environment.sessionVariables = mkIf (config.custom.ai-services.enable && config.custom.ai-services.packages.enable) {
       CUDA_PATH = "${pkgs.cudatoolkit}";
       CUDA_HOME = "${pkgs.cudatoolkit}";
       LD_LIBRARY_PATH = mkBefore [ "${pkgs.cudatoolkit}/lib" ];
+    };
+    
+    # Additional AI-specific environment variables (only when nvidia-performance is not enabled)
+    environment.variables = mkIf (config.custom.ai-services.enable && !config.custom.nvidiaPerformance.enable) {
+      # AI optimization variables
+      OMP_NUM_THREADS = "4";
+      PYTORCH_CUDA_ALLOC_CONF = "max_split_size_mb:128";
     };
 
     # System optimization for AI workloads - Use proper sysctl configuration

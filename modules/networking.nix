@@ -153,9 +153,6 @@ with lib;
     # Set hostname
     networking.hostName = config.custom.networking.hostName;
 
-    # Enable network manager for GUI network management
-    networking.networkmanager.enable = mkIf config.custom.networking.networkManager.enable true;
-
     # Disable iwd to avoid conflicts with NetworkManager
     networking.wireless.iwd.enable = lib.mkForce false;
 
@@ -250,10 +247,6 @@ with lib;
 
     # Hardware acceleration for graphics (handled by hardware.nix)
 
-    # Networking packages
-    environment.systemPackages = import ../packages/networking-packages.nix { inherit pkgs config lib; } ++
-      (optionals config.custom.networking.samba.enable [ pkgs.cifs-utils ]);
-
     # Network-related systemd services
     systemd.services = {
       # Fix NetworkManager wait online timeout
@@ -275,6 +268,41 @@ with lib;
       interfaces = {};
     };
 
+    # Enhanced NetworkManager configuration
+    networking.networkmanager = mkIf config.custom.networking.networkManager.enable {
+      enable = true;
+      dns = "systemd-resolved";
+      # Enable MAC address randomization for privacy
+      wifi.macAddress = "random";
+      ethernet.macAddress = "random";
+      # Additional NetworkManager configuration using new settings format
+      settings = {
+        main = {
+          # DNS configuration
+          dns = "systemd-resolved";
+        };
+        connection = {
+          # Randomize MAC addresses for privacy
+          "wifi.cloned-mac-address" = "random";
+          "ethernet.cloned-mac-address" = "random";
+        };
+        device = {
+          # WiFi device specific settings  
+          "wifi.scan-rand-mac-address" = "yes";
+        };
+        logging = {
+          # Reduce logging for privacy
+          level = "WARN";
+        };
+      };
+    };
+
+    # Fix nsncd service failures by using systemd-resolved instead
+    services.nscd.enable = false;               # Disable problematic nsncd
+    system.nssModules = lib.mkForce [];         # Disable NSS modules when nscd is disabled
+    services.resolved.enable = true;            # Enable modern DNS resolver
+    services.resolved.dnssec = "false";         # Avoid DNSSEC issues on some networks
+    
     # Additional network security settings
     boot.kernel.sysctl = {
       # Network security enhancements
@@ -294,5 +322,28 @@ with lib;
       "net.ipv4.conf.all.log_martians" = 1;
       "net.ipv4.conf.default.log_martians" = 1;
     };
+    
+    # Combined networking packages - merged from both sections
+    environment.systemPackages = mkIf config.custom.networking.enable (
+      # Import networking packages from separate file
+      (import ../packages/networking-packages.nix { inherit pkgs config lib; }) ++
+      # Add Samba utilities if enabled
+      (optionals config.custom.networking.samba.enable [ pkgs.cifs-utils ]) ++
+      # Network configuration and MAC address management tools
+      (with pkgs; [
+        macchanger              # Change MAC addresses of network interfaces
+        ethtool                 # Display and change ethernet device settings
+        iw                      # Wireless configuration utility
+        wirelesstools          # Wireless network configuration tools
+        aircrack-ng             # Wireless network security tools
+        wireshark              # Network protocol analyzer
+        nmap                    # Network discovery and security auditing
+        nettools               # Network configuration tools (ifconfig, route, etc.)
+        
+        # Hostname compatibility for applications
+        hostname-debian
+        lsb-release
+      ])
+    );
   };
 }

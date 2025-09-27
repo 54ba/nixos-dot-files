@@ -57,7 +57,7 @@ with lib;
             Name=Discord
             Comment=All-in-one cross-platform voice and text chat
             GenericName=Internet Messenger  
-            Exec=discord --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --enable-wayland-ime %U
+            Exec=discord --enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer --ozone-platform=wayland --enable-wayland-ime %U
             Icon=discord
             Type=Application
             Categories=Network;InstantMessaging;
@@ -77,7 +77,7 @@ with lib;
             Name=Chromium Web Browser (Wayland)
             GenericName=Web Browser
             Comment=Access the Internet
-            Exec=chromium --enable-features=UseOzonePlatform --ozone-platform=wayland %U
+            Exec=chromium --enable-features=UseOzonePlatform,WebRTCPipeWireCapturer --ozone-platform=wayland %U
             StartupNotify=true
             Terminal=false
             Icon=chromium
@@ -88,11 +88,11 @@ with lib;
             
             [Desktop Action new-window]
             Name=New Window
-            Exec=chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --new-window
+            Exec=chromium --enable-features=UseOzonePlatform,WebRTCPipeWireCapturer --ozone-platform=wayland --new-window
             
             [Desktop Action new-private-window]
             Name=New Incognito Window
-            Exec=chromium --enable-features=UseOzonePlatform --ozone-platform=wayland --incognito
+            Exec=chromium --enable-features=UseOzonePlatform,WebRTCPipeWireCapturer --ozone-platform=wayland --incognito
           '';
           mode = "0644";
         };
@@ -128,11 +128,11 @@ with lib;
     # Shell aliases for terminal users (both work consistently)
     environment.shellAliases = {
       discord = mkIf config.custom.electron-apps.packages.discord.enable
-        "discord --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --enable-wayland-ime";
+        "discord --enable-features=UseOzonePlatform,WaylandWindowDecorations,WebRTCPipeWireCapturer --ozone-platform=wayland --enable-wayland-ime";
       chromium = mkIf config.custom.electron-apps.packages.chromium.enable  
-        "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland";
+        "chromium --enable-features=UseOzonePlatform,WebRTCPipeWireCapturer --ozone-platform=wayland";
       chrome = mkIf config.custom.electron-apps.packages.chromium.enable
-        "chromium --enable-features=UseOzonePlatform --ozone-platform=wayland";  # Redirect chrome to chromium
+        "chromium --enable-features=UseOzonePlatform,WebRTCPipeWireCapturer --ozone-platform=wayland";  # Redirect chrome to chromium
       code = mkIf config.custom.electron-apps.packages.vscode.enable
         "code --enable-features=UseOzonePlatform,WaylandWindowDecorations --ozone-platform=wayland --password-store=gnome";
     };

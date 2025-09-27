@@ -39,6 +39,10 @@ with pkgs; [
   # .NET development
   dotnet-sdk_8  # Updated to newer LTS version
   
+  # Mobile development
+  flutter
+  dart
+  
   # Database tools
   mongodb-compass
   postgresql
@@ -108,5 +112,9 @@ with pkgs; [
   qemu
   libvirt
   vagrant
+  
+  # Remote desktop applications
+  rustdesk
+  remmina  # RDP/VNC client
 ]
 
