@@ -221,6 +221,17 @@
   custom.screen-sharing.enable = true;              # Enable enhanced screen sharing support
   custom.enhanced-packages.enable = true;           # Enable enhanced application packages
   
+  # Enable Electron apps with proper Wayland support and screen sharing
+  custom.electron-apps = {
+    enable = true;                                   # Enable Electron apps module
+    enableDesktopFiles = true;                      # Create desktop files with proper flags
+    packages = {
+      discord.enable = true;                         # Discord with Wayland screen sharing
+      chromium.enable = true;                        # Chromium with WebRTC PipeWire support
+      vscode.enable = true;                          # VS Code with Wayland support
+    };
+  };
+  
   # Enable system optimization
   custom.system-optimization.enable = true;         # Enable system performance optimizations
   
@@ -350,7 +361,7 @@
   # Enable GNOME Remote Desktop for screen sharing
   services.gnome.gnome-remote-desktop.enable = true;
   
-  # XDG Desktop Portal configuration for screen sharing
+  # XDG Desktop Portal configuration for screen sharing AND file dialogs
   xdg.portal = {
     enable = lib.mkForce true;
     wlr.enable = lib.mkForce false;  # Disable wlr portal as we're using GNOME
@@ -364,12 +375,23 @@
         "org.freedesktop.impl.portal.Screencast" = [ "gnome" ];
         "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
         "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+        "org.freedesktop.impl.portal.FileChooser" = [ "gnome" "gtk" ];  # CRITICAL: File save/open dialogs
+        "org.freedesktop.impl.portal.AppChooser" = [ "gnome" "gtk" ];   # CRITICAL: App chooser dialogs
       };
       gnome = {
         default = [ "gnome" "gtk" ];
         "org.freedesktop.impl.portal.Screencast" = [ "gnome" ];
         "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
         "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+        "org.freedesktop.impl.portal.FileChooser" = [ "gnome" "gtk" ];  # CRITICAL: File save/open dialogs
+        "org.freedesktop.impl.portal.AppChooser" = [ "gnome" "gtk" ];   # CRITICAL: App chooser dialogs
+      };
+      x11 = {
+        default = [ "gtk" ];
+        "org.freedesktop.impl.portal.Screencast" = [ "gtk" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "gtk" ];
+        "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];           # CRITICAL: File save/open dialogs for X11 apps
+        "org.freedesktop.impl.portal.AppChooser" = [ "gtk" ];            # CRITICAL: App chooser dialogs for X11 apps
       };
     };
   };
@@ -572,16 +594,6 @@
   # === ACTIVE MODULE CONFIGURATIONS ===
   # Only configurations for imported modules
   
-  # Electron Apps with proper Wayland support
-  custom.electron-apps = {
-    enable = true;
-    enableDesktopFiles = true;
-    packages = {
-      discord.enable = true;
-      chromium.enable = true; 
-      vscode.enable = true;
-    };
-  };
 
   # nixGL Graphics Compatibility
   custom.nixgl = {
