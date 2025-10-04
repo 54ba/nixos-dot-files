@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Wine Setup Script for NixOS
 # This script helps configure Wine for optimal performance and compatibility

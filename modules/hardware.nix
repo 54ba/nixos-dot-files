@@ -48,25 +48,25 @@ with lib;
 
     # Graphics configuration handled by Lenovo module
 
-    # Enhanced touchpad support with gestures - Override module settings
+    # Enhanced touchpad support with gestures - Force override GNOME
     services.libinput = mkIf config.custom.hardware.input.enable {
       enable = mkForce true;
       touchpad = {
-        # Basic touchpad settings
-        tapping = mkForce true;                    # Enable tap-to-click
-        tappingDragLock = mkForce true;           # Enable drag lock after tapping
-        naturalScrolling = mkForce true;           # Natural (reverse) scrolling like macOS
-        scrollMethod = mkForce "twofinger";        # Two-finger scrolling
-        disableWhileTyping = mkForce true;        # Disable touchpad while typing
+        # Basic touchpad settings - Force override GNOME
+        tapping = mkForce true;                           # Enable tap-to-click
+        tappingDragLock = mkForce true;                  # Enable drag lock after tapping
+        naturalScrolling = mkForce true;                 # Natural (reverse) scrolling like macOS
+        scrollMethod = mkForce "twofinger";               # Two-finger scrolling
+        disableWhileTyping = mkForce true;               # Disable touchpad while typing
         
-        # Advanced gesture settings
-        clickMethod = mkForce "clickfinger";       # Click method for multi-touch
-        accelProfile = mkForce "adaptive";         # Adaptive acceleration profile
-        accelSpeed = mkForce "0.3";               # Moderate acceleration speed (override module)
+        # Advanced gesture settings - Force clickfinger only for right-click
+        clickMethod = mkForce "clickfinger";              # Click method for multi-touch
+        accelProfile = mkForce "adaptive";               # Adaptive acceleration profile
+        accelSpeed = mkForce "0.3";                     # Moderate acceleration speed
         
         # Gesture recognition settings
-        horizontalScrolling = mkForce true;       # Enable horizontal scrolling
-        middleEmulation = mkForce true;           # Enable middle mouse button emulation
+        horizontalScrolling = mkForce true;              # Enable horizontal scrolling
+        middleEmulation = mkForce true;                  # Enable middle mouse button emulation
         
         # Lenovo-specific touchpad fixes
         leftHanded = false;
@@ -74,9 +74,9 @@ with lib;
         # Sensitivity and acceleration
         calibrationMatrix = "1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0";
         
-        # Additional libinput options for gestures
+        # Additional low-level libinput options to force settings
         additionalOptions = mkForce ''
-          # Enhanced gesture support
+          # Force tap-to-click and gestures
           Option "Tapping" "on"
           Option "TappingDrag" "on"
           Option "TappingDragLock" "on"
@@ -108,6 +108,105 @@ with lib;
         middleEmulation = true;
       };
     };
+    
+    # TouchEgg service for multi-touch gestures
+    services.touchegg = mkIf config.custom.hardware.input.enable {
+      enable = true;
+    };
+    
+    # TouchEgg configuration
+    environment.etc."touchegg/touchegg.conf".text = mkIf config.custom.hardware.input.enable ''
+      <global>
+          <property name="animation_delay">150</property>
+          <property name="action_execute_threshold">0.2</property>
+          <property name="color">auto</property>
+          <property name="borderColor">auto</property>
+      </global>
+      
+      <application name="All">
+          <gesture type="SWIPE" fingers="3" direction="UP">
+              <action type="GNOME_SHELL_EXTENSION">
+                  <command>ShowApplications</command>
+              </action>
+          </gesture>
+          
+          <gesture type="SWIPE" fingers="3" direction="DOWN">
+              <action type="MINIMIZE_RESTORE_WINDOW"></action>
+          </gesture>
+          
+          <gesture type="SWIPE" fingers="3" direction="LEFT">
+              <action type="SEND_KEYS">
+                  <keys>Super_L+Page_Up</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="SWIPE" fingers="3" direction="RIGHT">
+              <action type="SEND_KEYS">
+                  <keys>Super_L+Page_Down</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="SWIPE" fingers="4" direction="UP">
+              <action type="SEND_KEYS">
+                  <keys>Super_L</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="SWIPE" fingers="4" direction="DOWN">
+              <action type="SHOW_DESKTOP"></action>
+          </gesture>
+          
+          <gesture type="SWIPE" fingers="4" direction="LEFT">
+              <action type="SEND_KEYS">
+                  <keys>Super_L+Left</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="SWIPE" fingers="4" direction="RIGHT">
+              <action type="SEND_KEYS">
+                  <keys>Super_L+Right</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="PINCH" fingers="2" direction="IN">
+              <action type="SEND_KEYS">
+                  <keys>Control_L+minus</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="PINCH" fingers="2" direction="OUT">
+              <action type="SEND_KEYS">
+                  <keys>Control_L+plus</keys>
+              </action>
+          </gesture>
+      </application>
+      
+      <application name="Google-chrome,Chromium-browser,Firefox">
+          <gesture type="SWIPE" fingers="3" direction="LEFT">
+              <action type="SEND_KEYS">
+                  <keys>Alt_L+Right</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="SWIPE" fingers="3" direction="RIGHT">
+              <action type="SEND_KEYS">
+                  <keys>Alt_L+Left</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="PINCH" fingers="2" direction="IN">
+              <action type="SEND_KEYS">
+                  <keys>Control_L+minus</keys>
+              </action>
+          </gesture>
+          
+          <gesture type="PINCH" fingers="2" direction="OUT">
+              <action type="SEND_KEYS">
+                  <keys>Control_L+plus</keys>
+              </action>
+          </gesture>
+      </application>
+    '';
     
     # TOUCHPAD GESTURE SUPPORT PACKAGES
     environment.systemPackages = mkIf config.custom.hardware.input.enable (with pkgs; [

@@ -102,22 +102,34 @@ with lib;
     xdg.portal = mkIf config.custom.screen-sharing.portals.enable {
       enable = mkForce true;
       wlr.enable = mkForce false;  # Disable wlr portal as we're using GNOME
-      extraPortals = with pkgs; [
+      extraPortals = mkForce (with pkgs; [
         xdg-desktop-portal-gnome
         xdg-desktop-portal-gtk
-      ];
+        xdg-desktop-portal-wlr  # Include for compatibility but GNOME will have priority
+      ]);
       config = mkForce {
         common = {
           default = [ "gnome" "gtk" ];
           "org.freedesktop.impl.portal.Screencast" = [ "gnome" ];
           "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
           "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+          "org.freedesktop.impl.portal.FileChooser" = [ "gnome" "gtk" ];
+          "org.freedesktop.impl.portal.AppChooser" = [ "gnome" "gtk" ];
         };
         gnome = {
           default = [ "gnome" "gtk" ];
           "org.freedesktop.impl.portal.Screencast" = [ "gnome" ];
           "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
           "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+          "org.freedesktop.impl.portal.FileChooser" = [ "gnome" "gtk" ];
+          "org.freedesktop.impl.portal.AppChooser" = [ "gnome" "gtk" ];
+        };
+        x11 = {
+          default = [ "gtk" ];
+          "org.freedesktop.impl.portal.Screencast" = [ "gtk" ];
+          "org.freedesktop.impl.portal.Screenshot" = [ "gtk" ];
+          "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+          "org.freedesktop.impl.portal.AppChooser" = [ "gtk" ];
         };
       };
     };
@@ -143,7 +155,11 @@ with lib;
     # Screen sharing environment variables
     environment.sessionVariables = {
       # Ensure Wayland display is available for screen sharing
-      WAYLAND_DISPLAY = "wayland-0";
+      WAYLAND_DISPLAY = mkForce "wayland-0";
+      # Critical for portal detection - use mkForce to override conflicts
+      XDG_SESSION_TYPE = mkForce "wayland";
+      # PipeWire runtime directory
+      PIPEWIRE_RUNTIME_DIR = mkForce "/run/user/$(id -u)";
     };
   };
 }

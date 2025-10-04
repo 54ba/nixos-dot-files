@@ -22,7 +22,11 @@ with lib;
       };
 
       aliases = {
-        enable = mkEnableOption "useful shell aliases";
+        enable = mkOption {
+          type = types.bool;
+          default = false;  # DISABLED by default - keep original commands
+          description = "Enable useful shell aliases";
+        };
         ls = mkOption {
           type = types.str;
           default = "exa --icons --group-directories-first";

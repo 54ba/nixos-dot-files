@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 # Screen Sharing Fix Script for Wayland/GNOME
 # This script restarts the necessary services for screen sharing to work properly

@@ -1,4 +1,4 @@
-#!/run/current-system/sw/bin/bash
+#!/usr/bin/env bash
 
 # NVIDIA Performance and Gaming Optimization Script
 # This script provides various NVIDIA performance optimizations similar to AMD FSR
@@ -161,7 +161,7 @@ create_performance_profile() {
     print_status "Creating performance profile..."
 
     cat > ~/.config/nvidia-performance-profile.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # NVIDIA Performance Profile
 # Source this file to enable optimizations
 

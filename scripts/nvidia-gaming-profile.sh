@@ -1,4 +1,4 @@
-#!/run/current-system/sw/bin/bash
+#!/usr/bin/env bash
 
 # NVIDIA Gaming Profile Script
 # Optimizes NVIDIA GPU for maximum gaming performance
@@ -56,7 +56,7 @@ create_gaming_profile() {
 
     # Create gaming profile
     cat > ~/.config/nvidia-gaming/gaming-profile.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # NVIDIA Gaming Performance Profile
 # Source this file before gaming for optimal performance
 
@@ -160,7 +160,7 @@ create_game_profiles() {
 
     # Steam profile
     cat > ~/.config/nvidia-gaming/game-profiles/steam.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # Steam Gaming Profile
 
 # Load base gaming profile
@@ -179,7 +179,7 @@ EOF
 
     # Wine profile
     cat > ~/.config/nvidia-gaming/game-profiles/wine.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # Wine Gaming Profile
 
 # Load base gaming profile
@@ -199,7 +199,7 @@ EOF
 
     # Lutris profile
     cat > ~/.config/nvidia-gaming/game-profiles/lutris.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # Lutris Gaming Profile
 
 # Load base gaming profile

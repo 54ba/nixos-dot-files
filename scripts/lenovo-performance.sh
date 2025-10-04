@@ -1,4 +1,4 @@
-#!/run/current-system/sw/bin/bash
+#!/usr/bin/env bash
 
 # Lenovo S540 GTX 15IWL Performance Management Script
 # Optimizes performance for Lenovo laptop with NVIDIA GTX 1650
@@ -298,7 +298,7 @@ create_performance_profile() {
 
     # Create performance profile
     cat > ~/.config/lenovo-performance/performance-profile.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # Lenovo S540 GTX 15IWL Performance Profile
 # Source this file to enable optimizations
 

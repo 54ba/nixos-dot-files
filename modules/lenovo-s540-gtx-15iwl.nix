@@ -70,10 +70,12 @@ in {
       thinkfan
     ];
 
-    # Kernel modules for thermal management
-    boot.kernelModules = [ "coretemp" "thinkpad_acpi" ];
+    # Kernel modules for thermal management and input devices
+    boot.kernelModules = [ "coretemp" "thinkpad_acpi" "elan_i2c" "hid_multitouch" "i2c_hid" "i2c_hid_acpi" ];
     boot.extraModprobeConfig = ''
       options thinkpad_acpi fan_control=1
+      # Force ELAN touchpad driver loading
+      options elan_i2c force_elan_ic_type=1
     '';
 
     # Enable thermal services

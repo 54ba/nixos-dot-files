@@ -268,17 +268,17 @@ EOF
           
           while true; do
               # Main menu
-              CHOICE=$($DIALOG --title "MAC Address Manager" --menu "Choose an action:" $DIALOG_HEIGHT $DIALOG_WIDTH 10 \\
-                  "1" "List all network interfaces" \\
-                  "2" "Randomize WiFi MAC addresses" \\
-                  "3" "Restore WiFi MAC addresses" \\
-                  "4" "Restore all MAC addresses" \\
-                  "5" "Configure NetworkManager" \\
-                  "6" "Show NetworkManager status" \\
-                  "7" "Generate random MAC address" \\
-                  "8" "Manual MAC change" \\
-                  "9" "Help" \\
-                  "0" "Exit" \\
+              CHOICE=$($DIALOG --title "MAC Address Manager" --menu "Choose an action:" $DIALOG_HEIGHT $DIALOG_WIDTH 10 \
+                  "1" "List all network interfaces" \
+                  "2" "Randomize WiFi MAC addresses" \
+                  "3" "Restore WiFi MAC addresses" \
+                  "4" "Restore all MAC addresses" \
+                  "5" "Configure NetworkManager" \
+                  "6" "Show NetworkManager status" \
+                  "7" "Generate random MAC address" \
+                  "8" "Manual MAC change" \
+                  "9" "Help" \
+                  "0" "Exit" \
                   3>&1 1>&2 2>&3)
               
               if [ $? -ne 0 ]; then
@@ -290,7 +290,7 @@ EOF
                       gnome-terminal --title="Interface List" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh list; echo; echo 'Press Enter to continue...'; read"
                       ;;
                   2)
-                      if $DIALOG --title "Confirm" --yesno "Randomize MAC addresses for all WiFi interfaces?\\n\\nThis will temporarily change your network identity." 10 50; then
+                      if $DIALOG --title "Confirm" --yesno "Randomize MAC addresses for all WiFi interfaces?\n\nThis will temporarily change your network identity." 10 50; then
                           gnome-terminal --title="Randomizing WiFi MACs" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh randomize-wifi; echo; echo 'Press Enter to continue...'; read"
                       fi
                       ;;
@@ -305,7 +305,7 @@ EOF
                       fi
                       ;;
                   5)
-                      if $DIALOG --title "Confirm" --yesno "Configure NetworkManager for enhanced MAC randomization?\\n\\nThis will modify NetworkManager settings." 10 60; then
+                      if $DIALOG --title "Confirm" --yesno "Configure NetworkManager for enhanced MAC randomization?\n\nThis will modify NetworkManager settings." 10 60; then
                           gnome-terminal --title="Configuring NetworkManager" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh nm-configure; echo; echo 'Press Enter to continue...'; read"
                       fi
                       ;;
@@ -314,12 +314,12 @@ EOF
                       ;;
                   7)
                       MAC=$(sudo /etc/nixos/scripts/mac-manager.sh generate | grep "Generated MAC:" | cut -d: -f2- | xargs)
-                      $DIALOG --title "Generated MAC Address" --msgbox "Generated MAC: $MAC\\n\\nThis address can be used for manual MAC changes." 8 50
+                      $DIALOG --title "Generated MAC Address" --msgbox "Generated MAC: $MAC\n\nThis address can be used for manual MAC changes." 8 50
                       ;;
                   8)
                       INTERFACE=$($DIALOG --title "Manual MAC Change" --inputbox "Enter interface name (e.g., wlan0):" 8 40 3>&1 1>&2 2>&3)
                       if [ $? -eq 0 ] && [ -n "$INTERFACE" ]; then
-                          MAC_ADDR=$($DIALOG --title "Manual MAC Change" --inputbox "Enter new MAC address\\n(format: XX:XX:XX:XX:XX:XX)\\nor enter 'random' for random MAC:" 10 50 3>&1 1>&2 2>&3)
+                          MAC_ADDR=$($DIALOG --title "Manual MAC Change" --inputbox "Enter new MAC address\n(format: XX:XX:XX:XX:XX:XX)\nor enter 'random' for random MAC:" 10 50 3>&1 1>&2 2>&3)
                           if [ $? -eq 0 ] && [ -n "$MAC_ADDR" ]; then
                               gnome-terminal --title="Changing MAC Address" -- bash -c "sudo /etc/nixos/scripts/mac-manager.sh change $INTERFACE $MAC_ADDR; echo; echo 'Press Enter to continue...'; read"
                           fi

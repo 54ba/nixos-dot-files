@@ -198,7 +198,8 @@ with lib;
 
 
     # === XDG DESKTOP PORTAL CONFIGURATION ===
-    xdg.portal = {
+    # Only configure portals if screen-sharing module is not enabled (to avoid conflicts)
+    xdg.portal = mkIf (!config.custom.screen-sharing.enable) {
       enable = mkDefault true;
       wlr.enable = mkIf (config.services.xserver.displayManager.gdm.wayland) true;
       extraPortals = with pkgs; [

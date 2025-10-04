@@ -151,11 +151,12 @@
     syntaxHighlighting.enable = true;
 
     shellAliases = {
-      ll = "eza -la";
-      ls = "eza";
-      cat = "bat";
-      find = "fd";
-      grep = "rg";
+      # Basic command aliases REMOVED - keeping original commands available
+      # ll = "eza -la";
+      # ls = "eza";
+      # cat = "bat";
+      # find = "fd";
+      # grep = "rg";
 
     # nixai shortcuts
     nai = "nixai ask";

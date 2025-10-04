@@ -616,7 +616,7 @@
       htop = true; tmux = true; zoxide = true;
     };
     aliases = {
-      enable = true;
+      enable = false;  # DISABLED - Keep original commands available
       ls = "exa --icons --group-directories-first";
       ll = "exa --icons --group-directories-first -la";
       cat = "bat"; grep = "rg"; find = "fd";
