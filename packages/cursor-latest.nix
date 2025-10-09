@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchurl, appimageTools, makeWrapper, electron, fuse, libffi, openssl, curl, ca-certificates }:
+{ lib, fetchurl, appimageTools }:
 
 let
   pname = "cursor";
@@ -27,43 +27,6 @@ StartupWMClass=Cursor
 Categories=Development;IDE;
 MimeType=text/plain;inode/directory;
 EOF
-
-    # Create a wrapper script that sets proper environment
-    mkdir -p $out/bin
-    cat > $out/bin/cursor << 'EOF'
-#!/usr/bin/env bash
-
-# Ensure proper environment for GUI applications
-export XDG_DATA_DIRS="$XDG_DATA_DIRS:$out/share"
-
-# Set up library paths
-export LD_LIBRARY_PATH="${lib.makeLibraryPath [ 
-  fuse 
-  libffi 
-  openssl 
-  curl 
-]}"
-
-# Certificate bundle for SSL connections
-export SSL_CERT_FILE="${ca-certificates}/etc/ssl/certs/ca-bundle.crt"
-export CURL_CA_BUNDLE="${ca-certificates}/etc/ssl/certs/ca-bundle.crt"
-
-# Execute the AppImage with proper permissions and environment
-exec ${appimageTools.extract { inherit pname version src; }}/AppRun "$@"
-EOF
-    
-    chmod +x $out/bin/cursor
-
-    # Extract and install icon if available
-    ${appimageTools.extract { inherit pname version src; }}/AppRun --appimage-extract *.png 2>/dev/null || true
-    if [ -f squashfs-root/cursor.png ]; then
-      mkdir -p $out/share/pixmaps
-      cp squashfs-root/cursor.png $out/share/pixmaps/cursor.png
-    elif [ -f squashfs-root/*.png ]; then
-      mkdir -p $out/share/pixmaps  
-      cp squashfs-root/*.png $out/share/pixmaps/cursor.png
-    fi
-    rm -rf squashfs-root 2>/dev/null || true
   '';
 
   meta = with lib; {
