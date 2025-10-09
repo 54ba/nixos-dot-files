@@ -74,9 +74,6 @@ in
       openvpn
       wireguard-tools
       
-      # Privacy browsers
-      (mkIf cfg.browser.torBrowser tor-browser-bundle-bin)
-      
       # Network analysis tools
       nmap
       tcpdump
@@ -87,47 +84,29 @@ in
       v2ray
       
       # Certificate management
-      ca-certificates
+      cacert
       openssl
-    ] ++ (mkIf cfg.riseupVpn.enable [
-      # Riseup VPN dependencies
+      
+      # Python dependencies for Riseup VPN
       python3
       python3Packages.requests
       python3Packages.pycryptodome
-    ]);
+    ] ++ lib.optionals cfg.browser.torBrowser [
+      # Privacy browsers
+      tor-browser-bundle-bin
+    ];
 
     # Tor configuration
     services.tor = mkIf cfg.tor.enable {
       enable = true;
       
-      # Enable control port for applications
-      controlSocket.enable = true;
-      
-      # Client configuration
-      client = {
-        enable = true;
-        # Use entry guards for better security
-        privacyGuard = true;
-      };
-
-      # Relay configuration (disabled by default for privacy)
-      relay = {
-        enable = false;
-      };
-
       # Additional Tor configuration
       settings = {
         # SOCKS proxy on localhost
-        SocksPort = [
-          {
-            addr = "127.0.0.1";
-            port = 9050;
-          }
-        ];
+        SOCKSPort = [ "127.0.0.1:9050" ];
 
         # Control port configuration
         ControlPort = 9051;
-        ControlListenAddress = "127.0.0.1:9051";
         
         # Enable pluggable transports
         ClientTransportPlugin = mkMerge [
@@ -185,9 +164,11 @@ in
           # iptables -A OUTPUT -p tcp --dport 443 -j REJECT
         ''}
         
-        # DNS leak protection
-        iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:53
-        iptables -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:53
+        # DNS leak protection (only when dnsmasq is enabled)
+        ${optionalString config.services.dnsmasq.enable ''
+          iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:53
+          iptables -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:53
+        ''}
         
         # Block IPv6 to prevent leaks
         ip6tables -A OUTPUT -j REJECT --reject-with icmp6-no-route
@@ -197,9 +178,9 @@ in
     # Create Riseup VPN client script
     environment.etc."riseup-vpn/riseup-vpn.py" = mkIf cfg.riseupVpn.enable {
       text = ''
-        #!/usr/bin/env python3
-        """
-        Riseup VPN Client with Tor Transport Support
+#!/usr/bin/env python3
+"""
+Riseup VPN Client with Tor Transport Support
         
         This script connects to Riseup VPN with optional Tor transport
         and KER (obfs with KCP) support for censorship circumvention.
@@ -604,27 +585,10 @@ comp-lzo
     };
 
 
-    # DNS configuration for privacy
-    services.dnsmasq = mkIf cfg.enable {
-      enable = true;
-      settings = {
-        # Use secure DNS servers
-        server = [
-          "1.1.1.1"  # Cloudflare
-          "9.9.9.9"  # Quad9
-        ];
-        
-        # Privacy settings
-        no-resolv = true;
-        bogus-priv = true;
-        domain-needed = true;
-        expand-hosts = true;
-        no-hosts = true;
-        
-        # Cache settings
-        cache-size = 1000;
-      };
-    };
+    # DNS configuration for privacy is now handled in main configuration.nix
+    # to avoid conflicts with NetworkManager integration
+
+    # DNS configuration is handled in main configuration.nix
 
     # Message to user
     warnings = mkIf cfg.enable [

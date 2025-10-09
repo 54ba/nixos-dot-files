@@ -94,7 +94,7 @@
     ];
   };
 
- networking.nameservers = ["8.8.8.8" "8.8.4.4"];
+  # nameservers handled by dnsmasq configuration above
 
   # Binary cache and build optimization settings
   nix.settings = {
@@ -473,15 +473,20 @@
   services.nscd.enable = false;               # Disable problematic nsncd
   system.nssModules = lib.mkForce [];         # Disable NSS modules when nscd is disabled
   
-  # Disable systemd-resolved to use dnsmasq instead
+  # FIXED DNS CONFIGURATION: Properly disable systemd-resolved and configure NetworkManager with dnsmasq
   services.resolved.enable = lib.mkForce false; # Force disable systemd-resolved to use dnsmasq
   
-  # Enable dnsmasq DNS server (override privacy-circumvention module)
+  # Enable dnsmasq DNS server with proper NetworkManager integration
   services.dnsmasq = {
     enable = lib.mkForce true;
     settings = {
+      # Listen only on localhost to avoid conflicts with NetworkManager
+      listen-address = [ "127.0.0.1" ];
+      bind-interfaces = true;
+      
       # DNS servers to forward to (using reliable public DNS)
       server = [ "1.1.1.1" "1.0.0.1" "8.8.8.8" "8.8.4.4" "9.9.9.9" "149.112.112.112" ];
+      no-resolv = true;        # Don't read /etc/resolv.conf, use only our servers
       
       # Cache settings for better performance
       cache-size = 1000;
@@ -489,11 +494,6 @@
       # Security settings
       domain-needed = true;    # Never forward plain names (without a dot or domain part)
       bogus-priv = true;       # Fake reverse lookups for RFC1918 private address ranges
-      no-resolv = true;        # Don't read /etc/resolv.conf, use only our servers
-      
-      # Network interface to bind to (listen on all interfaces)
-      interface = [ "lo" ];
-      bind-interfaces = true;
       
       # Local domain settings
       expand-hosts = true;     # Add domain to simple names in /etc/hosts
@@ -501,23 +501,24 @@
       
       # Enhanced security and performance settings
       no-hosts = false;        # Do read /etc/hosts file
-      addn-hosts = "/etc/hosts"; # Additional hosts file
       
-      # Logging for troubleshooting (can be disabled later)
-      log-queries = false;     # Don't log DNS queries (set to true for debugging)
+      # Logging disabled for performance
+      log-queries = false;     # Don't log DNS queries
       log-dhcp = false;        # Don't log DHCP transactions
       
       # Performance optimizations
       dns-forward-max = 150;   # Maximum number of concurrent DNS queries
-      
-      # DHCP disabled by default (enable if needed)
-      # dhcp-range = "192.168.1.100,192.168.1.200,24h";
-      
-      # Local network configuration (adjust as needed)
-      # local = "/local/";
-      # address = "/local/127.0.0.1";
     };
   };
+  
+  # Configure NetworkManager to use dnsmasq instead of systemd-resolved
+  networking.networkmanager.dns = "dnsmasq";
+  
+  # Override resolv.conf to use dnsmasq
+  environment.etc."resolv.conf".text = lib.mkForce ''
+    nameserver 127.0.0.1
+    options edns0
+  '';
   
   # NetworkManager configuration is now handled by modules/networking.nix
   
