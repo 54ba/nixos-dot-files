@@ -16,9 +16,10 @@
       overlay-unstable = final: prev: {
         unstable = nixpkgs-unstable.legacyPackages.${system};
       };
+      cursor-overlay = import ./overlays/cursor-overlay.nix;
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ overlay-unstable ];
+        overlays = [ overlay-unstable cursor-overlay ];
         config = {
           allowUnfree = true;
           # Force use of binary caches and avoid building from source
@@ -33,7 +34,7 @@
           ./configuration.nix
           {
             # Configure nixpkgs overlays and config properly
-            nixpkgs.overlays = [ overlay-unstable ];
+            nixpkgs.overlays = [ overlay-unstable cursor-overlay ];
             nixpkgs.config = {
               allowUnfree = true;
               allowBroken = false;

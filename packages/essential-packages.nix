@@ -82,6 +82,9 @@ with pkgs; [
 
   # Additional utilities
   starship   # Prompt (system-wide installation)
+  
+  # Wayland Window Managers
+  niri  # Modern tiling Wayland compositor
 
   # Android development tools
   android-tools   # ADB, fastboot, and other Android utilities
@@ -92,7 +95,7 @@ with pkgs; [
 
   # Development tools
   github-desktop
-  code-cursor  # Code-cursor editor
+  cursor-latest  # Latest Cursor AI editor from cursor.com (v1.7)
 
   # Design and media tools
   figma-linux
