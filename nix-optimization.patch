@@ -1,0 +1,119 @@
+# Nix Configuration Optimizations to Minimize Downloads
+# Apply this patch to your configuration.nix
+
+## Current Issues:
+1. keep-outputs and keep-derivations are false (line 122-123)
+2. Duplicate substituter entries causing redundant lookups
+3. No parallel build optimization  
+4. GC settings too aggressive (7d cleanup)
+
+## Recommended Changes:
+
+### 1. Update nix.settings section (lines 96-127):
+  nix.settings = {
+    # Existing cache config (clean up duplicates)
+    substituters = [
+      "https://cache.nixos.org/"
+      "https://nix-community.cachix.org/"
+      "https://devenv.cachix.org/"
+      "https://nixpkgs-unfree.cachix.org/"
+      "https://cuda-maintainers.cachix.org/"
+      "https://hyprland.cachix.org/"
+      # Add these for better coverage:
+      "https://fossar.cachix.org"
+      "https://nixpkgs-python.cachix.org"
+      "https://tweag.cachix.org"
+    ];
+    
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
+      "nixpkgs-unfree.cachix.org-1:hqvoInulhbV4nJ9yJOEr+4wxhDV4xq2d1DK7S6Nj6rs="
+      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPiCgBV8vQQGjqozR5lnLBcBJKqKzR6bE="
+      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3rkCI6Vd0HQRSIo3VbK+LSnRVQCQ="
+      "fossar.cachix.org-1:Zv6FuqIboeHPWQS7ysLCJ7UT7xExb4OE8c4LyGb5AsE="
+      "nixpkgs-python.cachix.org-1:hxjI7pFxTyuTHn2NkvWCrAUcNZLNS3ZAvfYNuYifcEU="
+      "tweag.cachix.org-1:1kI0+PcOXktlm12UUDAEz7SErbLXsxOEKaEsAjxT8Dg="
+    ];
+    
+    # IMPORTANT: Keep derivations to avoid redownloads
+    keep-outputs = true;        # CHANGED from false 
+    keep-derivations = true;    # CHANGED from false
+    
+    # Optimize parallel downloads/builds
+    max-jobs = 4;                    # INCREASED from 2 (adjust to your CPU)
+    cores = 4;                       # INCREASED from 2 
+    max-substitution-jobs = 32;      # Parallel substitution downloads
+    
+    # Keep other optimizations
+    builders-use-substitutes = true;
+    substitute = true;
+    require-sigs = true;
+    fallback = true;
+    auto-optimise-store = true;
+    allow-import-from-derivation = true;
+    sandbox = true;
+    
+    # Connection timeouts
+    connect-timeout = 30;
+    stalled-download-timeout = 600;  # INCREASED from 300
+  };
+
+### 2. Update garbage collection (lines 148-154):
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";  # CHANGED from 7d - keep more generations
+  };
+
+### 3. Update extraOptions (lines 136-146):
+  nix.extraOptions = ''
+    experimental-features = nix-command flakes
+    keep-outputs = true                    # CHANGED from false
+    keep-derivations = true               # CHANGED from false  
+    builders-use-substitutes = true
+    substitute = true
+    stalled-download-timeout = 600        # CHANGED from 300
+    connect-timeout = 30
+    max-substitution-jobs = 32            # INCREASED from 16
+    warn-dirty = false
+  '';
+
+### 4. Add these settings to avoid unnecessary rebuilds:
+  # Add to your configuration.nix after nix settings
+  
+  # Prevent unnecessary rebuilds by pinning nixpkgs
+  system.autoUpgrade.enable = false;  # Don't auto-upgrade
+  
+  # Optional: Add binary cache status check
+  nix.extraOptions = ''
+    # ... existing options ...
+    # Check binary cache availability before building
+    builders-use-substitutes = true
+    substitute-on-destination = true
+  '';
+
+## Summary of Benefits:
+1. **keep-outputs/derivations = true**: Prevents redownloading build dependencies
+2. **Extended GC period (30d)**: Keeps more generations to avoid cache misses
+3. **More parallel jobs**: Faster downloads and builds
+4. **Better cache coverage**: Added Python, Flutter, and other specialized caches
+5. **Longer timeouts**: Prevents premature fallback to building from source
+
+## Usage Instructions:
+1. Review and apply these changes to your configuration.nix
+2. Test with: `sudo nixos-rebuild switch --flake .#mahmoud-laptop`
+3. Monitor build times - should be much faster for subsequent builds
+4. Adjust max-jobs/cores based on your CPU capabilities (check with `nproc`)
+
+## Future Recommendations:
+1. **Only update flakes when needed**: Use `nix flake lock --update-input nixpkgs` for targeted updates
+2. **Test before switching**: Use `nixos-rebuild test` to check compatibility
+3. **Keep a few generations**: Use `nixos-rebuild boot` for safer updates
+4. **Monitor cache hit rates**: Check download vs build ratios
+
+## Cache Hit Optimization:
+- With these settings, subsequent rebuilds should mostly use cached binaries
+- Major downloads only occur when updating to newer nixpkgs commits
+- Consider pinning critical inputs in flake.nix for stability

@@ -20,6 +20,9 @@
     ./modules/security.nix
     ./modules/users.nix
     
+    # Privacy and censorship circumvention
+    ./modules/privacy-circumvention.nix      # ENABLED - Tor, obfs4, Snowflake, Riseup VPN
+    
     # Desktop environment
     ./modules/display-manager.nix
     ./modules/wayland.nix
@@ -28,6 +31,7 @@
     
     # Package management
     ./modules/core-packages.nix
+    ./modules/profile-packages.nix
     ./modules/shell-environment.nix
     
     # Development tools
@@ -465,11 +469,55 @@
   # Home Manager Integration - Disabled (permission issues)
 
   # ===== CRITICAL FIXES FOR SYSTEMD ISSUES =====
-  # Fix nsncd service failures by using systemd-resolved instead
+  # Fix nsncd service failures by disabling it and using dnsmasq instead
   services.nscd.enable = false;               # Disable problematic nsncd
   system.nssModules = lib.mkForce [];         # Disable NSS modules when nscd is disabled
-  services.resolved.enable = true;            # Enable modern DNS resolver
-  services.resolved.dnssec = "false";         # Avoid DNSSEC issues on some networks
+  
+  # Disable systemd-resolved to use dnsmasq instead
+  services.resolved.enable = lib.mkForce false; # Force disable systemd-resolved to use dnsmasq
+  
+  # Enable dnsmasq DNS server (override privacy-circumvention module)
+  services.dnsmasq = {
+    enable = lib.mkForce true;
+    settings = {
+      # DNS servers to forward to (using reliable public DNS)
+      server = [ "1.1.1.1" "1.0.0.1" "8.8.8.8" "8.8.4.4" "9.9.9.9" "149.112.112.112" ];
+      
+      # Cache settings for better performance
+      cache-size = 1000;
+      
+      # Security settings
+      domain-needed = true;    # Never forward plain names (without a dot or domain part)
+      bogus-priv = true;       # Fake reverse lookups for RFC1918 private address ranges
+      no-resolv = true;        # Don't read /etc/resolv.conf, use only our servers
+      
+      # Network interface to bind to (listen on all interfaces)
+      interface = [ "lo" ];
+      bind-interfaces = true;
+      
+      # Local domain settings
+      expand-hosts = true;     # Add domain to simple names in /etc/hosts
+      domain = "local";        # Default domain for expand-hosts
+      
+      # Enhanced security and performance settings
+      no-hosts = false;        # Do read /etc/hosts file
+      addn-hosts = "/etc/hosts"; # Additional hosts file
+      
+      # Logging for troubleshooting (can be disabled later)
+      log-queries = false;     # Don't log DNS queries (set to true for debugging)
+      log-dhcp = false;        # Don't log DHCP transactions
+      
+      # Performance optimizations
+      dns-forward-max = 150;   # Maximum number of concurrent DNS queries
+      
+      # DHCP disabled by default (enable if needed)
+      # dhcp-range = "192.168.1.100,192.168.1.200,24h";
+      
+      # Local network configuration (adjust as needed)
+      # local = "/local/";
+      # address = "/local/127.0.0.1";
+    };
+  };
   
   # NetworkManager configuration is now handled by modules/networking.nix
   
@@ -589,6 +637,41 @@
     podman.enable = false;       # Disable Podman to avoid conflicts
     docker.enable = true;        # Enable Docker support
     dockerCompat = false;        # Disable Docker compatibility (not needed when using Docker directly)
+  };
+
+  # Privacy and Censorship Circumvention
+  custom.privacy-circumvention = {
+    enable = true;                # Enable censorship circumvention tools
+    
+    # Tor with pluggable transports
+    tor = {
+      enable = true;             # Enable Tor with SOCKS proxy
+      obfs4 = {
+        enable = true;           # Enable obfs4 bridges for traffic obfuscation
+        bridges = [              # Add obfs4 bridges (you can add more here)
+          # Example bridges - replace with actual working bridges
+          # "obfs4 192.95.36.142:443 CDF2E852BF539B82BD549EB5A0C1F7C5CA26881BA57A99E8F6A3A59C2B21B30E cert=SWnSJ4z5Fq1LQOCDQCu3AcVUiHPFnUTqBL6mPZnDU55JYkc+Tnn7a9g+CW8FVnE2z5BF6g iat-mode=0"
+          # "obfs4 85.31.186.98:443 011F2599C0E9B27EE74B353155E244813763C3E5 cert=ayq0XzCwhpdysn5o0EyDUbmSOx3X/oTEbzDMvjNqKoZd/z7y7L9DaXEEEhWOjfWPmDvRyQ iat-mode=0"
+        ];
+      };
+      snowflake = {
+        enable = true;           # Enable Snowflake pluggable transport
+        # Default settings for Snowflake - will use built-in configuration
+      };
+    };
+    
+    # Riseup VPN with Tor transport support
+    riseupVpn = {
+      enable = true;             # Enable Riseup VPN client
+      useTorTransport = false;   # Set to true to use Tor as transport by default
+      kerSupport = true;         # Enable KER (obfs with KCP) support
+    };
+    
+    # Privacy browsers
+    browser = {
+      torBrowser = true;         # Enable Tor Browser
+      hardened = true;           # Enable hardened browser configuration
+    };
   };
 
   # === ACTIVE MODULE CONFIGURATIONS ===
@@ -776,6 +859,9 @@
     gaming.enable = true;                  # Enable gaming packages for SteamOS
     pentest.enable = true;                 # ENABLED - Testing penetration testing tools
   };
+  
+  # Profile-based packages migrated to system config
+  custom.profile-packages.enable = true;    # ENABLED - Packages from nix profiles
   
   # Penetration Testing Tools (handled by custom.packages.pentest.enable above)
   
@@ -1071,6 +1157,10 @@ EOF
       iotop
       smartmontools
       
+      # Cypress testing framework with all dependencies
+      cypress                # Cypress end-to-end testing framework
+      glib                   # GLib library for Cypress
+
       # XDG Desktop utilities and integration tools
       xdg-utils                # XDG desktop integration utilities (xdg-open, xdg-mime, etc.)
       xdg-user-dirs           # XDG user directory management

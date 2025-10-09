@@ -43,6 +43,12 @@ with lib;
       mesa                      # Graphics drivers
       libdrm                    # Direct Rendering Manager
       
+      # Window managers and compositors
+      niri                      # Modern tiling Wayland compositor
+      waybar                    # Status bar for Wayland compositors
+      wofi                      # Application launcher for Wayland
+      mako                      # Notification daemon for Wayland
+      
       # CRITICAL: Screen sharing and portal support (always enabled)
       xdg-desktop-portal        # Desktop portal framework
       xdg-desktop-portal-gnome  # GNOME portal implementation
@@ -196,6 +202,105 @@ with lib;
         --disable-gpu-sandbox'';
     };
 
+    # === NIRI CONFIGURATION AND SYSTEM FILES ===
+    environment.etc = {
+      # Create Niri session desktop entry
+      "xdg/wayland-sessions/niri.desktop".text = ''
+        [Desktop Entry]
+        Name=Niri
+        Comment=Modern tiling Wayland compositor
+        Exec=niri --session
+        Type=Application
+        DesktopNames=niri
+      '';
+
+      # Basic Niri configuration
+      "niri/config.kdl".text = ''
+      // Basic Niri configuration for NixOS
+      input {
+          keyboard {
+              xkb {
+                  layout "us"
+              }
+          }
+          
+          touchpad {
+              tap
+              dwt
+              natural-scroll
+              accel-speed 0.2
+          }
+      }
+
+      output "eDP-1" {
+          mode "1920x1080@60.0"
+      }
+
+      layout {
+          gaps 8
+          center-focused-column "on-overflow"
+          
+          preset-column-widths {
+              proportion 0.33333
+              proportion 0.5
+              proportion 0.66667
+          }
+          
+          default-column-width { proportion 0.5; }
+      }
+
+      spawn-at-startup "waybar"
+      spawn-at-startup "mako"
+
+      binds {
+          Mod+Return { spawn "gnome-terminal"; }
+          Mod+d { spawn "wofi" "--show" "drun"; }
+          Mod+q { close-window; }
+          Mod+Shift+e { quit; }
+          
+          Mod+Left { focus-column-left; }
+          Mod+Down { focus-window-down; }
+          Mod+Up { focus-window-up; }
+          Mod+Right { focus-column-right; }
+          
+          Mod+Shift+Left { move-column-left; }
+          Mod+Shift+Down { move-window-down; }
+          Mod+Shift+Up { move-window-up; }
+          Mod+Shift+Right { move-column-right; }
+          
+          Mod+1 { focus-workspace 1; }
+          Mod+2 { focus-workspace 2; }
+          Mod+3 { focus-workspace 3; }
+          Mod+4 { focus-workspace 4; }
+          
+          Mod+Shift+1 { move-column-to-workspace 1; }
+          Mod+Shift+2 { move-column-to-workspace 2; }
+          Mod+Shift+3 { move-column-to-workspace 3; }
+          Mod+Shift+4 { move-column-to-workspace 4; }
+          
+          Print { spawn "flameshot" "gui"; }
+      }
+
+      window-rules {
+          geometry-corner-radius 8
+          clip-to-geometry true
+      }
+
+      animations {
+          slowdown 1.0
+      }
+    '';
+    } // mkIf config.custom.wayland.electronApps.suppressWarnings {
+      # Chromium flags for logging suppression
+      "chromium-flags.conf".text = ''
+        --disable-logging
+        --log-level=3
+        --quiet
+        --disable-background-timer-throttling
+        --disable-backgrounding-occluded-windows
+        --disable-renderer-backgrounding
+      '';
+    };
 
     # === XDG DESKTOP PORTAL CONFIGURATION ===
     # Only configure portals if screen-sharing module is not enabled (to avoid conflicts)
@@ -267,15 +372,6 @@ with lib;
     ];
 
     # === LOGGING AND DEBUG OPTIMIZATION ===
-    environment.etc = mkIf config.custom.wayland.electronApps.suppressWarnings {
-      "chromium-flags.conf".text = ''
-        --disable-logging
-        --log-level=3
-        --quiet
-        --disable-background-timer-throttling
-        --disable-backgrounding-occluded-windows
-        --disable-renderer-backgrounding
-      '';
-    };
+    # Chromium flags for logging suppression are now merged with the main environment.etc
   };
 }
