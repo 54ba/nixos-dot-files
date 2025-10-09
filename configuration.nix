@@ -474,6 +474,7 @@
   system.nssModules = lib.mkForce [];         # Disable NSS modules when nscd is disabled
   
   # FIXED DNS CONFIGURATION: Properly disable systemd-resolved and configure NetworkManager with dnsmasq
+  # (Override networking module which enables systemd-resolved)
   services.resolved.enable = lib.mkForce false; # Force disable systemd-resolved to use dnsmasq
   
   # Enable dnsmasq DNS server with proper NetworkManager integration
@@ -511,8 +512,11 @@
     };
   };
   
-  # Configure NetworkManager to use dnsmasq instead of systemd-resolved
-  networking.networkmanager.dns = "dnsmasq";
+  # Configure NetworkManager to use dnsmasq instead of systemd-resolved (override networking module)
+  networking.networkmanager = {
+    dns = lib.mkForce "dnsmasq";
+    settings.main.dns = lib.mkForce "dnsmasq";
+  };
   
   # Override resolv.conf to use dnsmasq
   environment.etc."resolv.conf".text = lib.mkForce ''
