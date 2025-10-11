@@ -165,37 +165,37 @@ with lib;
     # System services and environment for Niri
     services.dbus.enable = true;
     xdg.portal = {
-      enable = true;
-      wlr.enable = true;
-      extraPortals = with pkgs; [
+      enable = mkDefault true;
+      wlr.enable = mkDefault true;
+      extraPortals = mkDefault (with pkgs; [
         xdg-desktop-portal-wlr
         xdg-desktop-portal-gtk
-      ];
-      config.common.default = [ "wlr" "gtk" ];
+      ]);
+      config.common.default = mkDefault [ "wlr" "gtk" ];
     };
 
     # Environment variables for Niri session
     environment.sessionVariables = {
-      NIXOS_OZONE_WL = "1";
-      MOZ_ENABLE_WAYLAND = "1";
-      QT_QPA_PLATFORM = "wayland";
-      GDK_BACKEND = "wayland";
-      XDG_CURRENT_DESKTOP = "niri";
-      XDG_SESSION_DESKTOP = "niri";
-      XDG_SESSION_TYPE = "wayland";
-      WLR_NO_HARDWARE_CURSORS = "1";
+      NIXOS_OZONE_WL = mkDefault "1";
+      MOZ_ENABLE_WAYLAND = mkDefault "1";
+      QT_QPA_PLATFORM = mkDefault "wayland";
+      GDK_BACKEND = mkDefault "wayland";
+      XDG_CURRENT_DESKTOP = mkForce "niri";
+      XDG_SESSION_DESKTOP = mkForce "niri";
+      XDG_SESSION_TYPE = mkForce "wayland";
+      WLR_NO_HARDWARE_CURSORS = mkDefault "1";
     };
 
     # Security and permissions
-    security.polkit.enable = true;
-    security.pam.services.swaylock = {};
+    security.polkit.enable = mkDefault true;
+    security.pam.services.swaylock = mkDefault {};
 
     # Audio support
     services.pipewire = {
-      enable = true;
-      pulse.enable = true;
+      enable = mkDefault true;
+      pulse.enable = mkDefault true;
     };
-    security.rtkit.enable = true;
+    security.rtkit.enable = mkDefault true;
 
     # Fonts
     fonts.packages = with pkgs; [
