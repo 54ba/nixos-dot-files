@@ -28,6 +28,7 @@
     ./modules/wayland.nix
     ./modules/gnome-extensions.nix           # ENABLED - Testing for stage view allocation warnings
     ./modules/gtk-enhanced.nix
+    ./modules/niri.nix                       # ENABLED - Niri window manager
     
     # Package management
     ./modules/core-packages.nix
@@ -582,6 +583,17 @@
       excludeApps.enable = true;      # Exclude unwanted apps
       theme.enable = true;            # Enable custom theming
     };
+  };
+  
+  # Niri Window Manager Configuration
+  custom.niri = {
+    enable = true;                    # Enable Niri scrollable-tiling compositor
+    enableGdm = true;                 # Enable GDM session integration
+    defaultTerminal = "gnome-terminal";
+    startupPrograms = [
+      "waybar"                        # Status bar
+      "dunst"                         # Notification daemon
+    ];
   };
 
   # PAM configuration handled by existing modules
