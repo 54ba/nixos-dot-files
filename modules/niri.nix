@@ -109,15 +109,15 @@ with lib;
             Mod+Print { spawn "grim" "-g" "$(slurp)"; }
             
             // Window management
-            Mod+H Left { focus-column-left; }
-            Mod+L Right { focus-column-right; }
-            Mod+J Down { focus-window-down; }
-            Mod+K Up { focus-window-up; }
+            Mod+H { focus-column-left; }
+            Mod+L { focus-column-right; }
+            Mod+J { focus-window-down; }
+            Mod+K { focus-window-up; }
             
-            Mod+Shift+H Shift+Left { move-column-left; }
-            Mod+Shift+L Shift+Right { move-column-right; }
-            Mod+Shift+J Shift+Down { move-window-down; }
-            Mod+Shift+K Shift+Up { move-window-up; }
+            Mod+Shift+H { move-column-left; }
+            Mod+Shift+L { move-column-right; }
+            Mod+Shift+J { move-window-down; }
+            Mod+Shift+K { move-window-up; }
             
             // Close window
             Mod+Q { close-window; }
@@ -154,11 +154,12 @@ with lib;
             Mod+Shift+E { quit; }
         }
 
-        window-rule {
-            // Example window rules
-            match app-id="firefox" { default-column-width { proportion 0.75; } }
-            match app-id="org.gnome.Nautilus" { default-column-width { proportion 0.5; } }
-        }
+        // Window rules can be configured later
+        // window-rule {
+        //     match app-id="firefox" {
+        //         default-column-width { proportion 0.75; }
+        //     }
+        // }
       '';
     };
 
