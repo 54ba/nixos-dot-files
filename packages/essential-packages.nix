@@ -21,6 +21,12 @@ with pkgs; [
   libsecret  # For storing credentials securely
   gnome-keyring  # GNOME keyring for credential storage
 
+  # Flutter development dependencies
+  sysprof  # System profiler
+  libsysprof-capture  # Static library for Sysprof capture data generation (provides sysprof-capture-4.pc)
+  libsecret.dev  # Development files for libsecret (provides libsecret-1.pc)
+  glib.dev  # Development files for GLib (includes sysprof-capture-4.pc)
+
   # System tray and notifications
   libnotify
   gnome-tweaks

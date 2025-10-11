@@ -56,7 +56,7 @@ with lib;
         [Desktop Entry]
         Name=Niri
         Comment=Scrollable-tiling Wayland compositor
-        Exec=niri --session
+        Exec=env XDG_CURRENT_DESKTOP=niri XDG_SESSION_DESKTOP=niri XDG_SESSION_TYPE=wayland niri --session
         Type=Application
         DesktopNames=niri
       '';
@@ -175,14 +175,12 @@ with lib;
     };
 
     # Environment variables for Niri session
+    # Note: XDG_CURRENT_DESKTOP will be set by the session file, not globally
     environment.sessionVariables = {
       NIXOS_OZONE_WL = mkDefault "1";
       MOZ_ENABLE_WAYLAND = mkDefault "1";
       QT_QPA_PLATFORM = mkDefault "wayland";
       GDK_BACKEND = mkDefault "wayland";
-      XDG_CURRENT_DESKTOP = mkForce "niri";
-      XDG_SESSION_DESKTOP = mkForce "niri";
-      XDG_SESSION_TYPE = mkForce "wayland";
       WLR_NO_HARDWARE_CURSORS = mkDefault "1";
     };
 
