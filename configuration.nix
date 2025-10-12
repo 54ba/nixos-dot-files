@@ -39,6 +39,7 @@
     ./modules/ai-services.nix
     ./modules/electron-apps.nix
     ./modules/void-editor.nix
+    ./modules/dev-libs-test.nix
     
     # Intelligent Recording System - DISABLED DUE TO CONFLICTS
     # ./modules/desktop-recording.nix                 # DISABLED - Desktop recording capabilities (conflicts)
@@ -460,6 +461,26 @@
     };
     packages.enable = true;               # ENABLED - Testing PyTorch build with binary caches
   };
+
+  # Test Development Libraries Configuration
+  custom.dev-libs-test = {
+    enable = true;                        # Enable test development libraries module
+  };
+
+  # Development Libraries Configuration - TEMPORARILY DISABLED
+  # custom.development-libraries = {
+  #   enable = true;                        # Enable development libraries module
+  #   core = true;                          # Enable core C/C++ libraries (glibc, libstdc++, etc.)
+  #   graphics = true;                      # Enable graphics libraries (Mesa, Vulkan, etc.)
+  #   multimedia = true;                    # Enable multimedia libraries (FFmpeg, GStreamer, etc.)
+  #   networking = true;                    # Enable networking libraries (OpenSSL, curl, etc.)
+  #   compression = true;                   # Enable compression libraries (zlib, bzip2, etc.)
+  #   gui = true;                           # Enable GUI libraries (GTK, Qt, etc.)
+  #   database = false;                     # Disable database libraries by default
+  #   python = false;                       # Disable Python libraries by default
+  #   nodejs = false;                       # Disable Node.js libraries by default
+  #   java = false;                         # Disable Java libraries by default
+  # };
 
   # Binary cache management with Cachix - ENABLED via root cachix.nix
   # Configuration handled by ./cachix.nix import above
