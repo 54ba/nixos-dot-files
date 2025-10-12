@@ -200,14 +200,9 @@
     };
 
     initContent = ''
-      # Enable starship prompt
-      eval "$(starship init zsh)"
-
-      # Enable zoxide
-      eval "$(zoxide init zsh)"
-
-      # Enable direnv
-      eval "$(direnv hook zsh)"
+      # Starship is enabled via programs.starship.enable = true
+      # Zoxide and direnv are enabled via their respective program configurations
+      # Removed manual initialization to prevent conflicts
 
       # Custom functions
       nixai-help() {

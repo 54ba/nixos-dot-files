@@ -78,7 +78,6 @@ in
       glibc.dev
       gcc-unwrapped.lib
       libgcc
-      libstdcxx5
       stdenv.cc.cc.lib
       binutils-unwrapped
       
@@ -97,85 +96,82 @@ in
       gnumake
       
       # Headers and development files
-      linux-headers
+      linuxHeaders
       glibc.dev
     ] ++ optionals cfg.graphics [
       # Graphics libraries
-      mesa.dev
+      mesa
       libGL
       libGLU
       vulkan-loader
       vulkan-headers
       vulkan-validation-layers
-      libglvnd.dev
-      wayland.dev
+      wayland
       wayland-protocols
-      libxkbcommon.dev
-      xorg.libX11.dev
-      xorg.libXext.dev
-      xorg.libXrandr.dev
-      xorg.libXi.dev
-      xorg.libXcursor.dev
-      xorg.libxcb.dev
-      libdrm.dev
+      libxkbcommon
+      xorg.libX11
+      xorg.libXext
+      xorg.libXrandr
+      xorg.libXi
+      xorg.libXcursor
+      xorg.libxcb
     ] ++ optionals cfg.multimedia [
       # Multimedia libraries
-      ffmpeg.dev
-      gstreamer.dev
-      gst_all_1.gstreamer.dev
-      gst_all_1.gst-plugins-base.dev
-      alsa-lib.dev
-      pulseaudio.dev
-      pipewire.dev
-      libsndfile.dev
+      ffmpeg
+      gst_all_1.gstreamer
+      gst_all_1.gst-plugins-base
+      alsa-lib
+      pulseaudio
+      pipewire
+      libsndfile
       
       # Image and video libraries
-      libjpeg.dev
-      libpng.dev
-      libtiff.dev
-      libwebp.dev
-      opencv.dev
+      libjpeg
+      libpng
+      libtiff
+      libwebp
+      opencv
     ] ++ optionals cfg.networking [
       # Networking libraries
-      openssl.dev
-      curl.dev
-      libssh.dev
-      libpcap.dev
+      openssl
+      curl
+      libssh
+      libpcap
       
       # Protocol libraries
-      protobuf.dev
-      grpc.dev
+      protobuf
+      grpc
     ] ++ optionals cfg.compression [
       # Compression libraries
-      zlib.dev
-      bzip2.dev
-      xz.dev
-      lz4.dev
-      zstd.dev
-      libarchive.dev
+      zlib
+      bzip2
+      xz
+      lz4
+      zstd
+      libarchive
     ] ++ optionals cfg.database [
       # Database libraries
-      sqlite.dev
-      postgresql.lib
-      mysql80.client
+      sqlite
+      postgresql
+      mysql80
       unixODBC
     ] ++ optionals cfg.gui [
       # GUI libraries
-      gtk3.dev
-      gtk4.dev
-      gdk-pixbuf.dev
-      cairo.dev
-      pango.dev
-      atk.dev
+      gtk3
+      gtk4
+      gdk-pixbuf
+      cairo
+      pango
+      atk
       
       # Qt libraries
-      qt5.qtbase.dev
-      qt6.qtbase.dev
+      qt5.qtbase
+      qt6.qtbase
       qt5.full
       qt6.full
     ] ++ optionals cfg.python [
       # Python development
-      python3.dev
+      python3
       python3Packages.pip
       python3Packages.setuptools
       python3Packages.wheel
@@ -198,24 +194,14 @@ in
     environment.variables = {
       # C/C++ compilation
       PKG_CONFIG_PATH = "${pkgs.pkg-config}/lib/pkgconfig:$PKG_CONFIG_PATH";
-      CPATH = lib.makeSearchPathOutput "dev" "include" (with pkgs; [
-        glibc.dev
-        gcc-unwrapped.lib
-        libffi.dev
+      CPATH = lib.makeSearchPath "include" (with pkgs; [
+        "${glibc.dev}/include"
+        "${gcc-unwrapped.lib}/include"
+        "${libffi.dev}/include"
       ] ++ optionals cfg.graphics [
-        mesa.dev
-        vulkan-headers
-        wayland.dev
-        libxkbcommon.dev
-      ] ++ optionals cfg.multimedia [
-        ffmpeg.dev
-        gstreamer.dev
-        alsa-lib.dev
-      ] ++ optionals cfg.gui [
-        gtk3.dev
-        gtk4.dev
-        cairo.dev
-        qt5.qtbase.dev
+        "${vulkan-headers}/include"
+        "${wayland}/include"
+        "${libxkbcommon}/include"
       ]);
       
       LIBRARY_PATH = lib.makeLibraryPath (with pkgs; [
@@ -230,7 +216,7 @@ in
         wayland
       ] ++ optionals cfg.multimedia [
         ffmpeg
-        gstreamer
+        gst_all_1.gstreamer
         alsa-lib
         pulseaudio
       ] ++ optionals cfg.gui [
@@ -262,10 +248,5 @@ in
     programs.zsh.shellAliases = mkIf cfg.enable {
       "dev-libs-info" = "echo 'Development libraries module enabled with: core=${toString cfg.core}, graphics=${toString cfg.graphics}, multimedia=${toString cfg.multimedia}, gui=${toString cfg.gui}'";
     };
-  };
-
-  meta = {
-    description = "Comprehensive development libraries module for NixOS";
-    maintainers = [ "NixOS Configuration" ];
   };
 }
