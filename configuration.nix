@@ -40,6 +40,7 @@
     ./modules/electron-apps.nix
     ./modules/void-editor.nix
     ./modules/development-libraries.nix
+    ./modules/flutter-development.nix
     
     # Intelligent Recording System - DISABLED DUE TO CONFLICTS
     # ./modules/desktop-recording.nix                 # DISABLED - Desktop recording capabilities (conflicts)
@@ -240,6 +241,15 @@
   
   # Enable system optimization
   custom.system-optimization.enable = true;         # Enable system performance optimizations
+  
+  # Enable Flutter development environment
+  custom.flutter-development = {
+    enable = true;                                   # Enable Flutter development tools
+    channel = "stable";                             # Use stable Flutter channel
+    androidDevelopment = true;                       # Enable Android development
+    webDevelopment = true;                           # Enable web development
+    linuxDevelopment = true;                         # Enable Linux desktop development
+  };
   
   # Enable enhanced system services
   custom.services.system = {
@@ -737,6 +747,9 @@
   #   # Ensure WAYLAND_DISPLAY is set globally for all applications
   environment.sessionVariables = {
     WAYLAND_DISPLAY = "wayland-0";
+    # Library paths for runtime linking - includes libglib-2.0.so.0 and all system libraries
+    # Use mkAfter to append to existing LD_LIBRARY_PATH (from CUDA, PipeWire, etc.)
+    LD_LIBRARY_PATH = lib.mkAfter [ "/run/current-system/sw/lib" ];
   };
 
   # NVIDIA Performance Optimizations - DISABLED temporarily to fix login/logout loop
@@ -1154,6 +1167,7 @@ EOF
       # Cypress testing framework with all dependencies
       cypress                # Cypress end-to-end testing framework
       glib                   # GLib library for Cypress
+      glib.out               # GLib runtime libraries (libglib-2.0.so.0)
 
       # XDG Desktop utilities and integration tools
       xdg-utils                # XDG desktop integration utilities (xdg-open, xdg-mime, etc.)
@@ -1171,6 +1185,11 @@ EOF
       xdg-ninja              # Check for XDG Base Directory compliance
       handlr                  # Better xdg-utils alternative for file associations
       mimeo                   # File association and MIME type manager
+      
+      # NixOS Environment Management Tools
+      (pkgs.writeShellScriptBin "env-inspector" ''
+        exec ${pkgs.bash}/bin/bash /etc/nixos/scripts/env-inspector.sh "$@"
+      '')
       
       # CRITICAL SCREEN SHARING PACKAGES
       gst_all_1.gstreamer   # GStreamer 1.x multimedia framework
@@ -1492,7 +1511,7 @@ EOF
       })
     ];
 
-    # Global environment variables
+    # Global environment variables - Enhanced with comprehensive system paths
     variables = {
       EDITOR = "vim";
       VISUAL = "vim";
@@ -1509,6 +1528,27 @@ EOF
       MOZ_USE_XINPUT2 = "1";
       MOZ_WEBRENDER = "1";
       MOZ_ACCELERATED = "1";
+      
+      # Comprehensive system library paths for all installed packages
+      NIX_PROFILES = "/nix/var/nix/profiles/default /run/current-system/sw $HOME/.nix-profile";
+      
+      # Include system package binaries in PATH (appended by NixOS)
+      # PATH is automatically managed by NixOS to include /run/current-system/sw/bin
+      
+      # Make all installed library documentation accessible
+      INFOPATH = "/run/current-system/sw/share/info";
+      
+      # Man pages from all packages
+      MANPATH = "/run/current-system/sw/share/man";
+      
+      # Aclocal paths for autotools
+      ACLOCAL_PATH = "/run/current-system/sw/share/aclocal";
+      
+      # Terminfo database
+      TERMINFO_DIRS = "/run/current-system/sw/share/terminfo";
+      
+      # Locale archive
+      LOCALE_ARCHIVE = "/run/current-system/sw/lib/locale/locale-archive";
       
       # XDG Base Directory Specification
       XDG_CONFIG_HOME = "$HOME/.config";
