@@ -749,7 +749,7 @@
     WAYLAND_DISPLAY = "wayland-0";
     # Library paths for runtime linking - includes libglib-2.0.so.0 and all system libraries
     # Use mkAfter to append to existing LD_LIBRARY_PATH (from CUDA, PipeWire, etc.)
-    LD_LIBRARY_PATH = lib.mkAfter [ "/run/current-system/sw/lib" ];
+    LD_LIBRARY_PATH = lib.mkBefore [ "/run/current-system/sw/lib" ];
   };
 
   # NVIDIA Performance Optimizations - DISABLED temporarily to fix login/logout loop
