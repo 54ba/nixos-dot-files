@@ -172,6 +172,10 @@ with lib;
       # Android development packages
       (optionals config.custom.services.system.android.enable [
         android-tools       # ADB, fastboot, etc.
+        libmtp             # MTP support for Android devices
+        jmtpfs             # FUSE-based MTP filesystem
+        gvfs               # GNOME virtual file system
+        usbutils           # USB device utilities
         # android-udev-rules removed due to systemctl path issues
       ]) ++
       
@@ -201,6 +205,17 @@ with lib;
     ]);
     
     # Enhanced udev rules for hardware access
+    # MTP/PTP support for mobile devices
+    services.gvfs.enable = mkIf config.custom.services.system.android.enable true;
+    services.udev.packages = mkIf config.custom.services.system.android.enable (with pkgs; [
+      libmtp
+      android-udev-rules
+    ]);
+    
+    # Filesystem support for removable devices
+    boot.supportedFilesystems = mkIf config.custom.services.system.android.enable [ "ntfs" "exfat" "vfat" ];
+    
+
     services.udev.extraRules = ''
       # Allow users in audio group to access audio devices
       SUBSYSTEM=="sound", GROUP="audio", MODE="0664"
@@ -222,6 +237,17 @@ with lib;
       
       # FUSE device permissions
       KERNEL=="fuse", GROUP="fuse", MODE="0664"
+      
+      # Android/MTP device permissions
+      SUBSYSTEM=="usb", ATTR{idVendor}=="*", MODE="0664", GROUP="adbusers"
+      SUBSYSTEM=="usb", ENV{ID_MTP_DEVICE}=="*", GROUP="adbusers", MODE="0664", TAG+="uaccess"
+      SUBSYSTEM=="usb", ENV{ID_MEDIA_PLAYER}=="*", GROUP="adbusers", MODE="0664", TAG+="uaccess"
+      
+      # Common Android vendors
+      SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", GROUP="adbusers", TAG+="uaccess"
+      SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", GROUP="adbusers", TAG+="uaccess"
+      SUBSYSTEM=="usb", ATTR{idVendor}=="22b8", GROUP="adbusers", TAG+="uaccess"
+      SUBSYSTEM=="usb", ATTR{idVendor}=="12d1", GROUP="adbusers", TAG+="uaccess"
     '';
   };
 }

@@ -164,6 +164,21 @@ in
       pango
       atk
       
+      # Additional GUI libraries for Flutter/OpenGL
+      libepoxy
+      fontconfig
+      
+      # Additional system libraries for development
+      libsepol
+      libsecret
+      pcre2
+      util-linux.dev
+      libselinux
+      libthai.dev
+      libdatrie.dev
+      sysprof  # provides libsysprof-capture
+      sysprof.dev
+      
       # Qt libraries
       qt5.qtbase
       qt6.qtbase
@@ -190,42 +205,9 @@ in
       gradle
     ];
 
-    # Ensure all libraries are available in the system library path
-    environment.variables = {
-      # C/C++ compilation
-      PKG_CONFIG_PATH = "${pkgs.pkg-config}/lib/pkgconfig:$PKG_CONFIG_PATH";
-      CPATH = lib.makeSearchPath "include" (with pkgs; [
-        "${glibc.dev}/include"
-        "${gcc-unwrapped.lib}/include"
-        "${libffi.dev}/include"
-      ] ++ optionals cfg.graphics [
-        "${vulkan-headers}/include"
-        "${wayland}/include"
-        "${libxkbcommon}/include"
-      ]);
-      
-      LIBRARY_PATH = lib.makeLibraryPath (with pkgs; [
-        glibc
-        gcc-unwrapped.lib
-        libgcc
-        stdenv.cc.cc.lib
-      ] ++ optionals cfg.graphics [
-        mesa
-        libGL
-        vulkan-loader
-        wayland
-      ] ++ optionals cfg.multimedia [
-        ffmpeg
-        gst_all_1.gstreamer
-        alsa-lib
-        pulseaudio
-      ] ++ optionals cfg.gui [
-        gtk3
-        gtk4
-        cairo
-        qt5.qtbase
-      ]);
-    };
+    # NOTE: Environment variables removed from this module to avoid conflicts with Flutter and other modules
+    # The packages are installed and available via /run/current-system/sw/{lib,include,bin}
+    # Use the env-inspector tool to view all environment variables and library paths
 
     # Create symbolic links for commonly expected library locations
     system.activationScripts.development-libraries = lib.mkIf cfg.core ''

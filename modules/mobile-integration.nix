@@ -271,6 +271,14 @@ in
     # System packages for mobile integration
     environment.systemPackages = with pkgs; [
       # Core mobile integration
+      # MTP support for USB file transfer
+      mtpfs
+      jmtpfs
+      go-mtpfs
+      gvfs
+      libmtp
+      libnotify
+      dunst
     ] ++ optionals cfg.kdeConnect.enable [
       kdePackages.kdeconnect-kde
       plasma5Packages.kdeconnect-kde
@@ -445,6 +453,12 @@ in
 
     # Enable necessary system services
     services = {
+      # GVFS for automatic USB device mounting
+      gvfs = {
+        enable = true;
+        package = pkgs.gvfs;
+      };
+      
       # Avahi for service discovery (mDNS/Bonjour)
       avahi = {
         enable = true;
@@ -505,13 +519,36 @@ in
     ];
 
     services.udev.extraRules = ''
-      # Android devices
-      SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="adbusers"
-      SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="adbusers"
-      SUBSYSTEM=="usb", ATTR{idVendor}=="22b8", MODE="0666", GROUP="adbusers"
+      # Android devices - Google
+      SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      # Samsung
+      SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      # Motorola
+      SUBSYSTEM=="usb", ATTR{idVendor}=="22b8", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      # Xiaomi
+      SUBSYSTEM=="usb", ATTR{idVendor}=="2717", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      # OnePlus
+      SUBSYSTEM=="usb", ATTR{idVendor}=="2a70", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      # Huawei
+      SUBSYSTEM=="usb", ATTR{idVendor}=="12d1", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      # Oppo
+      SUBSYSTEM=="usb", ATTR{idVendor}=="22d9", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      # Vivo
+      SUBSYSTEM=="usb", ATTR{idVendor}=="2d95", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      # Realme
+      SUBSYSTEM=="usb", ATTR{idVendor}=="22d9", MODE="0666", GROUP="adbusers", TAG+="uaccess", ENV{ID_MTP_DEVICE}="1"
+      
+      # Generic MTP devices
+      SUBSYSTEM=="usb", ENV{ID_MTP_DEVICE}=="1", MODE="0666", GROUP="adbusers", TAG+="uaccess"
       
       # iOS devices
-      SUBSYSTEM=="usb", ATTR{idVendor}=="05ac", MODE="0666", GROUP="users"
+      SUBSYSTEM=="usb", ATTR{idVendor}=="05ac", MODE="0666", GROUP="users", TAG+="uaccess"
+      
+      # Notify user when Android device is connected
+      ACTION=="add", SUBSYSTEM=="usb", ENV{ID_MTP_DEVICE}=="1", RUN+="${pkgs.bash}/bin/bash -c 'DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000 ${pkgs.libnotify}/bin/notify-send -u normal \"Mobile Device Connected\" \"Android device detected via USB\" -i phone'"
+      
+      # Notify user when device is disconnected
+      ACTION=="remove", SUBSYSTEM=="usb", ENV{ID_MTP_DEVICE}=="1", RUN+="${pkgs.bash}/bin/bash -c 'DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000 ${pkgs.libnotify}/bin/notify-send -u normal \"Mobile Device Disconnected\" \"Android device removed\" -i phone'"
       
       # Enable wake on USB for mobile connections
       ACTION=="add", SUBSYSTEM=="usb", ATTR{power/wakeup}="enabled"
@@ -689,6 +726,36 @@ in
 
     # Systemd user services for session-based mobile integration
     systemd.user.services = {
+      # KDE Connect user service
+      kdeconnect = mkIf cfg.kdeConnect.enable {
+        description = "KDE Connect";
+        wantedBy = [ "graphical-session.target" ];
+        partOf = [ "graphical-session.target" ];
+        after = [ "graphical-session.target" ];
+        
+        serviceConfig = {
+          Type = "simple";
+          ExecStart = "${pkgs.kdePackages.kdeconnect-kde}/bin/kdeconnectd";
+          Restart = "on-failure";
+          RestartSec = "10s";
+        };
+      };
+      
+      # KDE Connect indicator
+      kdeconnect-indicator = mkIf cfg.kdeConnect.enable {
+        description = "KDE Connect Indicator";
+        wantedBy = [ "graphical-session.target" ];
+        partOf = [ "graphical-session.target" ];
+        after = [ "kdeconnect.service" ];
+        
+        serviceConfig = {
+          Type = "simple";
+          ExecStart = "${pkgs.kdePackages.kdeconnect-kde}/bin/kdeconnect-indicator";
+          Restart = "on-failure";
+          RestartSec = "10s";
+        };
+      };
+      
       # Mobile notification forwarder
       mobile-notifications = mkIf cfg.notifications.enable {
         description = "Mobile Notification Forwarder";

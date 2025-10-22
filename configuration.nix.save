@@ -40,6 +40,7 @@
     ./modules/electron-apps.nix
     ./modules/void-editor.nix
     ./modules/development-libraries.nix
+    ./modules/flutter-development.nix
     
     # Intelligent Recording System - DISABLED DUE TO CONFLICTS
     # ./modules/desktop-recording.nix                 # DISABLED - Desktop recording capabilities (conflicts)
@@ -63,7 +64,7 @@
     # SteamOS and Mobile PC Integration - DISABLED DUE TO CONFLICTS
     # ./modules/steamos-gaming.nix                 # DISABLED - SteamOS-like gaming environment (conflicts)
     # ./modules/steamos-mobile-suite.nix           # DISABLED - SteamOS mobile suite (conflicts)
-    ./modules/mobile-integration.nix             # ENABLED - Part of mobile suite (conflicts)
+    # ./modules/mobile-integration.nix             # DISABLED - Part of mobile suite (conflicts)
     # ./modules/remote-control.nix                 # DISABLED - Remote control capabilities (conflicts)
     # ./modules/ssh-remote-access.nix              # DISABLED - SSH remote access (conflicts)
     
@@ -71,7 +72,7 @@
     ./modules/boot-enhancements.nix              # ENABLED - Boot enhancements
     # ./modules/security-services.nix             # DISABLED - Security services (conflicts)
     # ./modules/user-security.nix                 # DISABLED - User security enhancements (conflicts)
-    ./modules/device-permissions.nix            # ENABLED - Device permission management (conflicts)
+    # ./modules/device-permissions.nix            # DISABLED - Device permission management (conflicts)
     ./modules/system-optimization.nix
     ./modules/system-services.nix
     ./modules/optional-packages.nix              # ENABLED - Optional package collections
@@ -216,7 +217,7 @@
     networkManager.enable = true;
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 22 465 587 25 ];
+      allowedTCPPorts = [ 22 20 21 ];  # Add FTP ports 20 and 21
       allowedUDPPorts = [ 53 ];
       extraRules.enable = false;  # Disable extra firewall rules
     };
@@ -241,6 +242,15 @@
   # Enable system optimization
   custom.system-optimization.enable = true;         # Enable system performance optimizations
   
+  # Enable Flutter development environment
+  custom.flutter-development = {
+    enable = false;                                  # DISABLED - Flutter development tools
+    channel = "stable";                             # Use stable Flutter channel
+    androidDevelopment = false;                      # Disable Android development
+    webDevelopment = false;                          # Disable web development
+    linuxDevelopment = false;                        # Disable Linux desktop development
+  };
+ 
   # Enable enhanced system services
   custom.services.system = {
     enable = true;                                   # Enable enhanced system services
@@ -250,7 +260,7 @@
     printing.enable = false;                         # Disable printing for now
     flatpak.enable = true;                           # Enable Flatpak
     gamemode.enable = true;                          # Enable GameMode
-    android.enable = true;                          # Disable Android tools for now
+    android.enable = false;                          # Disable Android tools for now
     fuse.enable = true;                              # Enable FUSE support
   };
   
@@ -407,7 +417,7 @@
     enable = true;                                   # Enable security services
     firewall = {
       enable = true;                                 # Enable enhanced firewall
-      allowedTCPPorts = [ 22 80 443 25 465 587 ];   # Allow SSH, HTTP, HTTPS, SMTP
+      allowedTCPPorts = [ 22 80 443 20 21 ];        # Allow SSH, HTTP, HTTPS, FTP              # Allow SSH, HTTP, HTTPS
       allowedUDPPorts = [ 53 123 68 ];              # Allow DNS, NTP, DHCP
     };
     ssh = {
@@ -449,7 +459,7 @@
 
   # AI Services with CUDA acceleration - NVIDIA drivers handled by nvidia-performance module
   custom.ai-services = {
-    enable = true;                        # Enable AI services
+    enable = false;                        # Enable AI services
     ollama = {
       enable = true;                      # ENABLED - Testing PyTorch build
       acceleration = "cuda";               # Enable CUDA acceleration
@@ -463,8 +473,8 @@
   };
 
   # Development Libraries Configuration
-  custom.development-libraries = {
-    enable = true;                        # Enable development libraries module
+   custom.development-libraries = {
+    enable = true;                       # DISABLED - Development libraries module
     core = true;                          # Enable core C/C++ libraries (glibc, libstdc++, etc.)
     graphics = true;                      # Enable graphics libraries (Mesa, Vulkan, etc.)
     multimedia = true;                    # Enable multimedia libraries (FFmpeg, GStreamer, etc.)
@@ -476,6 +486,7 @@
     nodejs = false;                       # Disable Node.js libraries by default
     java = false;                         # Disable Java libraries by default
   };
+
 
   # Binary cache management with Cachix - ENABLED via root cachix.nix
   # Configuration handled by ./cachix.nix import above
@@ -514,10 +525,10 @@
   services.accounts-daemon.enable = true;
   
   # Fix D-Bus services for GNOME session
-  #services.dbus = {
-  #  enable = true;
-  #  packages = [ pkgs.gnome-session ];
-  #};
+  services.dbus = {
+    enable = true;
+    packages = [ pkgs.gnome-session ];
+  };
 
   # Ensure IBus is available (fixes 'ibus-daemon not found') - using new syntax
   i18n.inputMethod = {
@@ -550,6 +561,10 @@
     # WORKING ACPI CONFIGURATION (from generation 16)
     "acpi_osi=Linux"                              # Use Linux ACPI (working setting)
     "acpi_backlight=vendor"                       # Vendor backlight control
+    
+    # NVIDIA GRAPHICS CONFIGURATION - DISABLED temporarily to fix login loop
+        "nvidia_drm.modeset=1"                        # Enable NVIDIA DRM modesetting (disabled)
+        "nouveau.modeset=0"                           # Disable nouveau to use NVIDIA (disabled)
     
     # Security framework
     "lsm=landlock,yama,bpf,apparmor"
@@ -733,59 +748,14 @@
   #   # Ensure WAYLAND_DISPLAY is set globally for all applications
   environment.sessionVariables = {
     WAYLAND_DISPLAY = "wayland-0";
-    XDG_CURRENT_DESKTOP = "GNOME";
-    XDG_SESSION_TYPE = "wayland";
+    # Library paths for runtime linking - includes libglib-2.0.so.0 and all system libraries
+    # Use mkAfter to append to existing LD_LIBRARY_PATH (from CUDA, PipeWire, etc.)
+#    LD_LIBRARY_PATH = lib.mkBefore [ "/run/current-system/sw/lib" ];
   };
-  
 
-# Systemd service to fix session environment
-systemd.user.services.fix-session-env = {
-  enable = true;
-  description = "Fix session environment for GUI applications";
-  wantedBy = [ "graphical-session.target" ];
-  partOf = [ "graphical-session.target" ];
-  serviceConfig = {
-    Type = "oneshot";
-    ExecStart = "/etc/nixos/scripts/fix-session-env.sh";
-    RemainAfterExit = true;
-  };
-};
-
-# Ensure XDG runtime directories are created
-systemd.tmpfiles.rules = [
-  "d /run/user/1000 0755 mahmoud users -"
-  "d /run/user/1000/flatpak 0755 mahmoud users -"
-];
-
-# Fix for GNOME session and Flatpak
-services.flatpak.enable = true;
-
-
-# Ensure D-Bus is properly configured
-services.dbus.enable = true;
-services.dbus.packages = with pkgs; [ gnome2.GConf ];
-
-# Ensure proper session management
-services.xserver.displayManager.sessionCommands = ''
-  # Set Wayland environment for display manager
-  export WAYLAND_DISPLAY="wayland-0"
-  export XDG_CURRENT_DESKTOP="GNOME"
-  export XDG_SESSION_TYPE="wayland"
-  export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-  
-  # Electron support
-  export ELECTRON_OZONE_PLATFORM_HINT="auto"
-  export NIXOS_OZONE_WL="1"
-  
-  # Ensure Flatpak session helper can run
-  if [ -n "$XDG_RUNTIME_DIR" ] && [ -d "$XDG_RUNTIME_DIR" ]; then
-    export FLATPAK_SESSION_HELPER="$XDG_RUNTIME_DIR/flatpak-session-helper"
-  fi
-'';
-
-  # NVIDIA Performance Optimizations - ENABLED for proper GPU support
+  # NVIDIA Performance Optimizations - DISABLED temporarily to fix login/logout loop
   custom.nvidiaPerformance = {
-    enable = true;                               # Enable NVIDIA performance optimizations
+    enable = true;                              # Disable NVIDIA performance optimizations temporarily
     gaming = {
       enable = true;                             # Enable gaming optimizations
       dlss = true;                               # Enable DLSS support
@@ -964,7 +934,7 @@ services.xserver.displayManager.sessionCommands = ''
   
   # NixAI Integration
   custom.nixaiIntegration = {
-    enable = true;                         # Enable NixAI for recording system
+    enable = false;                         # Enable NixAI for recording system
     features = {
       cli = true;                          # Enable nixai CLI tools
       gui = false;                         # Disable nixai GUI applications for now
@@ -1015,7 +985,7 @@ services.xserver.displayManager.sessionCommands = ''
   users.users.mahmoud = {
     isNormalUser = true;
     description = "mahmoud";
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" "adbusers" "plugdev" "fuse" ];
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" ];
     shell = lib.mkForce pkgs.zsh;
     openssh.authorizedKeys.keys = [
       # Add your SSH public key here if needed
@@ -1042,12 +1012,6 @@ services.xserver.displayManager.sessionCommands = ''
       direnv
 
       # Development tools
-      # Android/USB file transfer
-      mtpfs
-      jmtpfs
-      go-mtpfs
-      gvfs
-      libmtp
       python3
       nodejs
       rustc
@@ -1204,6 +1168,7 @@ EOF
       # Cypress testing framework with all dependencies
       cypress                # Cypress end-to-end testing framework
       glib                   # GLib library for Cypress
+      glib.out               # GLib runtime libraries (libglib-2.0.so.0)
 
       # XDG Desktop utilities and integration tools
       xdg-utils                # XDG desktop integration utilities (xdg-open, xdg-mime, etc.)
@@ -1221,6 +1186,11 @@ EOF
       xdg-ninja              # Check for XDG Base Directory compliance
       handlr                  # Better xdg-utils alternative for file associations
       mimeo                   # File association and MIME type manager
+      
+      # NixOS Environment Management Tools
+      #(pkgs.writeShellScriptBin "env-inspector" ''
+      #  exec ${pkgs.bash}/bin/bash /etc/nixos/scripts/env-inspector.sh "$@"
+      #'')
       
       # CRITICAL SCREEN SHARING PACKAGES
       gst_all_1.gstreamer   # GStreamer 1.x multimedia framework
@@ -1542,7 +1512,7 @@ EOF
       })
     ];
 
-    # Global environment variables
+    # Global environment variables - Enhanced with comprehensive system paths
     variables = {
       EDITOR = "vim";
       VISUAL = "vim";
@@ -1559,7 +1529,29 @@ EOF
       MOZ_USE_XINPUT2 = "1";
       MOZ_WEBRENDER = "1";
       MOZ_ACCELERATED = "1";
+   /*   
+      # Comprehensive system library paths for all installed packages
+      NIX_PROFILES = "/nix/var/nix/profiles/default /run/current-system/sw $HOME/.nix-profile";
       
+      # Include system package binaries in PATH (appended by NixOS)
+      # PATH is automatically managed by NixOS to include /run/current-system/sw/bin
+      
+      # Make all installed library documentation accessible
+      INFOPATH = "/run/current-system/sw/share/info";
+      
+      # Man pages from all packages
+      MANPATH = "/run/current-system/sw/share/man";
+      
+      # Aclocal paths for autotools
+      ACLOCAL_PATH = "/run/current-system/sw/share/aclocal";
+      
+      # Terminfo database
+      TERMINFO_DIRS = "/run/current-system/sw/share/terminfo";
+      
+      # Locale archive
+      LOCALE_ARCHIVE = "/run/current-system/sw/lib/locale/locale-archive";
+     */
+ 
       # XDG Base Directory Specification
       XDG_CONFIG_HOME = "$HOME/.config";
       XDG_DATA_HOME = "$HOME/.local/share";
@@ -1600,87 +1592,45 @@ EOF
     };
   };
 
-  # Mobile Device Integration
-  custom.mobile-integration = {
-    enable = true;                            # Enable mobile device integration
+
+
+  # FTP Server Configuration
+  services.vsftpd = {
+    enable = true;                                   # Enable vsftpd FTP server
     
-    # KDE Connect for comprehensive mobile integration
-    kdeConnect = {
-      enable = true;                          # Enable KDE Connect
-      features = {
-        notifications = true;                 # Enable notification sync
-        clipboard = true;                     # Enable clipboard sharing
-        fileTransfer = true;                  # Enable file transfer
-        mediaControl = true;                  # Enable media control
-        remoteInput = true;                   # Enable remote input
-        sms = true;                           # Enable SMS integration
-        findDevice = true;                    # Enable find device
-      };
-    };
+    # Basic configuration
+    localUsers = true;                               # Allow local users to login
+    anonymousUser = false;                           # Disable anonymous access
+    writeEnable = true;                              # Allow file uploads
     
-    # Android device integration
-    android = {
-      enable = true;                          # Enable Android support
-      scrcpy = {
-        enable = true;                        # Enable scrcpy for screen mirroring
-        quality = 8;                          # Best video quality
-        wireless = true;                      # Enable wireless control
-        recordScreen = true;                  # Enable screen recording
-      };
-      adb = {
-        enable = true;                        # Enable ADB
-        wireless = true;                      # Enable wireless ADB
-        port = 5555;                          # ADB wireless port
-      };
-      apps = {
-        enable = true;                        # Enable Android app management
-        apkTool = false;                      # Disable APK analysis tools
-      };
-    };
+    # Security settings
+    chrootlocalUser = true;                          # Chroot local users to home directory
+    allowWriteableChroot = true;                     # Allow writable chroot (needed for home dirs)
     
-    # iOS device integration
-    ios = {
-      enable = false;                         # Disable iOS support
-      libimobiledevice = false;               # Disable libimobiledevice
-      uxplay = false;                         # Disable AirPlay
-      fileTransfer = false;                   # Disable iOS file transfer
-    };
-    
-    # Cross-platform features
-    crossPlatform = {
-      enable = true;                          # Enable cross-platform features
-      localsend = true;                       # Enable LocalSend
-      warpinator = true;                      # Enable Warpinator
-      snapdrop = false;                       # Disable Snapdrop
-      pairdrop = true;                        # Enable PairDrop
-    };
-    
-    # Web interface for mobile control
-    webInterface = {
-      enable = false;                          # Disable web interface (port conflict)
-      port = 8081;                            # Web interface port
-      ssl = false;                            # Disable SSL for local use
-      authentication = true;                  # Enable authentication
-    };
-    
-    # Notifications
-    notifications = {
-      enable = true;                          # Enable notification forwarding
-      pushover = false;                       # Disable Pushover
-      ntfy = true;                            # Enable ntfy.sh
-      telegram = false;                       # Disable Telegram
-    };
-    
-    # Automation features
-    automation = {
-      enable = true;                          # Enable automation
-      homeAssistant = false;                  # Disable Home Assistant
-      shortcuts = true;                       # Enable mobile shortcuts
-      tasker = true;                          # Enable Tasker integration
-    };
+    # Passive mode configuration for FileZilla
+    extraConfig = "
+pasv_enable=YES
+pasv_min_port=50000
+pasv_max_port=51000
+idle_session_timeout=600
+data_connection_timeout=120
+log_ftp_protocol=YES
+xferlog_enable=YES
+local_umask=022
+file_open_mode=0755
+use_localtime=YES
+    ";
   };
- 
 
+  # Open passive FTP port range in firewall
+  networking.firewall.allowedTCPPortRanges = [
+    { from = 50000; to = 51000; }  # FTP passive mode ports
+  ];
 
+  # Blacklist nouveau driver to prevent conflicts with NVIDIA proprietary drivers
+
+  # Force load NVIDIA modules for nvidia-performance module
 }
+
+
 

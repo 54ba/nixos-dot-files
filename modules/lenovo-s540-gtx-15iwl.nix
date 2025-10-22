@@ -71,9 +71,9 @@ in {
     ];
 
     # Kernel modules for thermal management and input devices
-    boot.kernelModules = [ "coretemp" "thinkpad_acpi" "elan_i2c" "hid_multitouch" "i2c_hid" "i2c_hid_acpi" ];
+    boot.kernelModules = [ "coretemp" "thinkpad_acpi" "elan_i2c" "hid_multitouch" "i2c_hid" "i2c_hid_acpi"  "usbnet" "rndis_host" "cdc_ether" "cdc_acm" ];
     boot.extraModprobeConfig = ''
-      options thinkpad_acpi fan_control=1
+      options thinkpad_acpi fan_control=1 battery=0
       # Force ELAN touchpad driver loading
       options elan_i2c force_elan_ic_type=1
     '';

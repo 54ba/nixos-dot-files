@@ -92,11 +92,8 @@ with lib;
     services.xserver.videoDrivers = mkIf (config.custom.ai-services.nvidia.enable && !config.custom.nvidiaPerformance.enable) [ "nvidia" ];
     
     # Blacklist nouveau driver to avoid conflicts with NVIDIA
-    boot.blacklistedKernelModules = mkIf config.custom.ai-services.nvidia.enable [ "nouveau" ];
+    #boot.blacklistedKernelModules = mkIf config.custom.ai-services.nvidia.enable [ "nouveau" ];
     
-    # Force load NVIDIA modules
-    boot.kernelModules = mkIf config.custom.ai-services.nvidia.enable [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
-
     # AI Development and nixai packages combined
     environment.systemPackages = 
       (optionals (config.custom.ai-services.enable && config.custom.ai-services.packages.enable) (with pkgs; [

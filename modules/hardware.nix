@@ -46,6 +46,15 @@ with lib;
       ];
     };
 
+    # USB Type-C support
+    boot.kernelModules = [
+      "typec"
+      "typec_ucsi"
+      "ucsi_acpi"
+      "typec_displayport"
+      "roles"
+    ];
+    
     # Graphics configuration handled by Lenovo module
 
     # Enhanced touchpad support with gestures - Force override GNOME

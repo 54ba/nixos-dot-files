@@ -1,23 +1,51 @@
 { config, pkgs, lib, ... }:
-{
-  # Basic home configuration is handled by flake.nix
-  # This file contains the user-specific package and program configurations
 
-
-  # Development packages
-  home.packages = with pkgs; [
-    # Home Manager CLI removed to avoid collision (available system-wide)
-
-    # AI/ML Development
-    python312  # Use consistent Python 3.12 instead of python3
+let
+  # Systematically collect all installed packages for dynamic path generation
+  allDevPackages = with pkgs; [
+    # Flutter/Dart Development with complete GTK3 stack
+    flutter
+    android-studio
+    android-tools
+    google-chrome
+    gtk3
+    gtk3.dev
+    glib
+    glib.dev
+    gdk-pixbuf
+    cairo
+    cairo.dev
+    pango
+    pango.dev
+    atk
+    atk.dev
+    at-spi2-atk
+    at-spi2-atk.dev
+    libepoxy
+    libepoxy.dev
+    fontconfig
+    fontconfig.dev
+    freetype
+    freetype.dev
+    harfbuzz
+    harfbuzz.dev
+    fribidi
+    fribidi.dev
+    pkg-config
+    cmake
+    ninja
+    clang
+  ];
+  
+  # AI/ML and other development packages
+  languagePackages = with pkgs; [
+    python312
     python312Packages.pip
     python312Packages.virtualenv
     poetry
     python312Packages.setuptools
     python312Packages.wheel
-
-    # Node.js/TypeScript Development
-    nodejs  # Default version to avoid conflicts
+    nodejs
     nodePackages.npm
     nodePackages.yarn
     nodePackages.pnpm
@@ -25,16 +53,11 @@
     nodePackages.ts-node
     nodePackages.eslint
     nodePackages.prettier
-
-    # Flutter/Dart Development
-    flutter
-    # dart - included with flutter, removing to avoid collision
-
-    # PHP Development
     php82
-    # php82Packages.composer - removed to avoid collision with Flutter
-
-    # Development Tools
+  ];
+  
+  # Utility packages
+  utilityPackages = with pkgs; [
     jq
     yq
     curl
@@ -45,68 +68,62 @@
     bat
     eza
     fzf
-
-    # Container Tools
     docker-compose
     podman-compose
-
-    # Nix Tools
-    nil # Nix LSP
+    nil
     nixpkgs-fmt
     alejandra
     nix-tree
     nix-du
-
-    # Terminal Tools
     starship
     zoxide
     direnv
     nix-direnv
-
-    # Editor Tools
     tree-sitter
-
-    # Communication
+  ];
+  
+  # Communication and desktop packages
+  desktopPackages = with pkgs; [
     slack
     zoom-us
     discord
-
-    # GNOME Extensions (managed by system configuration)
-    # Extensions are installed via the gnome-extensions.nix module
-    # All extensions are managed centrally to avoid conflicts
-
-    # Professional Themes and Icons
-    # Modern GTK Themes
     whitesur-gtk-theme
     nordic
     gruvbox-gtk-theme
     catppuccin-gtk
     dracula-theme
-
-    # Professional Icon Themes
     papirus-icon-theme
     papirus-folders
     tela-icon-theme
     numix-icon-theme-circle
-
-    # Cursor Themes
     bibata-cursors
     phinger-cursors
     capitaine-cursors
-
-    # Fonts
     inter
     jetbrains-mono
     fira-code
     source-code-pro
     noto-fonts
     noto-fonts-emoji
-
-    # Additional GNOME Tools
     gnome-tweaks
     gnome-shell-extensions
     dconf-editor
   ];
+  
+  # Combine all packages
+  allPackages = allDevPackages ++ languagePackages ++ utilityPackages ++ desktopPackages;
+  
+  # Path generation now handled dynamically in sessionVariables
+  # This ensures paths are generated at runtime rather than build time
+  
+in
+{
+  # Basic home configuration is handled by flake.nix
+  # This file contains the user-specific package and program configurations
+
+  # Use all packages we defined
+  # All packages are now defined in the let block above
+  home.packages = allPackages;
 
   # Git configuration
   programs.git = {
@@ -310,6 +327,17 @@
     BROWSER = "firefox";
     TERMINAL = "gnome-terminal";
 
+    # Enhanced PATH configuration including common binary directories
+    PATH = lib.concatStringsSep ":" [
+      "$HOME/.local/bin"
+      "$HOME/.local/sbin"
+      "/usr/local/bin"
+      "/usr/local/sbin"
+      "/opt/bin"
+      "/snap/bin"
+      "$PATH"  # Preserve existing PATH
+    ];
+
     # Wayland environment variables
     WAYLAND_DISPLAY = "wayland-0";
     XDG_SESSION_TYPE = "wayland";
@@ -330,11 +358,58 @@
     # Development environment variables
     NIXPKGS_ALLOW_UNFREE = "1";
 
-    # Python environment
-    PYTHONPATH = "$HOME/.local/lib/python3.12/site-packages:$PYTHONPATH";
+    # Python environment - use dynamic path detection
+    PYTHONPATH = "$HOME/.local/lib/python3.12/site-packages:$\{PYTHONPATH:-}";
 
     # Terminal and shell optimizations
     TERM = "xterm-256color";
+    
+    # AUTOMATICALLY GENERATED PATHS from installed packages
+    # PKG_CONFIG_PATH - dynamically includes all packages with pkgconfig files
+    PKG_CONFIG_PATH = lib.concatStringsSep ":" (
+      # Include standard system paths
+      [ "/usr/lib/pkgconfig" "/usr/local/lib/pkgconfig" ] ++
+      # Add package-specific paths (build-time evaluation for Nix store paths)
+      (builtins.concatMap (pkg:
+        let
+          paths = [
+            "${pkg}/lib/pkgconfig"
+            "${pkg}/share/pkgconfig"
+          ];
+        in
+          # Filter only existing paths to avoid broken references
+          builtins.filter (path: builtins.pathExists path) paths
+      ) allPackages)
+    );
+    
+    # LD_LIBRARY_PATH - dynamically includes all packages with lib directories
+    /*LD_LIBRARY_PATH = lib.concatStringsSep ":" (
+      # Include standard system paths
+      [ "/usr/lib" "/usr/local/lib" ] ++
+      # Add package-specific lib paths (build-time evaluation for Nix store paths)
+      (builtins.concatMap (pkg:
+        let
+          paths = [
+            "${pkg}/lib"
+            "${pkg}/lib64"
+          ];
+        in
+          # Filter only existing paths to avoid broken references
+          builtins.filter (path: builtins.pathExists path) paths
+      ) allPackages)
+    );
+    
+    */
+    
+    # Flutter and Android development - use dynamic detection
+    CHROME_EXECUTABLE = "${pkgs.google-chrome}/bin/google-chrome-stable";
+    # Android SDK detection - check common locations
+    ANDROID_HOME = "$\{ANDROID_HOME:-$HOME/Android/Sdk}";
+    ANDROID_SDK_ROOT = "$\{ANDROID_SDK_ROOT:-$HOME/Android/Sdk}";
+    
+    # Development tools paths - automatically detect from Nix packages
+    FLUTTER_ROOT = "${pkgs.flutter}";
+    DART_SDK = "${pkgs.flutter}/bin/cache/dart-sdk";
   };
 
   # XDG configuration
@@ -402,6 +477,8 @@
       defaultCacheTtl = 1800;
       enableSshSupport = true;
     };
+    
+    # Session variables are handled by home.sessionVariables above
   };
 
   # Desktop entries for Wine applications
@@ -659,6 +736,26 @@
     platformTheme.name = "gtk";
     style.name = "gtk2";
   };
+  
+  services.flatpak.enable = true;
+  services.xdg-desktop-portal.enable = true;
+  services.xdg-desktop-portal.gtk.enable = true;
+  
+  
+    services.flatpak.enable = true;
+
+  xdg.portal = {
+    enable = true;
+    config.common.default = "gnome";
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gtk
+      xdg-desktop-portal-gnome
+    ];
+  };
+
+  services.dbus.enable = true;
+
+
 
 }
 

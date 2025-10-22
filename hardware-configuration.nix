@@ -26,11 +26,6 @@
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
-  # NVIDIA modules are handled by the nvidia-specific configuration
-  hardware.nvidia = {
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-    modesetting.enable = true;
-  };
 
   # Kernel parameters moved to configuration.nix to avoid conflicts
   # All kernel parameters are now centrally managed in configuration.nix
@@ -51,6 +46,12 @@
   fileSystems."/nix" = {
     device = "/dev/disk/by-uuid/d76ba515-91c4-4316-97ca-749ad2e4e22f";
     fsType = "ext4";
+  };
+
+  fileSystems."/mnt/data" = {
+    device = "/dev/disk/by-uuid/6e893b17-365c-49bb-940e-767b32712eb2";
+    fsType = "ext4";
+    options = [ "defaults" "noatime" ];
   };
 
   # Temporary build directory with more space
