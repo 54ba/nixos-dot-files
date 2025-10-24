@@ -425,21 +425,24 @@
   # Rescue System - DISABLED (module commented out)
   # custom.rescueSystem configuration removed to prevent option errors
 
-  # ===== CUSTOM SSD2 BIND MOUNTS =====
-  custom.binding = {
-    enable = true;                                   # Enable custom binding for SSD2
-    ssd2Path = "/mnt/ssd2";                          # Path to SSD2 mount
-    tmp = {
-      enable = true;                                 # Bind /tmp to SSD2
-      path = "tmp";                                  # Use /mnt/ssd2/tmp
-      options = [ "bind" "noatime" ];                # Performance options
-    };
-    var = {
-      enable = true;                                 # Bind /var to SSD2
-      path = "var";                                  # Use /mnt/ssd2/var
-      options = [ "bind" ];                          # Standard bind options
-    };
-    createDirectories = true;                        # Auto-create directories
+  # ===== CUSTOM DATA DRIVE MOUNTS =====
+  fileSystems."/mnt/data" = {
+    device = "/dev/nvme0n1p1";
+    fsType = "ext4";
+    options = [ "defaults" "noatime" ];
+  };
+
+  # Bind mounts for user data and Docker
+  fileSystems."/home/mahmoud/.share" = {
+    device = "/mnt/data/.share";
+    options = [ "bind" ];
+    depends = [ "/mnt/data" ];
+  };
+
+  fileSystems."/var/lib/docker" = {
+    device = "/mnt/data/var/lib/docker";
+    options = [ "bind" ];
+    depends = [ "/mnt/data" ];
   };
 
   # ===== GNOME DESKTOP CONFIGURATION =====
@@ -461,6 +464,18 @@
     };
     packages.enable = true;               # ENABLED - Testing PyTorch build with binary caches
   };
+
+  # Enable proprietary NVIDIA drivers for nvidia-smi
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = true;
+    powerManagement.finegrained = false;  # Disable fine-grained to avoid assertion error
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  services.xserver.videoDrivers = [ "nvidia" ];
 
   # Test Development Libraries Configuration
   custom.dev-libs-test = {

@@ -14,7 +14,7 @@ in
     environment.systemPackages = with pkgs; [
       glibc.dev
       gcc-unwrapped.lib
-      libstdcxx5
+      stdenv.cc.cc.lib
       pkg-config
     ];
   };
