@@ -425,25 +425,6 @@
   # Rescue System - DISABLED (module commented out)
   # custom.rescueSystem configuration removed to prevent option errors
 
-  # ===== CUSTOM DATA DRIVE MOUNTS =====
-  fileSystems."/mnt/data" = {
-    device = "/dev/nvme0n1p1";
-    fsType = "ext4";
-    options = [ "defaults" "noatime" ];
-  };
-
-  # Bind mounts for user data and Docker
-  fileSystems."/home/mahmoud/.share" = {
-    device = "/mnt/data/.share";
-    options = [ "bind" ];
-    depends = [ "/mnt/data" ];
-  };
-
-  fileSystems."/var/lib/docker" = {
-    device = "/mnt/data/var/lib/docker";
-    options = [ "bind" ];
-    depends = [ "/mnt/data" ];
-  };
 
   # ===== GNOME DESKTOP CONFIGURATION =====
   # GNOME configuration consolidated below to avoid conflicts
@@ -609,15 +590,15 @@
   # Health monitoring is now handled by modules/health-monitoring.nix
   
   # ===== DESKTOP ENVIRONMENT CONFIGURATION =====
-  # Enable desktop environment and GNOME
+  # Enable desktop environment and GNOME - DISABLED for Niri
   custom.desktop = {
     enable = true;                    # Enable desktop environment
     wayland.enable = true;            # Enable Wayland (works in generation 45)
     gnome = {
-      enable = true;                  # Enable GNOME desktop environment
-      extensions.enable = true;       # ENABLED - Testing for stage view allocation warnings
-      excludeApps.enable = true;      # Exclude unwanted apps
-      theme.enable = true;            # Enable custom theming
+      enable = false;                 # DISABLED - Using Niri as primary compositor
+      extensions.enable = false;      # DISABLED - Not needed with Niri
+      excludeApps.enable = false;     # DISABLED - Not needed with Niri
+      theme.enable = false;           # DISABLED - Not needed with Niri
     };
   };
   
@@ -659,9 +640,9 @@
     
     # Tor with pluggable transports
     tor = {
-      enable = true;             # Enable Tor with SOCKS proxy
+      enable = false;             # Enable Tor with SOCKS proxy
       obfs4 = {
-        enable = true;           # Enable obfs4 bridges for traffic obfuscation
+        enable = false;           # Enable obfs4 bridges for traffic obfuscation
         bridges = [              # Add obfs4 bridges (you can add more here)
           # Example bridges - replace with actual working bridges
           # "obfs4 192.95.36.142:443 CDF2E852BF539B82BD549EB5A0C1F7C5CA26881BA57A99E8F6A3A59C2B21B30E cert=SWnSJ4z5Fq1LQOCDQCu3AcVUiHPFnUTqBL6mPZnDU55JYkc+Tnn7a9g+CW8FVnE2z5BF6g iat-mode=0"
@@ -669,22 +650,22 @@
         ];
       };
       snowflake = {
-        enable = true;           # Enable Snowflake pluggable transport
+        enable = false;           # Enable Snowflake pluggable transport
         # Default settings for Snowflake - will use built-in configuration
       };
     };
     
     # Riseup VPN with Tor transport support
     riseupVpn = {
-      enable = true;             # Enable Riseup VPN client
+      enable = false;             # Enable Riseup VPN client
       useTorTransport = false;   # Set to true to use Tor as transport by default
-      kerSupport = true;         # Enable KER (obfs with KCP) support
+      kerSupport = false;         # Enable KER (obfs with KCP) support
     };
     
     # Privacy browsers
     browser = {
-      torBrowser = true;         # Enable Tor Browser
-      hardened = true;           # Enable hardened browser configuration
+      torBrowser = false;         # Enable Tor Browser
+      hardened = false;           # Enable hardened browser configuration
     };
   };
 
