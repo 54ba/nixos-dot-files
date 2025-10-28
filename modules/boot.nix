@@ -55,10 +55,10 @@ with lib;
       
       # Console configuration
       consoleLogLevel = 0;
-      kernelParams = [
-        "quiet"
-        "rd.udev.log_level=3"
-      ];
+      # Kernel parameters will be added by hardware-specific modules
+      # Kernel parameters will be added by hardware-specific modules
+      # Kernel parameters will be added by hardware-specific modules
+      # Kernel parameters will be added by hardware-specific modules
     };
     
     # Console settings

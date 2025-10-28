@@ -50,17 +50,22 @@ with lib;
       displayManager.gdm.wayland = true;
     };
 
-    # Create Niri session desktop file for GDM
-    environment.etc."xdg/wayland-sessions/niri.desktop" = mkIf config.custom.niri.enableGdm {
-      text = ''
+    # Register Niri session with GDM using the new option name
+    services.displayManager.sessionPackages = mkIf config.custom.niri.enableGdm [
+      (pkgs.runCommand "niri-session" {
+        passthru.providedSessions = [ "niri" ];
+      } ''
+        mkdir -p $out/share/wayland-sessions
+        cat > $out/share/wayland-sessions/niri.desktop << 'DESKTOP'
         [Desktop Entry]
         Name=Niri
         Comment=Scrollable-tiling Wayland compositor
-        Exec=env XDG_CURRENT_DESKTOP=niri XDG_SESSION_DESKTOP=niri XDG_SESSION_TYPE=wayland niri --session
+        Exec=niri-session
         Type=Application
         DesktopNames=niri
-      '';
-    };
+        DESKTOP
+      '')
+    ];
 
     # Niri configuration directory and basic config
     environment.etc."niri/config.kdl" = {

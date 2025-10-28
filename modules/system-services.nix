@@ -64,14 +64,86 @@ with lib;
     services.acpid.enable = true;    # Power management
     systemd.services.NetworkManager-wait-online.enable = false;  # Faster boot
     
-    # Audio system with Pipewire
+    # SSD TRIM support for better performance and longevity
+    services.fstrim.enable = true;
+    
+    # Fix nsncd service failures
+    services.nscd.enable = false;
+    system.nssModules = mkForce [];
+    
+    # Journald configuration
+    services.journald.extraConfig = ''
+      # Persistent storage for logs
+      Storage=persistent
+      # Compress logs to save space
+      Compress=yes
+      # Keep logs for 7 days
+      MaxRetentionSec=604800
+      # Limit journal size to 1GB
+      SystemMaxUse=1G
+      # Keep at least 100MB free
+      SystemKeepFree=100M
+    '';
+    
+    # Audio system with PipeWire - Enhanced configuration for screen sharing
     security.rtkit.enable = mkIf config.custom.services.system.audio.enable true;
+    
+    # Disable PulseAudio since we're using PipeWire
+    services.pulseaudio.enable = false;
+    
     services.pipewire = mkIf config.custom.services.system.audio.enable {
       enable = true;
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
       jack.enable = true;
+      
+      # Enable WirePlumber session manager
+      wireplumber.enable = true;
+      
+      # PipeWire configuration for screen sharing
+      extraConfig.pipewire = {
+        "context.properties" = {
+          "link.max-buffers" = 16;
+          "log.level" = 2;
+          "default.clock.rate" = 48000;
+          "default.clock.quantum" = 1024;
+          "default.clock.min-quantum" = 32;
+          "default.clock.max-quantum" = 8192;
+          "core.daemon" = true;
+          "core.name" = "pipewire-0";
+        };
+        "context.modules" = [
+          {
+            name = "libpipewire-module-rtkit";
+            args = {
+              "nice.level" = -15;
+              "rt.prio" = 88;
+              "rt.time.soft" = 200000;
+              "rt.time.hard" = 200000;
+            };
+            flags = [ "ifexists" "nofail" ];
+          }
+          { name = "libpipewire-module-protocol-native"; }
+          { name = "libpipewire-module-profiler"; }
+          { name = "libpipewire-module-metadata"; }
+          { name = "libpipewire-module-spa-device-factory"; }
+          { name = "libpipewire-module-spa-node-factory"; }
+          { name = "libpipewire-module-client-node"; }
+          { name = "libpipewire-module-client-device"; }
+          {
+            name = "libpipewire-module-portal";
+            flags = [ "ifexists" "nofail" ];
+          }
+          {
+            name = "libpipewire-module-access";
+            args = {};
+          }
+          { name = "libpipewire-module-adapter"; }
+          { name = "libpipewire-module-link-factory"; }
+          { name = "libpipewire-module-session-manager"; }
+        ];
+      };
     };
     
     # Bluetooth support (only enable if not explicitly configured in hardware module)
@@ -172,7 +244,6 @@ with lib;
       # Android development packages
       (optionals config.custom.services.system.android.enable [
         android-tools       # ADB, fastboot, etc.
-        # android-udev-rules removed due to systemctl path issues
       ]) ++
       
       # FUSE packages

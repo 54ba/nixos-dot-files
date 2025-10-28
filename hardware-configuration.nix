@@ -59,6 +59,28 @@
     fsType = "tmpfs";
     options = [ "size=10G" ];
   };
+  
+  
+  # ===== CUSTOM DATA DRIVE MOUNTS =====
+  fileSystems."/mnt/data" = {
+    device = "/dev/disk/by-uuid/6e893b17-365c-49bb-940e-767b32712eb2";
+    fsType = "ext4";
+    options = [ "defaults" "noatime" ];
+  };
+
+  fileSystems."/var/lib/docker" = {
+    device = "/dev/disk/by-uuid/ae7f3150-5c3e-4890-8ae2-2adcc684d45f";
+    fsType = "ext4";
+  };
+
+  fileSystems."/mnt/storage" = {
+    device = "/dev/disk/by-uuid/e74a23d2-545e-47e4-a673-e464a99eb46b";
+    fsType = "ext4";
+    options = [ "defaults" "noatime" ];
+  };
+
+
+
 
   swapDevices = [ ];
 
