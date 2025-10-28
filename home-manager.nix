@@ -340,6 +340,10 @@
 
     # Terminal and shell optimizations
     TERM = "xterm-256color";
+
+    # Additional environment variables
+    PATH = "$HOME/.local/bin:/usr/local/bin:$PATH";
+    NIXOS_STORE = "/nix/store";
   };
 
   # XDG configuration
