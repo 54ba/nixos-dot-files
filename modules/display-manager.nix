@@ -104,11 +104,6 @@ with lib;
         # Ensure AccountsService is running for GDM
         accounts-daemon.enable = true;
       };
-      # Fix D-Bus services for GNOME session
-      dbus = {
-        enable = true;
-        packages = [ pkgs.gnome-session ];
-      };
 
       # Fix TTY access
       console = {

@@ -1,0 +1,435 @@
+/* ===== BEAUTIFUL WAYBAR STYLING ===== */
+/* Catppuccin Mocha Color Palette */
+/* https://github.com/catppuccin/catppuccin */
+
+@define-color base    #1e1e2e;
+@define-color mantle  #181825;
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color surface2 #585b70;
+@define-color overlay0 #6c7086;
+@define-color overlay1 #7f849c;
+@define-color text     #cdd6f4;
+@define-color subtext1 #bac2de;
+@define-color subtext0 #a6adc8;
+@define-color lavender #b4befe;
+@define-color blue     #89b4fa;
+@define-color sapphire #74c7ec;
+@define-color sky      #89dceb;
+@define-color teal     #94e2d5;
+@define-color green    #a6e3a1;
+@define-color yellow   #f9e2af;
+@define-color peach    #fab387;
+@define-color maroon   #eba0ac;
+@define-color red      #f38ba8;
+@define-color mauve    #cba6f7;
+@define-color pink     #f5c2e7;
+@define-color flamingo #f2cdcd;
+@define-color rosewater #f5e0dc;
+
+/* ===== MAIN CONTAINER ===== */
+window#waybar {
+    background-color: alpha(@base, 0.9);
+    border: 2px solid @mauve;
+    border-radius: 16px;
+    font-family: "JetBrains Mono", "Font Awesome 6 Free", monospace;
+    font-size: 13px;
+    font-weight: 500;
+    transition-property: background-color;
+    transition-duration: 0.5s;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+/* ===== TOOLTIP STYLING ===== */
+tooltip {
+    background: alpha(@base, 0.95);
+    border: 2px solid @mauve;
+    border-radius: 12px;
+    color: @text;
+    font-family: "JetBrains Mono";
+    font-size: 12px;
+    padding: 8px 12px;
+}
+
+/* ===== MODULE BASE STYLING ===== */
+.modules-left, .modules-center, .modules-right {
+    margin: 4px 8px;
+}
+
+.modules-left {
+    margin-left: 12px;
+}
+
+.modules-right {
+    margin-right: 12px;
+}
+
+/* Individual module styling */
+#workspaces,
+#window,
+#clock,
+#custom-media,
+#pulseaudio,
+#network,
+#cpu,
+#memory,
+#temperature,
+#backlight,
+#battery,
+#tray,
+#custom-power,
+#custom-niri-workspaces {
+    background-color: alpha(@surface0, 0.8);
+    color: @text;
+    border-radius: 10px;
+    margin: 2px 3px;
+    padding: 4px 12px;
+    transition: all 0.3s cubic-bezier(0.55, -0.68, 0.48, 1.68);
+}
+
+/* Hover effects for interactive modules */
+#pulseaudio:hover,
+#network:hover,
+#cpu:hover,
+#memory:hover,
+#backlight:hover,
+#battery:hover,
+#custom-power:hover,
+#clock:hover {
+    background-color: alpha(@surface1, 0.9);
+    box-shadow: 0 2px 8px alpha(@mauve, 0.3);
+    transform: translateY(-1px);
+}
+
+/* ===== LEFT MODULES ===== */
+#custom-niri-workspaces {
+    background: linear-gradient(45deg, @mauve, @blue);
+    color: @base;
+    font-size: 16px;
+    font-weight: 600;
+    min-width: 20px;
+    padding: 4px 8px;
+}
+
+#workspaces {
+    background-color: alpha(@surface0, 0.6);
+    border-radius: 12px;
+    padding: 2px 8px;
+}
+
+#workspaces button {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    color: @subtext0;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 2px 4px;
+    min-width: 24px;
+    padding: 4px 8px;
+    transition: all 0.3s ease;
+}
+
+#workspaces button:hover {
+    background-color: alpha(@surface1, 0.8);
+    color: @text;
+    transform: scale(1.1);
+}
+
+#workspaces button.active {
+    background: linear-gradient(45deg, @mauve, @blue);
+    color: @base;
+    font-weight: 700;
+    box-shadow: 0 2px 6px alpha(@mauve, 0.4);
+}
+
+#workspaces button.urgent {
+    background-color: @red;
+    color: @base;
+    animation: urgent-blink 1s ease-in-out infinite alternate;
+}
+
+@keyframes urgent-blink {
+    from { box-shadow: 0 2px 6px alpha(@red, 0.8); }
+    to { box-shadow: 0 2px 12px alpha(@red, 0.4); }
+}
+
+#window {
+    background-color: alpha(@surface0, 0.7);
+    color: @text;
+    font-style: italic;
+    font-weight: 500;
+    max-width: 300px;
+    min-width: 200px;
+    padding: 4px 16px;
+}
+
+#window.empty {
+    background-color: alpha(@surface0, 0.4);
+    color: @subtext0;
+}
+
+/* ===== CENTER MODULES ===== */
+#clock {
+    background: linear-gradient(90deg, @blue, @sapphire, @sky);
+    color: @base;
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 80px;
+    padding: 6px 20px;
+    text-align: center;
+}
+
+#clock:hover {
+    background: linear-gradient(90deg, @sky, @sapphire, @blue);
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 4px 12px alpha(@blue, 0.4);
+}
+
+/* ===== RIGHT MODULES ===== */
+#custom-media {
+    background-color: @green;
+    color: @base;
+    font-weight: 600;
+    min-width: 60px;
+}
+
+#custom-media.custom-spotify {
+    background: linear-gradient(45deg, #1DB954, @green);
+}
+
+#pulseaudio {
+    background-color: @yellow;
+    color: @base;
+    font-weight: 600;
+    min-width: 60px;
+}
+
+#pulseaudio.muted {
+    background-color: @red;
+    animation: pulse-muted 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-muted {
+    from { opacity: 0.8; }
+    to { opacity: 1.0; }
+}
+
+#network {
+    background-color: @teal;
+    color: @base;
+    font-weight: 600;
+    min-width: 60px;
+}
+
+#network.disconnected {
+    background-color: @red;
+    animation: pulse-disconnected 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-disconnected {
+    from { opacity: 0.7; }
+    to { opacity: 1.0; }
+}
+
+#cpu {
+    background-color: @peach;
+    color: @base;
+    font-weight: 600;
+    min-width: 50px;
+}
+
+#cpu.warning {
+    background-color: @yellow;
+    animation: pulse-warning 2s ease-in-out infinite alternate;
+}
+
+#cpu.critical {
+    background-color: @red;
+    animation: pulse-critical 1s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-warning {
+    from { opacity: 0.8; }
+    to { opacity: 1.0; }
+}
+
+@keyframes pulse-critical {
+    from { opacity: 0.6; }
+    to { opacity: 1.0; }
+}
+
+#memory {
+    background-color: @lavender;
+    color: @base;
+    font-weight: 600;
+    min-width: 50px;
+}
+
+#memory.warning {
+    background-color: @yellow;
+    animation: pulse-warning 2s ease-in-out infinite alternate;
+}
+
+#memory.critical {
+    background-color: @red;
+    animation: pulse-critical 1s ease-in-out infinite alternate;
+}
+
+#temperature {
+    background-color: @blue;
+    color: @base;
+    font-weight: 600;
+    min-width: 50px;
+}
+
+#temperature.critical {
+    background-color: @red;
+    animation: pulse-critical 1s ease-in-out infinite alternate;
+}
+
+#backlight {
+    background-color: @yellow;
+    color: @base;
+    font-weight: 600;
+    min-width: 50px;
+}
+
+#battery {
+    background-color: @green;
+    color: @base;
+    font-weight: 600;
+    min-width: 60px;
+}
+
+#battery.charging, #battery.plugged {
+    background: linear-gradient(45deg, @green, @teal);
+    animation: pulse-charging 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-charging {
+    from { opacity: 0.9; }
+    to { opacity: 1.0; }
+}
+
+#battery.warning:not(.charging) {
+    background-color: @yellow;
+    color: @base;
+    animation: pulse-warning 2s ease-in-out infinite alternate;
+}
+
+#battery.critical:not(.charging) {
+    background-color: @red;
+    color: @text;
+    animation: pulse-critical 1s ease-in-out infinite alternate;
+}
+
+#tray {
+    background-color: alpha(@surface0, 0.8);
+    border-radius: 10px;
+    padding: 4px 8px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: @red;
+    border-radius: 8px;
+    padding: 2px;
+}
+
+#custom-power {
+    background: linear-gradient(45deg, @red, @maroon);
+    color: @base;
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 30px;
+    padding: 4px 10px;
+}
+
+#custom-power:hover {
+    background: linear-gradient(45deg, @maroon, @red);
+    box-shadow: 0 4px 12px alpha(@red, 0.5);
+    transform: scale(1.1) translateY(-2px);
+}
+
+/* ===== ADDITIONAL ANIMATIONS ===== */
+@keyframes slide-in-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-in-from-right {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modules-left {
+    animation: slide-in-from-left 0.5s ease-out;
+}
+
+.modules-right {
+    animation: slide-in-from-right 0.5s ease-out;
+}
+
+.modules-center {
+    animation: fade-in 0.8s ease-out;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+    #custom-media,
+    #temperature {
+        display: none;
+    }
+    
+    window#waybar {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 900px) {
+    #memory,
+    #cpu {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    #network,
+    #backlight {
+        display: none;
+    }
+    
+    window#waybar {
+        margin-left: 8px;
+        margin-right: 8px;
+    }
+}

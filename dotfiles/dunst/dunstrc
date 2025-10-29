@@ -1,0 +1,171 @@
+# ===== BEAUTIFUL DUNST CONFIGURATION =====
+# Catppuccin Mocha Theme for notifications
+
+[global]
+    monitor = 0
+    follow = mouse
+    
+    # Geometry
+    width = (300, 400)
+    height = 300
+    origin = top-right
+    offset = 16x48
+    
+    # Progress bar
+    progress_bar = true
+    progress_bar_height = 12
+    progress_bar_frame_width = 2
+    progress_bar_min_width = 200
+    progress_bar_max_width = 400
+    
+    # Appearance
+    transparency = 5
+    separator_height = 2
+    padding = 12
+    horizontal_padding = 16
+    text_icon_padding = 16
+    frame_width = 2
+    separator_color = "#45475a"
+    sort = yes
+    
+    # Text and fonts
+    font = JetBrains Mono 11
+    line_height = 4
+    markup = full
+    format = "<span weight='bold'>%s</span>\n%b"
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = 60
+    ellipsize = middle
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = yes
+    
+    # Icons
+    enable_recursive_icon_lookup = true
+    icon_theme = "Papirus-Dark, Adwaita"
+    icon_position = left
+    min_icon_size = 32
+    max_icon_size = 48
+    icon_path = /usr/share/icons/Papirus-Dark/48x48/status/:/usr/share/icons/Papirus-Dark/48x48/devices/:/usr/share/icons/Papirus-Dark/48x48/apps/
+    
+    # History
+    sticky_history = yes
+    history_length = 50
+    
+    # Misc/Advanced
+    dmenu = /usr/bin/wofi --show dmenu -p dunst:
+    browser = /usr/bin/firefox
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+    corner_radius = 12
+    ignore_dbusclose = false
+    force_xinerama = false
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+    
+    # Animation settings
+    animation = true
+    
+# ===== URGENCY LEVELS =====
+
+[urgency_low]
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#94e2d5"
+    highlight = "#94e2d5"
+    timeout = 5
+    default_icon = "/usr/share/icons/Papirus-Dark/48x48/status/dialog-information.svg"
+
+[urgency_normal]
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#cba6f7"
+    highlight = "#cba6f7"
+    timeout = 8
+    default_icon = "/usr/share/icons/Papirus-Dark/48x48/status/dialog-information.svg"
+
+[urgency_critical]
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#f38ba8"
+    highlight = "#f38ba8"
+    timeout = 0
+    default_icon = "/usr/share/icons/Papirus-Dark/48x48/status/dialog-error.svg"
+
+# ===== APPLICATION-SPECIFIC RULES =====
+
+# Firefox
+[firefox]
+    appname = firefox
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#fab387"
+    timeout = 10
+    
+# Spotify
+[spotify]
+    appname = Spotify
+    background = "#1e1e2e"
+    foreground = "#a6e3a1"
+    frame_color = "#a6e3a1"
+    timeout = 8
+
+# Volume notifications
+[volume]
+    summary = "Volume*"
+    background = "#1e1e2e"
+    foreground = "#f9e2af"
+    frame_color = "#f9e2af"
+    timeout = 3
+    
+# Brightness notifications  
+[brightness]
+    summary = "Brightness*"
+    background = "#1e1e2e"
+    foreground = "#fab387"
+    frame_color = "#fab387"
+    timeout = 3
+
+# Battery notifications
+[battery]
+    summary = "*Battery*"
+    background = "#1e1e2e"
+    foreground = "#a6e3a1"
+    frame_color = "#a6e3a1"
+    timeout = 10
+
+[battery_low]
+    summary = "*Battery*"
+    body = "*low*"
+    background = "#1e1e2e"
+    foreground = "#f38ba8"
+    frame_color = "#f38ba8"
+    timeout = 0
+
+# Network notifications
+[network]
+    appname = NetworkManager
+    background = "#1e1e2e"
+    foreground = "#89dceb"
+    frame_color = "#89dceb"
+    timeout = 8
+
+# System notifications
+[system]
+    appname = "System"
+    background = "#1e1e2e"
+    foreground = "#b4befe"
+    frame_color = "#b4befe"
+    timeout = 10
+
+# Screenshot notifications
+[screenshot]
+    summary = "*screenshot*"
+    background = "#1e1e2e"
+    foreground = "#f5c2e7"
+    frame_color = "#f5c2e7"
+    timeout = 5

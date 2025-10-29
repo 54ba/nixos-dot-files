@@ -439,24 +439,12 @@
       acceleration = "cuda";               # Enable CUDA acceleration
     };
     nvidia = {
-      enable = false;                     # DISABLED - Let nvidia-performance module handle NVIDIA drivers
+      enable = true;                     # DISABLED - Let nvidia-performance module handle NVIDIA drivers
       package = "stable";
       powerManagement = true;
     };
     packages.enable = true;               # ENABLED - Testing PyTorch build with binary caches
   };
-
-  # Enable proprietary NVIDIA drivers for nvidia-smi
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = true;
-    powerManagement.finegrained = false;  # Disable fine-grained to avoid assertion error
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
-
-  services.xserver.videoDrivers = [ "nvidia" ];
 
   # Test Development Libraries Configuration
   custom.dev-libs-test = {
@@ -595,21 +583,79 @@
     enable = true;                    # Enable desktop environment
     wayland.enable = true;            # Enable Wayland (works in generation 45)
     gnome = {
-      enable = false;                 # DISABLED - Using Niri as primary compositor
-      extensions.enable = false;      # DISABLED - Not needed with Niri
-      excludeApps.enable = false;     # DISABLED - Not needed with Niri
-      theme.enable = false;           # DISABLED - Not needed with Niri
+      enable = true;                 # DISABLED - Using Niri as primary compositor
+      extensions.enable = true;      # DISABLED - Not needed with Niri
+      excludeApps.enable = true;     # DISABLED - Not needed with Niri
+      theme.enable = true;           # DISABLED - Not needed with Niri
     };
   };
   
   # Niri Window Manager Configuration
   custom.niri = {
-    enable = true;                    # Enable Niri scrollable-tiling compositor
+    enable = false;                    # Enable beautiful Niri scrollable-tiling compositor
     enableGdm = true;                 # Enable GDM session integration
-    defaultTerminal = "gnome-terminal";
+    defaultTerminal = "alacritty";    # Beautiful terminal
+    theme = "catppuccin-mocha";       # Beautiful theme
+    wallpaper = "~/Pictures/wallpaper.jpg"; # Default wallpaper
     startupPrograms = [
-      "waybar"                        # Status bar
-      "dunst"                         # Notification daemon
+      "waybar"                        # Beautiful status bar
+      "dunst"                         # Beautiful notification daemon
+      "swww-daemon"                   # Wallpaper manager
+      "wl-paste --watch cliphist store" # Clipboard manager
+      "/etc/nixos/scripts/niri-startup.sh" # Startup script
+    ];
+  };
+  
+  # ===== BEAUTIFUL GNOME EXTENSIONS =====
+  # Extensions configuration for when using GNOME desktop
+  custom.gnome.extensions = {
+    enable = true;                 # DISABLED - Using Niri, enable when switching to GNOME
+    preset = "beautiful";           # Use beautiful preset: minimal, beautiful, productivity, macos, windows, gaming
+    
+    # Or use custom categories (when preset = "custom")
+    categories = {
+      beauty = true;                # Visual enhancements
+      productivity = true;          # Productivity tools
+      windows = true;               # Window management
+      system = true;                # System monitoring
+      interface = true;             # UI enhancements
+      media = false;                # Media controls
+      notifications = false;        # Notification enhancements
+      utilities = true;             # Utility extensions
+      development = false;          # Developer tools
+      power = true;                 # Power management
+      search = false;               # Search enhancements
+    };
+    
+    # Extension settings
+    settings = {
+      enable = true;
+      dashToDock = {
+        enable = true;
+        position = "BOTTOM";        # LEFT, RIGHT, BOTTOM, TOP
+        iconSize = 48;              # 16-64
+        transparency = "DYNAMIC";   # FIXED, DYNAMIC, ADAPTIVE
+      };
+      blurMyShell = {
+        enable = false;             # Disabled by default (can cause issues)
+        intensity = 30;             # 0-100
+      };
+      justPerfection = {
+        enable = true;
+        hideTopBarActivities = false;
+        showApplicationsButton = true;
+      };
+      vitals = {
+        enable = true;
+        showCpu = true;
+        showMemory = true;
+        showTemperature = true;
+      };
+    };
+    
+    # Add custom extensions
+    customList = [
+      # Add extension names here
     ];
   };
 
@@ -742,7 +788,7 @@
 
   # NVIDIA Performance Optimizations - DISABLED temporarily to fix login/logout loop
   custom.nvidiaPerformance = {
-    enable = false;                              # Disable NVIDIA performance optimizations temporarily
+    enable = true;                              # Disable NVIDIA performance optimizations temporarily
     gaming = {
       enable = true;                             # Enable gaming optimizations
       dlss = true;                               # Enable DLSS support
@@ -1529,8 +1575,8 @@ EOF
       XDG_VIDEOS_DIR = "$HOME/Videos";
       
       # XDG Desktop Integration
-      XDG_CURRENT_DESKTOP = "GNOME";
-      XDG_SESSION_DESKTOP = "gnome";
+      # XDG_CURRENT_DESKTOP = "GNOME"; # Commented out for Niri
+      # XDG_SESSION_DESKTOP = "gnome"; # Commented out for Niri
       XDG_MENU_PREFIX = "gnome-";
       
       # Desktop file and MIME handling (XDG_DATA_DIRS is managed by system)
@@ -1550,7 +1596,14 @@ EOF
       WGETRC = "$XDG_CONFIG_HOME/wget/wgetrc";
     };
   };
+  # Snap Support via nix-snapd
+  services.snap.enable = true;
+  
+
+
 
 
 }
+
+
 

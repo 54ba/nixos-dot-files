@@ -3,254 +3,388 @@
 with lib;
 
 let
-  # Define extension categories for better organization
+  # ===== BEAUTIFUL & USEFUL GNOME EXTENSIONS =====
+  # Curated collection from extensions.gnome.org
+  
   extensionCategories = {
-    # Essential productivity extensions
+    # ===== VISUAL ENHANCEMENTS & BEAUTY =====
+    beauty = [
+      "blur-my-shell"              # Beautiful blur effects for shell (use with caution)
+      "compiz-alike-magic-lamp-effect"  # Beautiful minimize effect
+      "compiz-windows-effect"      # Wobbly windows animation
+      "burn-my-windows"            # Beautiful window open/close effects
+      "desktop-cube"               # 3D desktop cube effect
+      "coverflow-alt-tab"          # Beautiful alt-tab switcher
+      "透明top-bar"                  # Transparent top bar (Dynamic transparency)
+    ];
+
+    # ===== ESSENTIAL PRODUCTIVITY =====
     productivity = [
-      "dash-to-dock"
-      # "blur-my-shell"    # DISABLED - Causes GNOME Shell crashes on this setup
-      "caffeine"
-      "clipboard-indicator"
-      "desktop-icons-ng-ding"
+      "dash-to-dock"               # Essential dock (like macOS/Windows taskbar)
+      "dash-to-panel"              # Alternative: Panel with integrated taskbar
+      "appindicator"               # Tray icons support (AppIndicator/KStatusNotifierItem)
+      "caffeine"                   # Prevent auto-suspend
+      "clipboard-indicator"        # Clipboard history manager
+      "clipboard-history"          # Alternative clipboard manager
+      "desktop-icons-ng-ding"      # Desktop icons support
+      "just-perfection"            # Customize GNOME Shell (highly recommended)
+      "pop-shell"                  # Tiling window management (from System76)
+      "unite"                      # Remove title bars and merge with top bar
     ];
 
-    # System monitoring and information
-    system = [
-      "system-monitor"
-      "system-monitor-next"
-      "multicore-system-monitor"
-      "status-icons"
-    ];
-
-    # Window management and navigation
+    # ===== WORKSPACE & WINDOW MANAGEMENT =====
     windows = [
-      "auto-move-windows"
-      "all-windows"
-      "all-windows-saverestore-window-positions"
+      "space-bar"                  # Beautiful workspace indicator
+      "workspace-indicator"        # Alternative workspace indicator  
+      "workspace-matrix"           # 2D workspace grid
+      "window-list"                # Windows list in panel
+      "window-is-ready-remover"    # Remove "Window is Ready" notification
+      "gtile"                      # Advanced window tiling
+      "tiling-assistant"           # Smart tiling assistant
+      "auto-move-windows"          # Move apps to specific workspaces
     ];
 
-    # Application launchers and menus
-    launchers = [
-      "arc-menu"
-      "activity-app-launcher"
-      "alphabetical-app-grid"
+    # ===== SYSTEM MONITORING =====
+    system = [
+      "vitals"                     # Beautiful system monitor in top bar
+      "system-monitor-next"        # Advanced system monitoring
+      "tophat"                     # Resource monitor with beautiful design
+      "cpu-power-manager"          # CPU power management
+      "gpu-profile-selector"       # GPU profile switcher (for NVIDIA/AMD)
+      "freon"                      # Temperature sensor
     ];
 
-    # Media and connectivity
+    # ===== USER INTERFACE ENHANCEMENTS =====
+    interface = [
+      "arc-menu"                   # Beautiful application menu
+      "applications-menu"          # Alternative app menu
+      "user-themes"                # Custom shell themes support
+      "rounded-window-corners"     # Rounded corners for windows
+      "bluetooth-quick-connect"    # Quick Bluetooth management
+      "quick-settings-tweaker"     # Customize quick settings panel
+      "panel-corners"              # Rounded panel corners
+      "logo-menu"                  # Replace Activities with logo
+    ];
+
+    # ===== MEDIA & AUDIO =====
     media = [
-      "sound-output-device-chooser"
-      "removable-drive-menu"
-      "do-not-disturb-while-screen-sharing-or-recording"
+      "media-controls"             # Media player controls in panel
+      "sound-output-device-chooser"  # Quick audio device switcher
+      "volume-mixer"               # Individual app volume control
     ];
 
-    # Utilities and enhancements
+    # ===== NOTIFICATIONS & INDICATORS =====
+    notifications = [
+      "notification-banner-reloaded"  # Better notification positioning
+      "do-not-disturb-button"      # Quick DND toggle
+      "night-theme-switcher"       # Auto dark/light theme switching
+    ];
+
+    # ===== UTILITIES =====
     utilities = [
-      "screenshot-window-sizer"
-      "light-style"
-      "compiz-windows-effect"
-      "runcat"
-      "slinger"
-      "shyriiwook"
-      "reading-strip"
+      "gsconnect"                  # KDE Connect for Android integration
+      "emoji-copy"                 # Emoji picker
+      "clipboard-indicator"        # Clipboard manager
+      "espresso"                   # Alternative to Caffeine
+      "removable-drive-menu"       # USB drive manager
+      "screenshot-tool"            # Enhanced screenshot tool
+      "weather-oclock"             # Weather in clock
+      "vitals"                     # System vitals
     ];
 
-    # Development and customization
+    # ===== DEVELOPMENT =====
     development = [
-      "extension-list"
-      "user-stylesheet-font"
+      "extension-list"             # Manage extensions
+      "looking-glass-button"       # Quick access to Looking Glass
+      "gamemode"                   # GameMode indicator
     ];
 
-    # Security and privacy
-    security = [
-      "lockscreen-extension"
-      "primary-input-on-lockscreen"
+    # ===== POWER & BATTERY =====
+    power = [
+      "battery-health-charging"    # Battery health management
+      "power-profile-switcher"     # Quick power profile switching
+    ];
+
+    # ===== SEARCH & LAUNCH =====
+    search = [
+      "app-hider"                  # Hide apps from overview
+      "applications-overview-tooltip"  # Tooltips in overview
+      "search-light"               # Better search experience
     ];
   };
 
-  # Windows migration extensions (familiar Windows-like experience)
-  windowsMigrationExtensions = [
-    "dash-to-dock"                       # Taskbar-like dock
-    "arc-menu"                           # Start menu replacement
-    "auto-move-windows"                  # Window snapping
-    "clipboard-indicator"                # Clipboard history
-    "caffeine"                           # Keep awake (like Windows)
-    "desktop-icons-ng-ding"             # Desktop icons
+  # ===== PRESET CONFIGURATIONS =====
+  
+  # Minimal & Fast (performance-focused)
+  minimalPreset = [
+    "appindicator"
+    "dash-to-dock"
+    "user-themes"
+    "caffeine"
   ];
 
-  # macOS migration extensions (familiar macOS-like experience)
-  macosMigrationExtensions = [
-    "dash-to-dock"                       # Dock-like experience
-    # "blur-my-shell"                    # DISABLED - Causes crashes
-    "auto-move-windows"                  # Window management
-    "caffeine"                           # Prevent sleep
-    "clipboard-indicator"                # Clipboard management
-    "desktop-icons-ng-ding"             # Desktop icons
+  # Beautiful Desktop (aesthetics-focused)
+  beautifulPreset = [
+    "blur-my-shell"
+    "burn-my-windows"
+    "compiz-alike-magic-lamp-effect"
+    "coverflow-alt-tab"
+    "dash-to-dock"
+    "rounded-window-corners"
+    "panel-corners"
+    "just-perfection"
+    "vitals"
+    "media-controls"
+    "user-themes"
+    "appindicator"
   ];
 
-  # Android integration extensions
-  androidIntegrationExtensions = [
-    "clipboard-indicator"                # Sync clipboard
-    "desktop-icons-ng-ding"             # File sync
-    "sound-output-device-chooser"       # Audio routing
+  # Productivity Powerhouse
+  productivityPreset = [
+    "dash-to-panel"              # Panel with taskbar
+    "pop-shell"                  # Tiling
+    "clipboard-indicator"
+    "vitals"
+    "gsconnect"
+    "just-perfection"
+    "tiling-assistant"
+    "appindicator"
+    "bluetooth-quick-connect"
+    "window-list"
   ];
 
-  # Premium extensions from gnome-look.org and pling.com (placeholder for future)
-  premiumExtensions = {
-    gnomeLook = [];
-    pling = [];
-  };
+  # macOS-like Experience
+  macosPreset = [
+    "dash-to-dock"               # Dock
+    "blur-my-shell"
+    "rounded-window-corners"
+    "unite"                      # Remove title bars
+    "coverflow-alt-tab"
+    "just-perfection"
+    "user-themes"
+    "appindicator"
+    "media-controls"
+  ];
+
+  # Windows-like Experience  
+  windowsPreset = [
+    "dash-to-panel"              # Taskbar in panel
+    "arc-menu"                   # Start menu
+    "window-list"
+    "desktop-icons-ng-ding"
+    "appindicator"
+    "clipboard-indicator"
+    "quick-settings-tweaker"
+  ];
+
+  # Gaming Setup
+  gamingPreset = [
+    "gamemode"
+    "caffeine"
+    "gpu-profile-selector"
+    "cpu-power-manager"
+    "vitals"
+    "appindicator"
+    "just-perfection"
+  ];
 
   cfg = config.custom.gnome.extensions;
 
 in {
   options.custom.gnome.extensions = {
-    enable = mkEnableOption "Enable enhanced GNOME extensions management";
+    enable = mkEnableOption "Enable beautiful GNOME extensions";
 
+    # ===== PRESET SELECTION =====
+    preset = mkOption {
+      type = types.enum [ "custom" "minimal" "beautiful" "productivity" "macos" "windows" "gaming" ];
+      default = "custom";
+      description = "Choose a preset configuration";
+    };
+
+    # ===== CATEGORY TOGGLES =====
     categories = {
-      productivity = mkEnableOption "Productivity extensions";
-      system = mkEnableOption "System monitoring extensions";
-      windows = mkEnableOption "Window management extensions";
-      launchers = mkEnableOption "Application launcher extensions";
-      media = mkEnableOption "Media and connectivity extensions";
-      utilities = mkEnableOption "Utility extensions";
-      development = mkEnableOption "Development extensions";
-      security = mkEnableOption "Security extensions";
+      beauty = mkEnableOption "Visual enhancement extensions" // { default = true; };
+      productivity = mkEnableOption "Productivity extensions" // { default = true; };
+      windows = mkEnableOption "Window management extensions" // { default = true; };
+      system = mkEnableOption "System monitoring extensions" // { default = true; };
+      interface = mkEnableOption "UI enhancement extensions" // { default = true; };
+      media = mkEnableOption "Media extensions" // { default = false; };
+      notifications = mkEnableOption "Notification extensions" // { default = false; };
+      utilities = mkEnableOption "Utility extensions" // { default = true; };
+      development = mkEnableOption "Development extensions" // { default = false; };
+      power = mkEnableOption "Power management extensions" // { default = true; };
+      search = mkEnableOption "Search enhancement extensions" // { default = false; };
     };
 
-    migration = {
-      windows = mkEnableOption "Windows migration extensions";
-      macos = mkEnableOption "macOS migration extensions";
-      android = mkEnableOption "Android integration extensions";
-    };
-
-    premium = {
-      enable = mkEnableOption "Enable premium extensions";
-      gnomeLook = mkEnableOption "Extensions from gnome-look.org";
-      pling = mkEnableOption "Extensions from pling.com";
-    };
-
+    # ===== EXTENSION SETTINGS =====
     settings = {
-      enable = mkEnableOption "Enable extension settings";
+      enable = mkEnableOption "Apply extension settings" // { default = true; };
+      
       dashToDock = {
+        enable = mkEnableOption "Configure Dash to Dock" // { default = true; };
         position = mkOption {
-          type = types.enum [ "left" "right" "bottom" "top" ];
-          default = "bottom";
-          description = "Dash to Dock position";
+          type = types.enum [ "LEFT" "RIGHT" "BOTTOM" "TOP" ];
+          default = "BOTTOM";
+        };
+        iconSize = mkOption {
+          type = types.int;
+          default = 48;
+          description = "Icon size (16-64)";
         };
         transparency = mkOption {
           type = types.enum [ "FIXED" "DYNAMIC" "ADAPTIVE" ];
           default = "DYNAMIC";
-          description = "Dash to Dock transparency mode";
-        };
-        theme = mkOption {
-          type = types.str;
-          default = "default";
-          description = "Dash to Dock theme";
         };
       };
+
       blurMyShell = {
+        enable = mkEnableOption "Configure Blur My Shell" // { default = false; };
         intensity = mkOption {
           type = types.int;
-          default = 10;
-          description = "Blur intensity (0-20)";
-        };
-        brightness = mkOption {
-          type = types.int;
-          default = 0;
-          description = "Brightness adjustment (-10 to 10)";
+          default = 30;
+          description = "Blur intensity (0-100)";
         };
       };
-      caffeine = {
-        duration = mkOption {
-          type = types.int;
-          default = 300;
-          description = "Caffeine duration in seconds";
+
+      justPerfection = {
+        enable = mkEnableOption "Configure Just Perfection" // { default = true; };
+        hideTopBarActivities = mkOption {
+          type = types.bool;
+          default = false;
+        };
+        showApplicationsButton = mkOption {
+          type = types.bool;
+          default = true;
+        };
+      };
+
+      vitals = {
+        enable = mkEnableOption "Configure Vitals" // { default = true; };
+        showCpu = mkOption {
+          type = types.bool;
+          default = true;
+        };
+        showMemory = mkOption {
+          type = types.bool;
+          default = true;
+        };
+        showTemperature = mkOption {
+          type = types.bool;
+          default = true;
         };
       };
     };
 
-    performance = {
-      enable = mkEnableOption "Enable performance optimizations";
-    };
-
-    list = mkOption {
+    # Custom extension list
+    customList = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = "List of GNOME extensions to install";
+      description = "Additional custom extensions";
     };
   };
 
   config = mkIf cfg.enable {
-    # Build the extension list based on enabled categories
-    custom.gnome.extensions.list = let
-      # Base extensions (always included)
-      baseList = [
-        "extension-list"
-        "user-stylesheet-font"
-      ];
+    # Build extension list based on preset or categories
+    environment.systemPackages = with pkgs.gnomeExtensions; let
+      # Select extensions based on preset
+      presetExtensions = {
+        minimal = minimalPreset;
+        beautiful = beautifulPreset;
+        productivity = productivityPreset;
+        macos = macosPreset;
+        windows = windowsPreset;
+        gaming = gamingPreset;
+        custom = [];
+      }.${cfg.preset};
 
-      # Category-based extensions
-      categoryExtensions =
-        (if cfg.categories.productivity then extensionCategories.productivity else []) ++
-        (if cfg.categories.system then extensionCategories.system else []) ++
-        (if cfg.categories.windows then extensionCategories.windows else []) ++
-        (if cfg.categories.launchers then extensionCategories.launchers else []) ++
-        (if cfg.categories.media then extensionCategories.media else []) ++
-        (if cfg.categories.utilities then extensionCategories.utilities else []) ++
-        (if cfg.categories.development then extensionCategories.development else []) ++
-        (if cfg.categories.security then extensionCategories.security else []);
-
-      # Migration extensions
-      migrationExtensions =
-        (if cfg.migration.windows then windowsMigrationExtensions else []) ++
-        (if cfg.migration.macos then macosMigrationExtensions else []) ++
-        (if cfg.migration.android then androidIntegrationExtensions else []);
-
-      # Premium extensions
-      premiumExtensionsList = if cfg.premium.enable then
-        (if cfg.premium.gnomeLook then premiumExtensions.gnomeLook else []) ++
-        (if cfg.premium.pling then premiumExtensions.pling else [])
+      # Category-based extensions for custom preset
+      categoryExtensions = if cfg.preset == "custom" then
+        (optionals cfg.categories.beauty extensionCategories.beauty) ++
+        (optionals cfg.categories.productivity extensionCategories.productivity) ++
+        (optionals cfg.categories.windows extensionCategories.windows) ++
+        (optionals cfg.categories.system extensionCategories.system) ++
+        (optionals cfg.categories.interface extensionCategories.interface) ++
+        (optionals cfg.categories.media extensionCategories.media) ++
+        (optionals cfg.categories.notifications extensionCategories.notifications) ++
+        (optionals cfg.categories.utilities extensionCategories.utilities) ++
+        (optionals cfg.categories.development extensionCategories.development) ++
+        (optionals cfg.categories.power extensionCategories.power) ++
+        (optionals cfg.categories.search extensionCategories.search)
       else [];
 
-      # Combine all lists and remove duplicates
-      allExtensions = baseList ++ categoryExtensions ++ migrationExtensions ++ premiumExtensionsList;
-    in lib.unique allExtensions;
+      # Combine all extension names
+      allExtensionNames = unique (presetExtensions ++ categoryExtensions ++ cfg.customList);
 
-    # Install GNOME extensions
-    environment.systemPackages = with pkgs; [
-      gnome-shell-extensions
-    ] ++ (map (ext: gnomeExtensions.${ext}) cfg.list);
+      # Convert extension names to packages (with error handling)
+      extensionPackages = filter (x: x != null) (map (name:
+        if hasAttr name pkgs.gnomeExtensions
+        then getAttr name pkgs.gnomeExtensions
+        else (warn "Extension '${name}' not found in nixpkgs" null)
+      ) allExtensionNames);
 
-    # GSettings overrides for extensions
-    services.xserver.desktopManager.gnome.extraGSettingsOverrides = mkIf cfg.settings.enable ''
-      [org.gnome.shell]
-      enabled-extensions=[${concatStringsSep ", " (map (ext: "'${ext}'") cfg.list)}]
-      disable-user-extensions=false
-      development-tools=true
+    in [
+      pkgs.gnome-shell-extensions
+      pkgs.gnome-tweaks
+    ] ++ extensionPackages;
 
-      [org.gnome.shell.extensions.dash-to-dock]
-      dock-position='${cfg.settings.dashToDock.position}'
-      dock-fixed=false
-      transparency-mode='${cfg.settings.dashToDock.transparency}'
-      running-indicator-style='DOTS'
-      show-favorites=true
-      show-running=true
-      show-windows-preview=true
-      click-action='cycle-windows'
-      scroll-action='cycle-windows'
-      theme='${cfg.settings.dashToDock.theme}'
+    # Enable GNOME Shell extensions
+    services.xserver.desktopManager.gnome = {
+      extraGSettingsOverrides = mkIf cfg.settings.enable (concatStringsSep "\n" (filter (x: x != "") [
+        # Enable extensions
+        "[org.gnome.shell]"
+        "disable-user-extensions=false"
+        
+        # Dash to Dock settings
+        (optionalString cfg.settings.dashToDock.enable ''
+          [org.gnome.shell.extensions.dash-to-dock]
+          dock-position='${cfg.settings.dashToDock.position}'
+          dash-max-icon-size=${toString cfg.settings.dashToDock.iconSize}
+          transparency-mode='${cfg.settings.dashToDock.transparency}'
+          dock-fixed=false
+          extend-height=false
+          show-favorites=true
+          show-running=true
+          show-windows-preview=true
+          click-action='cycle-windows'
+          scroll-action='cycle-windows'
+          running-indicator-style='DOTS'
+        '')
 
-      [org.gnome.shell.extensions.blur-my-shell]
-      blur-dash=true
-      blur-panel=true
-      blur-overview=true
-      blur-intensity=${toString cfg.settings.blurMyShell.intensity}
-      brightness=${toString cfg.settings.blurMyShell.brightness}
+        # Blur My Shell settings
+        (optionalString (cfg.settings.blurMyShell.enable && cfg.categories.beauty) ''
+          [org.gnome.shell.extensions.blur-my-shell]
+          blur-dash=true
+          blur-panel=true
+          blur-overview=true
+          blur-appfolder=true
+          brightness=0.6
+          sigma=${toString cfg.settings.blurMyShell.intensity}
+        '')
 
-      [org.gnome.shell.extensions.caffeine]
-      enable-fullscreen=true
-      restore-state=true
-      duration=${toString cfg.settings.caffeine.duration}
-    '';
+        # Just Perfection settings
+        (optionalString cfg.settings.justPerfection.enable ''
+          [org.gnome.shell.extensions.just-perfection]
+          activities-button=${if cfg.settings.justPerfection.hideTopBarActivities then "false" else "true"}
+          app-menu=true
+          window-demands-attention-focus=true
+          workspace-switcher-should-show=true
+          world-clock=false
+        '')
+
+        # Vitals settings
+        (optionalString cfg.settings.vitals.enable ''
+          [org.gnome.shell.extensions.vitals]
+          show-storage=false
+          show-network=false
+          show-processor=${if cfg.settings.vitals.showCpu then "true" else "false"}
+          show-memory=${if cfg.settings.vitals.showMemory then "true" else "false"}
+          show-temperature=${if cfg.settings.vitals.showTemperature then "true" else "false"}
+          position-in-panel=2
+        '')
+      ]));
+    };
+
+    # Install extension management tools
+    programs.dconf.enable = true;
   };
 }
