@@ -50,6 +50,60 @@ with lib;
 
     # Enable nix-ld for compatibility
     programs.nix-ld.enable = true;
+    programs.nix-ld.libraries = with pkgs; [
+      # C/C++ standard libraries
+      stdenv.cc.cc.lib
+      glibc
+      
+      # Core system libraries
+      glib
+      libsecret
+      zlib
+      bzip2
+      xz
+      
+      # Graphics and multimedia
+      libGL
+      libGLU
+      mesa
+      vulkan-loader
+      
+      # X11 and Wayland
+      xorg.libX11
+      xorg.libXext
+      xorg.libXrender
+      xorg.libXrandr
+      xorg.libXi
+      xorg.libXcursor
+      xorg.libxcb
+      wayland
+      
+      # Audio
+      alsa-lib
+      libpulseaudio
+      pipewire
+      
+      # GTK and Qt
+      gtk3
+      gtk4
+      qt5.qtbase
+      qt6.qtbase
+      
+      # Networking
+      openssl
+      curl
+      
+      # Compression
+      libarchive
+      
+      # Database
+      sqlite
+      
+      # Development
+      libffi
+      ncurses
+      readline
+    ];
 
 
 
@@ -79,7 +133,7 @@ with lib;
       package = pkgs.gitFull;
       config = {
         init.defaultBranch = "main";
-        credential.helper = "${pkgs.libsecret}/lib/libsecret/git-credential-libsecret";
+        credential.helper = "/run/current-system/sw/bin/git-credential-libsecret";
       };
     };
 
@@ -114,8 +168,40 @@ with lib;
       VKD3D_CONFIG = "dxr,dxr11";
     };
 
-    # Basic system packages
-    environment.systemPackages = import ../packages/system-base-packages.nix { inherit pkgs; };
+    # System-wide library path for compatibility
+    environment.sessionVariables = {
+      LD_LIBRARY_PATH = lib.mkDefault (lib.makeLibraryPath [
+        pkgs.stdenv.cc.cc.lib
+        pkgs.glib
+        pkgs.zlib
+        pkgs.libGL
+        pkgs.libGLU
+        pkgs.xorg.libX11
+        pkgs.xorg.libXext
+        pkgs.alsa-lib
+        pkgs.libpulseaudio
+        pkgs.openssl
+      ]);
+    };
+
+
+
+    # Basic system packages with FHS wrapper
+    environment.systemPackages = (import ../packages/system-base-packages.nix { inherit pkgs; }) ++ [
+      (pkgs.buildFHSUserEnv {
+        name = "fhs-run";
+        targetPkgs = pkgs: with pkgs; [
+          stdenv.cc.cc.lib glibc gcc
+          glib zlib openssl curl
+          libGL libGLU mesa vulkan-loader
+          xorg.libX11 xorg.libXext xorg.libXrender xorg.libXi
+          wayland alsa-lib libpulseaudio pipewire
+          gtk3 qt5.qtbase
+        ];
+        runScript = "bash";
+        profile = "export FHS_ENV=1";
+      })
+    ];
 
 
 
