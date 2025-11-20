@@ -668,6 +668,30 @@
     platformTheme.name = "gtk";
     style.name = "gtk2";
   };
+  
+  {
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = { self, nixpkgs, home-manager, antigravity-nix, ... }: {
+    homeConfigurations.your-user = home-manager.lib.homeManagerConfiguration {
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      modules = [
+        {
+          home.packages = [
+            antigravity-nix.packages.x86_64-linux.default
+          ];
+        }
+      ];
+    };
+  };
+}
 
 }
 

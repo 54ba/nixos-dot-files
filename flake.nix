@@ -4,26 +4,27 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    nix-snapd = {
+    /*nix-snapd = {
       url = "github:nix-community/nix-snapd";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {
       url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
+    };*/
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nix-snapd, ... }:
+  #outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nix-snapd, ... }:
+    outputs = { self, nixpkgs, nixpkgs-unstable,home-manager, ... }:
     let
       system = "x86_64-linux";
       overlay-unstable = final: prev: {
         unstable = nixpkgs-unstable.legacyPackages.${system};
       };
-      cursor-overlay = import ./overlays/cursor-overlay.nix;
+      #cursor-overlay = import ./overlays/cursor-overlay.nix;
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ overlay-unstable cursor-overlay ];
+        #overlays = [ overlay-unstable cursor-overlay ];
         config = {
           allowUnfree = true;
           # Force use of binary caches and avoid building from source
@@ -35,11 +36,11 @@
       nixosConfigurations.mahmoud-laptop = nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
-          nix-snapd.nixosModules.default
+          #nix-snapd.nixosModules.default
           ./configuration.nix
           {
             # Configure nixpkgs overlays and config properly
-            nixpkgs.overlays = [ overlay-unstable cursor-overlay ];
+            #nixpkgs.overlays = [ overlay-unstable cursor-overlay ];
             nixpkgs.config = {
               allowUnfree = true;
               allowBroken = false;
@@ -50,14 +51,14 @@
       };
 
       # Development shells
-      devShells.${system} = {
+      /*devShells.${system} = {
         automation = import ./shells/automation-shell.nix { inherit pkgs; };
         python = import ./shells/python-shell.nix { inherit pkgs; };
         typescript = import ./shells/typescript-shell.nix { inherit pkgs; };
         php = import ./shells/php-shell.nix { inherit pkgs; };
         flutter = import ./shells/flutter-shell.nix { inherit pkgs; };
         full-dev = import ./shells/full-dev-shell.nix { inherit pkgs; };
-      };
+      };*/
 
       # Standalone home-manager configuration
       homeConfigurations.mahmoud = home-manager.lib.homeManagerConfiguration {

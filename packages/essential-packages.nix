@@ -101,7 +101,7 @@ with pkgs; [
 
   # Development tools
   github-desktop
-  cursor-latest  # Latest Cursor AI editor from cursor.com (v1.7)
+  #cursor-latest  # Latest Cursor AI editor from cursor.com (v1.7)
 
   # Design and media tools
   figma-linux
@@ -140,8 +140,8 @@ with pkgs; [
   wine64
   wineWowPackages.stable
   winetricks
-  playonlinux
-  lutris
+  #playonlinux
+  #lutris
   dxvk
   vkd3d
   gamemode

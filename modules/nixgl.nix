@@ -28,7 +28,7 @@ with lib;
         
         wrappers = mkOption {
           type = types.listOf types.str;
-          default = [ "firefox" "chrome" "code" "blender" "steam" ];
+          default = [ "firefox" "chrome" "code" "blender" ];
           description = "Applications to create nixGL wrappers for";
         };
       };

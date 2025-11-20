@@ -13,8 +13,8 @@
     ./modules/networking.nix
     
     # Enhanced application support
-    ./modules/screen-sharing.nix
-    ./modules/enhanced-packages.nix
+    #./modules/screen-sharing.nix
+    #./modules/enhanced-packages.nix
     
     # Security framework (simplified)
     ./modules/security.nix
@@ -93,6 +93,8 @@
     permittedInsecurePackages = [
       "electron-27.3.11"
       "electron-33.4.11"
+      "mbedtls-2.28.10"
+
     ];
   };
 
@@ -224,12 +226,12 @@
 
   # Enable additional modules
   custom.wayland.enable = true;                     # Enable Wayland optimizations
-  custom.screen-sharing.enable = true;              # Enable enhanced screen sharing support
-  custom.enhanced-packages.enable = true;           # Enable enhanced application packages
+  #custom.screen-sharing.enable = false;              # Enable enhanced screen sharing support
+  #custom.enhanced-packages.enable = false;           # Enable enhanced application packages
   
   # Enable Electron apps with proper Wayland support and screen sharing
   custom.electron-apps = {
-    enable = true;                                   # Enable Electron apps module
+    enable = false;                                   # Enable Electron apps module
     enableDesktopFiles = true;                      # Create desktop files with proper flags
     packages = {
       discord.enable = true;                         # Discord with Wayland screen sharing
@@ -433,7 +435,7 @@
 
   # AI Services with CUDA acceleration - NVIDIA drivers handled by nvidia-performance module
   custom.ai-services = {
-    enable = true;                        # Enable AI services
+    enable = false;                        # Enable AI services
     ollama = {
       enable = true;                      # ENABLED - Testing PyTorch build
       acceleration = "cuda";               # Enable CUDA acceleration
@@ -726,7 +728,7 @@
     enableVulkan = true;
     applications = {
       enable = true;
-      wrappers = [ "firefox" "chrome" "code" "blender" "steam" ];
+      wrappers = [ "firefox" "chrome" "code" "blender" ];
     };
     help = true;
   };
@@ -811,7 +813,7 @@
   
   # Wine Support for Windows Applications - ENABLED with minimal configuration
   custom.wine = {
-    enable = true;                        # Enable Wine support
+    enable = false;                        # Enable Wine support
     packages = {
       wine64 = true;                      # Enable Wine 64-bit
       winetricks = true;                  # Enable Winetricks
@@ -892,13 +894,13 @@
   # Optional Package Collections
   custom.packages = {
     essential.enable = true;               # Enable essential packages
-    media.enable = true;                   # Enable media and graphics packages
-    development.enable = true;             # Enable development packages
-    productivity.enable = true;            # Enable productivity packages
-    popular.enable = true;                 # Enable popular packages collection
-    entertainment.enable = true;           # ENABLED - Entertainment software packages
-    gaming.enable = true;                  # Enable gaming packages for SteamOS
-    pentest.enable = true;                 # ENABLED - Testing penetration testing tools
+    media.enable = false;                   # Enable media and graphics packages
+    development.enable = false;             # Enable development packages
+    productivity.enable = false;            # Enable productivity packages
+    popular.enable = false;                 # Enable popular packages collection
+    entertainment.enable = false;           # ENABLED - Entertainment software packages
+    gaming.enable = false;                  # Enable gaming packages for SteamOS
+    pentest.enable = false;                 # ENABLED - Testing penetration testing tools
   };
   
   # Profile-based packages migrated to system config
@@ -908,15 +910,15 @@
   
   # Package Recommendations
   custom.packageRecommendations = {
-    enable = true;                         # Enable package recommendations
+    enable = false;                         # Enable package recommendations
     categories = {
-      productivity = true;                 # Enable productivity package recommendations
-      development = true;                  # Enable development package recommendations
-      creative = true;                     # Enable creative package recommendations
+      productivity = false;                 # Enable productivity package recommendations
+      development = false;                  # Enable development package recommendations
+      creative = false;                     # Enable creative package recommendations
       gaming = false;                      # Disable gaming recommendations for now
-      system = true;                       # Enable system utility recommendations
+      system = false;                       # Enable system utility recommendations
       networking = false;                  # Disable networking tools for security
-      education = true;                    # Enable educational software recommendations
+      education = false;                    # Enable educational software recommendations
     };
     hardware = {
       enable = true;                       # Enable hardware-based recommendations
@@ -930,7 +932,7 @@
       developer = true;                    # Enable developer profile recommendations
       designer = true;                     # Enable designer profile recommendations
       gamer = false;                       # Disable gamer profile for now
-      student = true;                      # Enable student profile recommendations
+      student = false;                      # Enable student profile recommendations
       business = false;                    # Disable business profile for now
     };
     ai = {
@@ -1018,7 +1020,7 @@
   users.users.mahmoud = {
     isNormalUser = true;
     description = "mahmoud";
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" ];
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" "nix" ];
     shell = lib.mkForce pkgs.zsh;
     openssh.authorizedKeys.keys = [
       # Add your SSH public key here if needed
@@ -1288,7 +1290,7 @@ EOF
       lsb-release
       
       # AnyDesk wrapper script for proper functionality
-      (pkgs.writeShellScriptBin "anydesk-working" ''
+      /*(pkgs.writeShellScriptBin "anydesk-working" ''
         # Set up proper environment for AnyDesk
         export PATH="${pkgs.hostname-debian}/bin:$PATH"
         
@@ -1347,7 +1349,7 @@ EOF
         icon = "rustdesk";
         categories = [ "Network" "RemoteAccess" ];
       })
-      
+      */
       # Home Manager for manual user management
       home-manager
       
@@ -1597,7 +1599,7 @@ EOF
     };
   };
   # Snap Support via nix-snapd
-  services.snap.enable = true;
+  #services.snap.enable = true;
   
 
 

@@ -51,7 +51,7 @@ with lib;
       };
       
       # Fix shutdown and reboot issues with /nix/store
-      nix-store-umount-fix = {
+      /*nix-store-umount-fix = {
         description = "Fix /nix/store umount on shutdown";
         wantedBy = [ "shutdown.target" ];
         before = [ "shutdown.target" "reboot.target" "halt.target" ];
@@ -67,7 +67,7 @@ with lib;
           TimeoutStopSec = "30s";
           KillMode = "none";
         };
-      };
+      };*/
     };
     
     # Fix the UserTasksMax deprecation issue

@@ -83,7 +83,7 @@ with lib;
       
       # === GRAPHICS AND PERFORMANCE ===
       LIBGL_ALWAYS_SOFTWARE = "0";            # Use hardware acceleration
-      MESA_LOADER_DRIVER_OVERRIDE = "iris";    # Intel graphics optimization
+      #MESA_LOADER_DRIVER_OVERRIDE = "iris";    # Intel graphics optimization
       __GL_GSYNC_ALLOWED = "1";               # Enable G-Sync if available
       __GL_VRR_ALLOWED = "1";                 # Variable refresh rate
       
@@ -304,7 +304,7 @@ with lib;
 
     # === XDG DESKTOP PORTAL CONFIGURATION ===
     # Only configure portals if screen-sharing module is not enabled (to avoid conflicts)
-    xdg.portal = mkIf (!config.custom.screen-sharing.enable) {
+    xdg.portal = {
       enable = mkDefault true;
       wlr.enable = mkIf (config.services.xserver.displayManager.gdm.wayland) true;
       extraPortals = with pkgs; [
