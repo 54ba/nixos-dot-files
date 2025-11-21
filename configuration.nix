@@ -71,7 +71,7 @@
     ./modules/boot-enhancements.nix              # ENABLED - Boot enhancements
     # ./modules/security-services.nix             # DISABLED - Security services (conflicts)
     # ./modules/user-security.nix                 # DISABLED - User security enhancements (conflicts)
-    # ./modules/device-permissions.nix            # DISABLED - Device permission management (conflicts)
+    ./modules/device-permissions.nix            # DISABLED - Device permission management (conflicts)
     ./modules/system-optimization.nix
     ./modules/system-services.nix
     ./modules/optional-packages.nix              # ENABLED - Optional package collections
@@ -1018,7 +1018,7 @@
   users.users.mahmoud = {
     isNormalUser = true;
     description = "mahmoud";
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" ];
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" "nix" ];
     shell = lib.mkForce pkgs.zsh;
     openssh.authorizedKeys.keys = [
       # Add your SSH public key here if needed

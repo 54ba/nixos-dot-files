@@ -83,7 +83,7 @@ with lib;
       
       # === GRAPHICS AND PERFORMANCE ===
       LIBGL_ALWAYS_SOFTWARE = "0";            # Use hardware acceleration
-      MESA_LOADER_DRIVER_OVERRIDE = "iris";    # Intel graphics optimization
+      #MESA_LOADER_DRIVER_OVERRIDE = "iris";    # Intel graphics optimization
       __GL_GSYNC_ALLOWED = "1";               # Enable G-Sync if available
       __GL_VRR_ALLOWED = "1";                 # Variable refresh rate
       
