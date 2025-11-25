@@ -12,18 +12,22 @@
       url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nix-snapd, ... }:
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nix-snapd,antigravity-nix, ... }:
     let
       system = "x86_64-linux";
       overlay-unstable = final: prev: {
         unstable = nixpkgs-unstable.legacyPackages.${system};
       };
-      cursor-overlay = import ./overlays/cursor-overlay.nix;
+      #cursor-overlay = import ./overlays/cursor-overlay.nix;
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ overlay-unstable cursor-overlay ];
+        #overlays = [ overlay-unstable cursor-overlay ];
         config = {
           allowUnfree = true;
           # Force use of binary caches and avoid building from source
@@ -35,11 +39,16 @@
       nixosConfigurations.mahmoud-laptop = nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [
+        {
+          environment.systemPackages = [
+            antigravity-nix.packages.x86_64-linux.default
+          ];
+        }
           nix-snapd.nixosModules.default
           ./configuration.nix
           {
             # Configure nixpkgs overlays and config properly
-            nixpkgs.overlays = [ overlay-unstable cursor-overlay ];
+           # nixpkgs.overlays = [ overlay-unstable cursor-overlay ];
             nixpkgs.config = {
               allowUnfree = true;
               allowBroken = false;

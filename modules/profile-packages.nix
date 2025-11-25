@@ -25,7 +25,7 @@ with lib;
       nix-index          # Nix package indexing for finding packages
       
       # LaTeX and document processing
-      texlive.combined.scheme-full  # Complete TeXLive distribution
+      #texlive.combined.scheme-full  # Complete TeXLive distribution
       tikzit             # TikZ diagram editor
       
       # Note: libnotify is already included in essential-packages.nix

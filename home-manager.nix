@@ -315,6 +315,9 @@
     BROWSER = "firefox";
     TERMINAL = "gnome-terminal";
 
+    # Nix daemon usage
+    NIX_REMOTE = "daemon";  # Always use Nix daemon for operations
+
     # Wayland environment variables
     WAYLAND_DISPLAY = "wayland-0";
     XDG_SESSION_TYPE = "wayland";

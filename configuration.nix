@@ -11,7 +11,7 @@
     ./modules/system-base.nix
     ./modules/hardware.nix
     ./modules/networking.nix
-    ./modules/nix-store-permissions.nix   # ENABLED - Fix Nix store permissions on boot
+    ./modules/nix-store-permissions.nix   # ENABLED - Systematic Nix permissions fix
     
     # Enhanced application support
     ./modules/screen-sharing.nix
@@ -81,7 +81,7 @@
     ./modules/package-recommendations.nix        # ENABLED - Package recommendations
     # ./modules/windows-compatibility.nix         # DISABLED - Windows app compatibility (conflicts)
     ./modules/lenovo-s540-gtx-15iwl.nix         # ENABLED - Lenovo hardware optimizations
-    ./modules/home-manager-integration.nix       # ENABLED - Home manager integration
+    # ./modules/home-manager-integration.nix     # DISABLED - Using flake-based home-manager instead
     ./modules/nvidia-performance.nix             # ENABLED - NVIDIA gaming optimizations (compatible with ai-services)
     # ./modules/pam-consolidated.nix              # DISABLED - conflicts with main PAM config
     ./modules/nixai-integration.nix              # ENABLED - NixAI integration
@@ -786,6 +786,7 @@
   #   # Ensure WAYLAND_DISPLAY is set globally for all applications
   environment.sessionVariables = {
     WAYLAND_DISPLAY = "wayland-0";
+    NIX_REMOTE = "daemon";  # Force all Nix operations to use the daemon
   };
 
   # NVIDIA Performance Optimizations - DISABLED temporarily to fix login/logout loop
@@ -942,30 +943,10 @@
     };
   };
   
-  # Home Manager Integration
-  custom.home-manager = {
-    enable = true;                         # Enable Home Manager integration
-    user = "mahmoud";                       # Username for home-manager configuration
-    configPath = "./home-manager.nix"; # Path to home-manager configuration file
-    useGlobalPkgs = true;                  # Use global package set for home-manager
-    useUserPackages = true;                # Install packages to user profile
-    backupFileExtension = "backup";        # Extension for backup files
-    development = {
-      enable = true;                       # Enable development tools in home-manager
-      languages = [ "python" "nodejs" "dart" "php" ]; # Development languages to enable
-    };
-    shell = {
-      enable = true;                       # Configure shell with home-manager
-      defaultShell = "zsh";                # Default shell to configure
-      starship = true;                     # Enable starship prompt
-      direnv = true;                       # Enable direnv integration
-    };
-    desktop = {
-      enable = true;                       # Configure desktop environment settings
-      theme = "Adwaita-dark";              # GTK theme name
-      iconTheme = "Papirus-Dark";          # Icon theme name
-    };
-  };
+  # Home Manager Integration - DISABLED
+  # Home-manager is configured in flake.nix as homeConfigurations.mahmoud
+  # Use: home-manager switch --flake /etc/nixos#mahmoud --impure -b backup
+  # Module disabled, configuration removed to prevent errors
   
   # NixAI Integration
   custom.nixaiIntegration = {
@@ -1016,11 +997,12 @@
     };
   };
 
-  # User management and permissions
+  # User management is handled by ./modules/users.nix
+  # Keeping this here for backwards compatibility but users.nix takes precedence
   users.users.mahmoud = {
     isNormalUser = true;
     description = "mahmoud";
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" "nix" ];
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "docker" "libvirtd" "kvm" "input" "systemd-journal" "nix" "fuse" ];
     shell = lib.mkForce pkgs.zsh;
     openssh.authorizedKeys.keys = [
       # Add your SSH public key here if needed

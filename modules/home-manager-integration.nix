@@ -15,7 +15,7 @@ with lib;
 
       configPath = mkOption {
         type = types.str;
-        default = "./home-manager-base.nix";
+        default = "./home-manager.nix";
         description = "Path to home-manager configuration file";
       };
 

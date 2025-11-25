@@ -68,6 +68,7 @@ with lib;
         "gamemode"       # gaming performance
         "adbusers"       # Android debugging bridge
         "plugdev"        # USB device access for Android
+        "fuse"           # FUSE filesystems (required for Flatpak document portal)
       ];
       group = "users";
       shell = config.custom.users.mainUser.shell;

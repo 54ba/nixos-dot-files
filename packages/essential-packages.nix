@@ -101,7 +101,7 @@ with pkgs; [
 
   # Development tools
   github-desktop
-  cursor-latest  # Latest Cursor AI editor from cursor.com (v1.7)
+  #cursor-latest  # Latest Cursor AI editor from cursor.com (v1.7)
 
   # Design and media tools
   figma-linux
