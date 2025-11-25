@@ -11,6 +11,7 @@
     ./modules/system-base.nix
     ./modules/hardware.nix
     ./modules/networking.nix
+    ./modules/nix-store-permissions.nix   # ENABLED - Fix Nix store permissions on boot
     
     # Enhanced application support
     ./modules/screen-sharing.nix
@@ -71,7 +72,7 @@
     ./modules/boot-enhancements.nix              # ENABLED - Boot enhancements
     # ./modules/security-services.nix             # DISABLED - Security services (conflicts)
     # ./modules/user-security.nix                 # DISABLED - User security enhancements (conflicts)
-    ./modules/device-permissions.nix            # DISABLED - Device permission management (conflicts)
+    #./modules/device-permissions.nix            # DISABLED - Device permission management (conflicts)
     ./modules/system-optimization.nix
     ./modules/system-services.nix
     ./modules/optional-packages.nix              # ENABLED - Optional package collections
@@ -93,6 +94,7 @@
     permittedInsecurePackages = [
       "electron-27.3.11"
       "electron-33.4.11"
+      "mbedtls-2.28.10"
     ];
   };
 
@@ -944,7 +946,7 @@
   custom.home-manager = {
     enable = true;                         # Enable Home Manager integration
     user = "mahmoud";                       # Username for home-manager configuration
-    configPath = "./home-manager-base.nix"; # Path to home-manager configuration file
+    configPath = "./home-manager.nix"; # Path to home-manager configuration file
     useGlobalPkgs = true;                  # Use global package set for home-manager
     useUserPackages = true;                # Install packages to user profile
     backupFileExtension = "backup";        # Extension for backup files
